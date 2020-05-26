@@ -100,6 +100,14 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 
 	m.next.ServeHTTP(recorder, req)
 
+	// TODO test it
+	//Hi @0xVox,
+	//
+	//	Thanks for your interest
+	//Today, the only data we got for one server (backend) is its url. As you mentioned, the access log provides this url.
+	//	A new metric can be introduced by adding a new label which will be this url.
+	//	If it's what your are proposing, to do so, one can collect this url on the request, after the execution of the next `ServeHTTP` func in the metrics middleware.
+
 	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
 	histograms := m.reqDurationHistogram.With(labels...)
