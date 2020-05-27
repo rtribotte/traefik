@@ -45,6 +45,9 @@ const (
 	serviceOpenConnsName    = MetricServicePrefix + "open_connections"
 	serviceRetriesTotalName = MetricServicePrefix + "retries_total"
 	serviceServerUpName     = MetricServicePrefix + "server_up"
+
+	//server
+	serverReqDurationName = "backends" + "request_duration_seconds"
 )
 
 // promState holds all metric state internally and acts as the only Collector we register for Prometheus.
@@ -190,6 +193,11 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			Name: serviceServerUpName,
 			Help: "service server is up, described by gauge value of 0 or 1.",
 		}, []string{"service", "url"})
+		serversReqDurations := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    serverReqDurationName,
+			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "service", "host"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			serviceReqs.cv.Describe,
@@ -198,6 +206,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			serviceOpenConns.gv.Describe,
 			serviceRetries.cv.Describe,
 			serviceServerUp.gv.Describe,
+			serversReqDurations.hv.Describe,
 		}...)
 
 		reg.serviceReqsCounter = serviceReqs
@@ -206,6 +215,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.serviceOpenConnsGauge = serviceOpenConns
 		reg.serviceRetriesCounter = serviceRetries
 		reg.serviceServerUpGauge = serviceServerUp
+		reg.serverReqDurationHistogram, _ = NewHistogramWithScale(serversReqDurations, time.Second)
 	}
 
 	return reg

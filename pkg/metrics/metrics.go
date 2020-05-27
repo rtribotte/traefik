@@ -34,6 +34,9 @@ type Registry interface {
 	ServiceOpenConnsGauge() metrics.Gauge
 	ServiceRetriesCounter() metrics.Counter
 	ServiceServerUpGauge() metrics.Gauge
+
+	// server metrics
+	ServerReqDurationHistogram() ScalableHistogram
 }
 
 // NewVoidRegistry is a noop implementation of metrics.Registry.
@@ -60,6 +63,7 @@ func NewMultiRegistry(registries []Registry) Registry {
 	var serviceOpenConnsGauge []metrics.Gauge
 	var serviceRetriesCounter []metrics.Counter
 	var serviceServerUpGauge []metrics.Gauge
+	var serverReqDurationHistogram []ScalableHistogram
 
 	for _, r := range registries {
 		if r.ConfigReloadsCounter() != nil {
@@ -104,6 +108,9 @@ func NewMultiRegistry(registries []Registry) Registry {
 		if r.ServiceServerUpGauge() != nil {
 			serviceServerUpGauge = append(serviceServerUpGauge, r.ServiceServerUpGauge())
 		}
+		if r.ServerReqDurationHistogram() != nil {
+			serverReqDurationHistogram = append(serverReqDurationHistogram, r.ServerReqDurationHistogram())
+		}
 	}
 
 	return &standardRegistry{
@@ -123,6 +130,7 @@ func NewMultiRegistry(registries []Registry) Registry {
 		serviceOpenConnsGauge:          multi.NewGauge(serviceOpenConnsGauge...),
 		serviceRetriesCounter:          multi.NewCounter(serviceRetriesCounter...),
 		serviceServerUpGauge:           multi.NewGauge(serviceServerUpGauge...),
+		serverReqDurationHistogram:     NewMultiHistogram(serverReqDurationHistogram...),
 	}
 }
 
@@ -143,6 +151,7 @@ type standardRegistry struct {
 	serviceOpenConnsGauge          metrics.Gauge
 	serviceRetriesCounter          metrics.Counter
 	serviceServerUpGauge           metrics.Gauge
+	serverReqDurationHistogram     ScalableHistogram
 }
 
 func (r *standardRegistry) IsEpEnabled() bool {
@@ -207,6 +216,10 @@ func (r *standardRegistry) ServiceRetriesCounter() metrics.Counter {
 
 func (r *standardRegistry) ServiceServerUpGauge() metrics.Gauge {
 	return r.serviceServerUpGauge
+}
+
+func (r *standardRegistry) ServerReqDurationHistogram() ScalableHistogram {
+	return r.serverReqDurationHistogram
 }
 
 // ScalableHistogram is a Histogram with a predefined time unit,

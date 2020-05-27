@@ -28,12 +28,13 @@ const (
 )
 
 type metricsMiddleware struct {
-	next                 http.Handler
-	reqsCounter          gokitmetrics.Counter
-	reqsTLSCounter       gokitmetrics.Counter
-	reqDurationHistogram metrics.ScalableHistogram
-	openConnsGauge       gokitmetrics.Gauge
-	baseLabels           []string
+	next                       http.Handler
+	reqsCounter                gokitmetrics.Counter
+	reqsTLSCounter             gokitmetrics.Counter
+	reqDurationHistogram       metrics.ScalableHistogram
+	reqDurationHistogramServer metrics.ScalableHistogram
+	openConnsGauge             gokitmetrics.Gauge
+	baseLabels                 []string
 }
 
 // NewEntryPointMiddleware creates a new metrics middleware for an Entrypoint.
@@ -55,12 +56,13 @@ func NewServiceMiddleware(ctx context.Context, next http.Handler, registry metri
 	log.FromContext(middlewares.GetLoggerCtx(ctx, nameService, typeName)).Debug("Creating middleware")
 
 	return &metricsMiddleware{
-		next:                 next,
-		reqsCounter:          registry.ServiceReqsCounter(),
-		reqsTLSCounter:       registry.ServiceReqsTLSCounter(),
-		reqDurationHistogram: registry.ServiceReqDurationHistogram(),
-		openConnsGauge:       registry.ServiceOpenConnsGauge(),
-		baseLabels:           []string{"service", serviceName},
+		next:                       next,
+		reqsCounter:                registry.ServiceReqsCounter(),
+		reqsTLSCounter:             registry.ServiceReqsTLSCounter(),
+		reqDurationHistogram:       registry.ServiceReqDurationHistogram(),
+		reqDurationHistogramServer: registry.ServerReqDurationHistogram(),
+		openConnsGauge:             registry.ServiceOpenConnsGauge(),
+		baseLabels:                 []string{"service", serviceName},
 	}
 }
 
@@ -109,6 +111,10 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	//	If it's what your are proposing, to do so, one can collect this url on the request, after the execution of the next `ServeHTTP` func in the metrics middleware.
 
 	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
+
+	serverLabels := append(labels, "host", req.Host)
+	serverHistograms := m.reqDurationHistogramServer.With(serverLabels...)
+	serverHistograms.ObserveFromStart(start)
 
 	histograms := m.reqDurationHistogram.With(labels...)
 	histograms.ObserveFromStart(start)
