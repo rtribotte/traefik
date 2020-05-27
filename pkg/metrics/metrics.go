@@ -14,6 +14,8 @@ type Registry interface {
 	IsEpEnabled() bool
 	// IsSvcEnabled shows whether metrics instrumentation is enabled on services.
 	IsSvcEnabled() bool
+	// IsSrvEnabled shows whether metrics instrumentation is enabled on servers.
+	IsSrvEnabled() bool
 
 	// server metrics
 	ConfigReloadsCounter() metrics.Counter
@@ -36,6 +38,8 @@ type Registry interface {
 	ServiceServerUpGauge() metrics.Gauge
 
 	// server metrics
+	ServerReqsCounter() metrics.Counter
+	ServerReqsTLSCounter() metrics.Counter
 	ServerReqDurationHistogram() ScalableHistogram
 }
 

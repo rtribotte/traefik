@@ -47,7 +47,7 @@ const (
 	serviceServerUpName     = MetricServicePrefix + "server_up"
 
 	//server
-	serverReqDurationName = "backends" + "request_duration_seconds"
+	serverReqDurationName = MetricServicePrefix + "server_request_duration_seconds"
 )
 
 // promState holds all metric state internally and acts as the only Collector we register for Prometheus.
@@ -197,7 +197,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			Name:    serverReqDurationName,
 			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			serviceReqs.cv.Describe,
