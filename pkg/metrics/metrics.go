@@ -14,8 +14,8 @@ type Registry interface {
 	IsEpEnabled() bool
 	// IsSvcEnabled shows whether metrics instrumentation is enabled on services.
 	IsSvcEnabled() bool
-	// IsSrvEnabled shows whether metrics instrumentation is enabled on servers.
-	IsSrvEnabled() bool
+	// IsBckEnabled shows whether metrics instrumentation is enabled on backends.
+	IsBckEnabled() bool
 
 	// server metrics
 	ConfigReloadsCounter() metrics.Counter
@@ -214,7 +214,7 @@ type standardRegistry struct {
 	backendsDownstreamBytesHistogram   metrics.Histogram
 }
 
-func (r *standardRegistry) IsSrvEnabled() bool {
+func (r *standardRegistry) IsBckEnabled() bool {
 	return r.bckEnabled
 }
 

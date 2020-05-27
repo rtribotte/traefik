@@ -186,7 +186,7 @@ func (m *Manager) getLoadBalancerServiceHandler(
 		chain = chain.Append(metricsMiddle.WrapServiceHandler(ctx, m.metricsRegistry, serviceName))
 	}
 
-	if m.metricsRegistry != nil && m.metricsRegistry.IsSrvEnabled() {
+	if m.metricsRegistry != nil && m.metricsRegistry.IsBckEnabled() {
 		chain = chain.Append(metricsMiddle.WrapBackendsHandler(ctx, m.metricsRegistry, serviceName))
 	}
 
