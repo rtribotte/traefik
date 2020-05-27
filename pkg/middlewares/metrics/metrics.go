@@ -33,8 +33,8 @@ type metricsMiddleware struct {
 	reqsCounter              gokitmetrics.Counter
 	reqsTLSCounter           gokitmetrics.Counter
 	reqDurationHistogram     metrics.ScalableHistogram
-	upstreamBytesHistogram   metrics.ScalableHistogram
-	downstreamBytesHistogram metrics.ScalableHistogram
+	upstreamBytesHistogram   gokitmetrics.Histogram
+	downstreamBytesHistogram gokitmetrics.Histogram
 	openConnsGauge           gokitmetrics.Gauge
 	baseLabels               []string
 	backends                 bool
@@ -121,6 +121,8 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 
 	m.next.ServeHTTP(recorder, req)
 
+	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
+
 	if m.backends {
 		labels = append(labels, "host", req.URL.Host)
 	}
@@ -143,8 +145,6 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	//Today, the only data we got for one server (backend) is its url. As you mentioned, the access log provides this url.
 	//	A new metric can be introduced by adding a new label which will be this url.
 	//	If it's what your are proposing, to do so, one can collect this url on the request, after the execution of the next `ServeHTTP` func in the metrics middleware.
-
-	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
 	histograms := m.reqDurationHistogram.With(labels...)
 	histograms.ObserveFromStart(start)

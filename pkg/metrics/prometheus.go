@@ -190,8 +190,8 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.entryPointReqsTLSCounter = entryPointReqsTLS
 		reg.entryPointReqDurationHistogram, _ = NewHistogramWithScale(entryPointReqDurations, time.Second)
 		reg.entryPointOpenConnsGauge = entryPointOpenConns
-		reg.entryPointUpstreamBytesHistogram = NewHistogram(entryPointUpstreamBytes)
-		reg.entryPointDownstreamBytesHistogram = NewHistogram(entryPointDownstreamBytes)
+		reg.entryPointUpstreamBytesHistogram = entryPointUpstreamBytes
+		reg.entryPointDownstreamBytesHistogram = entryPointDownstreamBytes
 	}
 
 	if config.AddServicesLabels {
@@ -248,8 +248,8 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.serviceOpenConnsGauge = serviceOpenConns
 		reg.serviceRetriesCounter = serviceRetries
 		reg.serviceServerUpGauge = serviceServerUp
-		reg.serviceUpstreamBytesHistogram = NewHistogram(serviceUpstreamBytes)
-		reg.serviceDownstreamBytesHistogram = NewHistogram(serviceDownstreamBytes)
+		reg.serviceUpstreamBytesHistogram = serviceUpstreamBytes
+		reg.serviceDownstreamBytesHistogram = serviceDownstreamBytes
 	}
 
 	if config.AddBackendsLabels {
@@ -288,8 +288,8 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.backendsReqsCounter = backendsReqs
 		reg.backendsReqsTLSCounter = backendsReqsTLS
 		reg.backendsReqDurationHistogram, _ = NewHistogramWithScale(backendsReqDurations, time.Second)
-		reg.backendsUpstreamBytesHistogram = NewHistogram(backendsUpstreamBytes)
-		reg.backendsDownstreamBytesHistogram = NewHistogram(backendsDownstreamBytes)
+		reg.backendsUpstreamBytesHistogram = backendsUpstreamBytes
+		reg.backendsDownstreamBytesHistogram = backendsDownstreamBytes
 	}
 
 	return reg

@@ -28,8 +28,8 @@ type Registry interface {
 	EntryPointReqsTLSCounter() metrics.Counter
 	EntryPointReqDurationHistogram() ScalableHistogram
 	EntryPointOpenConnsGauge() metrics.Gauge
-	EntryPointUpstreamBytesHistogram() ScalableHistogram
-	EntryPointDownstreamBytesHistogram() ScalableHistogram
+	EntryPointUpstreamBytesHistogram() metrics.Histogram
+	EntryPointDownstreamBytesHistogram() metrics.Histogram
 
 	// service metrics
 	ServiceReqsCounter() metrics.Counter
@@ -38,15 +38,15 @@ type Registry interface {
 	ServiceOpenConnsGauge() metrics.Gauge
 	ServiceRetriesCounter() metrics.Counter
 	ServiceServerUpGauge() metrics.Gauge
-	ServiceUpstreamBytesHistogram() ScalableHistogram
-	ServiceDownstreamBytesHistogram() ScalableHistogram
+	ServiceUpstreamBytesHistogram() metrics.Histogram
+	ServiceDownstreamBytesHistogram() metrics.Histogram
 
 	// backends metrics
 	BackendsReqsCounter() metrics.Counter
 	BackendsReqsTLSCounter() metrics.Counter
 	BackendsReqDurationHistogram() ScalableHistogram
-	BackendsUpstreamBytesHistogram() ScalableHistogram
-	BackendsDownstreamBytesHistogram() ScalableHistogram
+	BackendsUpstreamBytesHistogram() metrics.Histogram
+	BackendsDownstreamBytesHistogram() metrics.Histogram
 }
 
 // NewVoidRegistry is a noop implementation of metrics.Registry.
@@ -67,21 +67,21 @@ func NewMultiRegistry(registries []Registry) Registry {
 	var entryPointReqsTLSCounter []metrics.Counter
 	var entryPointReqDurationHistogram []ScalableHistogram
 	var entryPointOpenConnsGauge []metrics.Gauge
-	var entryPointUpstreamBytesHistogram []ScalableHistogram
-	var entryPointDownstreamBytesHistogram []ScalableHistogram
+	var entryPointUpstreamBytesHistogram []metrics.Histogram
+	var entryPointDownstreamBytesHistogram []metrics.Histogram
 	var serviceReqsCounter []metrics.Counter
 	var serviceReqsTLSCounter []metrics.Counter
 	var serviceReqDurationHistogram []ScalableHistogram
 	var serviceOpenConnsGauge []metrics.Gauge
 	var serviceRetriesCounter []metrics.Counter
 	var serviceServerUpGauge []metrics.Gauge
-	var serviceUpstreamBytesHistogram []ScalableHistogram
-	var serviceDownstreamBytesHistogram []ScalableHistogram
+	var serviceUpstreamBytesHistogram []metrics.Histogram
+	var serviceDownstreamBytesHistogram []metrics.Histogram
 	var backendsReqsCounter []metrics.Counter
 	var backendsReqsTLSCounter []metrics.Counter
 	var backendsReqDurationHistogram []ScalableHistogram
-	var backendsUpstreamBytesHistogram []ScalableHistogram
-	var backendsDownstreamBytesHistogram []ScalableHistogram
+	var backendsUpstreamBytesHistogram []metrics.Histogram
+	var backendsDownstreamBytesHistogram []metrics.Histogram
 
 	for _, r := range registries {
 		if r.ConfigReloadsCounter() != nil {
@@ -167,21 +167,21 @@ func NewMultiRegistry(registries []Registry) Registry {
 		entryPointReqsTLSCounter:           multi.NewCounter(entryPointReqsTLSCounter...),
 		entryPointReqDurationHistogram:     NewMultiHistogram(entryPointReqDurationHistogram...),
 		entryPointOpenConnsGauge:           multi.NewGauge(entryPointOpenConnsGauge...),
-		entryPointUpstreamBytesHistogram:   NewMultiHistogram(entryPointUpstreamBytesHistogram...),
-		entryPointDownstreamBytesHistogram: NewMultiHistogram(entryPointDownstreamBytesHistogram...),
+		entryPointUpstreamBytesHistogram:   multi.NewHistogram(entryPointUpstreamBytesHistogram...),
+		entryPointDownstreamBytesHistogram: multi.NewHistogram(entryPointDownstreamBytesHistogram...),
 		serviceReqsCounter:                 multi.NewCounter(serviceReqsCounter...),
 		serviceReqsTLSCounter:              multi.NewCounter(serviceReqsTLSCounter...),
 		serviceReqDurationHistogram:        NewMultiHistogram(serviceReqDurationHistogram...),
 		serviceOpenConnsGauge:              multi.NewGauge(serviceOpenConnsGauge...),
 		serviceRetriesCounter:              multi.NewCounter(serviceRetriesCounter...),
 		serviceServerUpGauge:               multi.NewGauge(serviceServerUpGauge...),
-		serviceUpstreamBytesHistogram:      NewMultiHistogram(serviceUpstreamBytesHistogram...),
-		serviceDownstreamBytesHistogram:    NewMultiHistogram(serviceDownstreamBytesHistogram...),
+		serviceUpstreamBytesHistogram:      multi.NewHistogram(serviceUpstreamBytesHistogram...),
+		serviceDownstreamBytesHistogram:    multi.NewHistogram(serviceDownstreamBytesHistogram...),
 		backendsReqsCounter:                multi.NewCounter(backendsReqsCounter...),
 		backendsReqsTLSCounter:             multi.NewCounter(backendsReqsTLSCounter...),
 		backendsReqDurationHistogram:       NewMultiHistogram(backendsReqDurationHistogram...),
-		backendsUpstreamBytesHistogram:     NewMultiHistogram(backendsUpstreamBytesHistogram...),
-		backendsDownstreamBytesHistogram:   NewMultiHistogram(backendsDownstreamBytesHistogram...),
+		backendsUpstreamBytesHistogram:     multi.NewHistogram(backendsUpstreamBytesHistogram...),
+		backendsDownstreamBytesHistogram:   multi.NewHistogram(backendsDownstreamBytesHistogram...),
 	}
 }
 
@@ -197,21 +197,21 @@ type standardRegistry struct {
 	entryPointReqsTLSCounter           metrics.Counter
 	entryPointReqDurationHistogram     ScalableHistogram
 	entryPointOpenConnsGauge           metrics.Gauge
-	entryPointUpstreamBytesHistogram   ScalableHistogram
-	entryPointDownstreamBytesHistogram ScalableHistogram
+	entryPointUpstreamBytesHistogram   metrics.Histogram
+	entryPointDownstreamBytesHistogram metrics.Histogram
 	serviceReqsCounter                 metrics.Counter
 	serviceReqsTLSCounter              metrics.Counter
 	serviceReqDurationHistogram        ScalableHistogram
 	serviceOpenConnsGauge              metrics.Gauge
 	serviceRetriesCounter              metrics.Counter
 	serviceServerUpGauge               metrics.Gauge
-	serviceUpstreamBytesHistogram      ScalableHistogram
-	serviceDownstreamBytesHistogram    ScalableHistogram
+	serviceUpstreamBytesHistogram      metrics.Histogram
+	serviceDownstreamBytesHistogram    metrics.Histogram
 	backendsReqsCounter                metrics.Counter
 	backendsReqsTLSCounter             metrics.Counter
 	backendsReqDurationHistogram       ScalableHistogram
-	backendsUpstreamBytesHistogram     ScalableHistogram
-	backendsDownstreamBytesHistogram   ScalableHistogram
+	backendsUpstreamBytesHistogram     metrics.Histogram
+	backendsDownstreamBytesHistogram   metrics.Histogram
 }
 
 func (r *standardRegistry) IsSrvEnabled() bool {
@@ -258,11 +258,11 @@ func (r *standardRegistry) EntryPointOpenConnsGauge() metrics.Gauge {
 	return r.entryPointOpenConnsGauge
 }
 
-func (r *standardRegistry) EntryPointUpstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) EntryPointUpstreamBytesHistogram() metrics.Histogram {
 	return r.entryPointUpstreamBytesHistogram
 }
 
-func (r *standardRegistry) EntryPointDownstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) EntryPointDownstreamBytesHistogram() metrics.Histogram {
 	return r.entryPointDownstreamBytesHistogram
 }
 
@@ -290,11 +290,11 @@ func (r *standardRegistry) ServiceServerUpGauge() metrics.Gauge {
 	return r.serviceServerUpGauge
 }
 
-func (r *standardRegistry) ServiceUpstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) ServiceUpstreamBytesHistogram() metrics.Histogram {
 	return r.serviceUpstreamBytesHistogram
 }
 
-func (r *standardRegistry) ServiceDownstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) ServiceDownstreamBytesHistogram() metrics.Histogram {
 	return r.serviceDownstreamBytesHistogram
 }
 
@@ -310,11 +310,11 @@ func (r *standardRegistry) BackendsReqDurationHistogram() ScalableHistogram {
 	return r.backendsReqDurationHistogram
 }
 
-func (r *standardRegistry) BackendsUpstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) BackendsUpstreamBytesHistogram() metrics.Histogram {
 	return r.backendsUpstreamBytesHistogram
 }
 
-func (r *standardRegistry) BackendsDownstreamBytesHistogram() ScalableHistogram {
+func (r *standardRegistry) BackendsDownstreamBytesHistogram() metrics.Histogram {
 	return r.backendsDownstreamBytesHistogram
 }
 
