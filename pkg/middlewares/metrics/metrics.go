@@ -25,16 +25,19 @@ const (
 	typeName       = "Metrics"
 	nameEntrypoint = "metrics-entrypoint"
 	nameService    = "metrics-service"
+	nameBackend    = "metrics-backend"
 )
 
 type metricsMiddleware struct {
-	next                         http.Handler
-	reqsCounter                  gokitmetrics.Counter
-	reqsTLSCounter               gokitmetrics.Counter
-	reqDurationHistogram         metrics.ScalableHistogram
-	reqDurationByServerHistogram metrics.ScalableHistogram
-	openConnsGauge               gokitmetrics.Gauge
-	baseLabels                   []string
+	next                     http.Handler
+	reqsCounter              gokitmetrics.Counter
+	reqsTLSCounter           gokitmetrics.Counter
+	reqDurationHistogram     metrics.ScalableHistogram
+	upstreamBytesHistogram   metrics.ScalableHistogram
+	downstreamBytesHistogram metrics.ScalableHistogram
+	openConnsGauge           gokitmetrics.Gauge
+	baseLabels               []string
+	backendsCollect          bool
 }
 
 // NewEntryPointMiddleware creates a new metrics middleware for an Entrypoint.
@@ -42,12 +45,14 @@ func NewEntryPointMiddleware(ctx context.Context, next http.Handler, registry me
 	log.FromContext(middlewares.GetLoggerCtx(ctx, nameEntrypoint, typeName)).Debug("Creating middleware")
 
 	return &metricsMiddleware{
-		next:                 next,
-		reqsCounter:          registry.EntryPointReqsCounter(),
-		reqsTLSCounter:       registry.EntryPointReqsTLSCounter(),
-		reqDurationHistogram: registry.EntryPointReqDurationHistogram(),
-		openConnsGauge:       registry.EntryPointOpenConnsGauge(),
-		baseLabels:           []string{"entrypoint", entryPointName},
+		next:                     next,
+		reqsCounter:              registry.EntryPointReqsCounter(),
+		reqsTLSCounter:           registry.EntryPointReqsTLSCounter(),
+		reqDurationHistogram:     registry.EntryPointReqDurationHistogram(),
+		upstreamBytesHistogram:   registry.EntryPointUpstreamBytesHistogram(),
+		downstreamBytesHistogram: registry.EntryPointDownstreamBytesHistogram(),
+		openConnsGauge:           registry.EntryPointOpenConnsGauge(),
+		baseLabels:               []string{"entrypoint", entryPointName},
 	}
 }
 
@@ -56,28 +61,29 @@ func NewServiceMiddleware(ctx context.Context, next http.Handler, registry metri
 	log.FromContext(middlewares.GetLoggerCtx(ctx, nameService, typeName)).Debug("Creating middleware")
 
 	return &metricsMiddleware{
-		next:                         next,
-		reqsCounter:                  registry.ServiceReqsCounter(),
-		reqsTLSCounter:               registry.ServiceReqsTLSCounter(),
-		reqDurationHistogram:         registry.ServiceReqDurationHistogram(),
-		reqDurationByServerHistogram: registry.ServerReqDurationHistogram(),
-		openConnsGauge:               registry.ServiceOpenConnsGauge(),
-		baseLabels:                   []string{"service", serviceName},
+		next:                     next,
+		reqsCounter:              registry.ServiceReqsCounter(),
+		reqsTLSCounter:           registry.ServiceReqsTLSCounter(),
+		reqDurationHistogram:     registry.ServiceReqDurationHistogram(),
+		upstreamBytesHistogram:   registry.ServiceUpstreamBytesHistogram(),
+		downstreamBytesHistogram: registry.ServiceDownstreamBytesHistogram(),
+		openConnsGauge:           registry.ServiceOpenConnsGauge(),
+		baseLabels:               []string{"service", serviceName},
 	}
 }
 
-// NewServiceMiddleware creates a new metrics middleware for a Service/Server.
-func NewServerMiddleware(ctx context.Context, next http.Handler, registry metrics.Registry, serviceName string) http.Handler {
-	log.FromContext(middlewares.GetLoggerCtx(ctx, nameService, typeName)).Debug("Creating middleware")
+// NewBackendsMiddleware creates a new metrics middleware for service's Backends.
+func NewBackendsMiddleware(ctx context.Context, next http.Handler, registry metrics.Registry, serviceName string) http.Handler {
+	log.FromContext(middlewares.GetLoggerCtx(ctx, nameBackend, typeName)).Debug("Creating middleware")
 
 	return &metricsMiddleware{
-		next:                         next,
-		reqsCounter:                  registry.Se(),
-		reqsTLSCounter:               registry.ServiceReqsTLSCounter(),
-		reqDurationHistogram:         registry.ServiceReqDurationHistogram(),
-		reqDurationByServerHistogram: registry.ServerReqDurationHistogram(),
-		openConnsGauge:               registry.ServiceOpenConnsGauge(),
-		baseLabels:                   []string{"service", serviceName},
+		next:                     next,
+		reqsCounter:              registry.BackendsReqsCounter(),
+		reqsTLSCounter:           registry.BackendsReqsTLSCounter(),
+		reqDurationHistogram:     registry.BackendsReqDurationHistogram(),
+		upstreamBytesHistogram:   registry.BackendsUpstreamBytesByServerHistogram(),
+		downstreamBytesHistogram: registry.BackendsDownstreamBytesHistogram(),
+		baseLabels:               []string{"service", serviceName},
 	}
 }
 
@@ -95,10 +101,10 @@ func WrapServiceHandler(ctx context.Context, registry metrics.Registry, serviceN
 	}
 }
 
-// WrapServiceHandler Wraps metrics service to alice.Constructor.
-func WrapServerHandler(ctx context.Context, registry metrics.Registry, serviceName string) alice.Constructor {
+// WrapBackendsHandler Wraps metrics service to alice.Constructor.
+func WrapBackendsHandler(ctx context.Context, registry metrics.Registry, serviceName string) alice.Constructor {
 	return func(next http.Handler) (http.Handler, error) {
-		return NewServiceMiddleware(ctx, next, registry, serviceName), nil
+		return NewBackendsMiddleware(ctx, next, registry, serviceName), nil
 	}
 }
 
@@ -119,6 +125,8 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		m.reqsTLSCounter.With(tlsLabels...).Add(1)
 	}
 
+	m.upstreamBytesHistogram.With(labels...).Observe()
+
 	recorder := newResponseRecorder(rw)
 	start := time.Now()
 
@@ -134,10 +142,8 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 
 	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
-	if m.reqDurationByServerHistogram != nil {
-		serverLabels := append(labels, "url", req.URL.Host)
-		serverHistograms := m.reqDurationByServerHistogram.With(serverLabels...)
-		serverHistograms.ObserveFromStart(start)
+	if m.backendsCollect {
+		labels = append(labels, "host", req.URL.Host)
 	}
 
 	histograms := m.reqDurationHistogram.With(labels...)

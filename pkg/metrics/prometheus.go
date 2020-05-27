@@ -131,6 +131,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 	reg := &standardRegistry{
 		epEnabled:                    config.AddEntryPointsLabels,
 		svcEnabled:                   config.AddServicesLabels,
+		srv
 		configReloadsCounter:         configReloads,
 		configReloadsFailureCounter:  configReloadsFailures,
 		lastConfigReloadSuccessGauge: lastConfigReloadSuccess,
@@ -197,7 +198,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			Name:    serverReqDurationName,
 			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "url"})
+		}, []string{"code", "method", "protocol", "service", "host"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			serviceReqs.cv.Describe,
@@ -215,7 +216,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.serviceOpenConnsGauge = serviceOpenConns
 		reg.serviceRetriesCounter = serviceRetries
 		reg.serviceServerUpGauge = serviceServerUp
-		reg.serverReqDurationHistogram, _ = NewHistogramWithScale(serversReqDurations, time.Second)
+		reg.backendsReqDurationHistogram, _ = NewHistogramWithScale(serversReqDurations, time.Second)
 	}
 
 	return reg
