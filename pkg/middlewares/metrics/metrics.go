@@ -37,7 +37,7 @@ type metricsMiddleware struct {
 	downstreamBytesHistogram metrics.ScalableHistogram
 	openConnsGauge           gokitmetrics.Gauge
 	baseLabels               []string
-	backendsCollect          bool
+	backends                 bool
 }
 
 // NewEntryPointMiddleware creates a new metrics middleware for an Entrypoint.
@@ -81,7 +81,7 @@ func NewBackendsMiddleware(ctx context.Context, next http.Handler, registry metr
 		reqsCounter:              registry.BackendsReqsCounter(),
 		reqsTLSCounter:           registry.BackendsReqsTLSCounter(),
 		reqDurationHistogram:     registry.BackendsReqDurationHistogram(),
-		upstreamBytesHistogram:   registry.BackendsUpstreamBytesByServerHistogram(),
+		upstreamBytesHistogram:   registry.BackendsUpstreamBytesHistogram(),
 		downstreamBytesHistogram: registry.BackendsDownstreamBytesHistogram(),
 		baseLabels:               []string{"service", serviceName},
 	}
@@ -116,22 +116,26 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	m.openConnsGauge.With(labels...).Add(1)
 	defer m.openConnsGauge.With(labels...).Add(-1)
 
-	// TLS metrics
-	if req.TLS != nil {
-		var tlsLabels []string
-		tlsLabels = append(tlsLabels, m.baseLabels...)
-		tlsLabels = append(tlsLabels, "tls_version", getRequestTLSVersion(req), "tls_cipher", getRequestTLSCipher(req))
-
-		m.reqsTLSCounter.With(tlsLabels...).Add(1)
-	}
-
-	m.upstreamBytesHistogram.With(labels...).Observe()
-
 	recorder := newResponseRecorder(rw)
 	start := time.Now()
 
 	m.next.ServeHTTP(recorder, req)
 
+	if m.backends {
+		labels = append(labels, "host", req.URL.Host)
+	}
+
+	if req.ContentLength >= 0 {
+		m.upstreamBytesHistogram.With(labels...).Observe(float64(req.ContentLength))
+	}
+
+	contentLength := rw.Header().Get("Content-Length")
+	if contentLength != "" {
+		cl, err := strconv.Atoi(contentLength)
+		if err == nil {
+			m.downstreamBytesHistogram.With(labels...).Observe(float64(cl))
+		}
+	}
 	// TODO test it
 	//Hi @0xVox,
 	//
@@ -142,12 +146,17 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 
 	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
-	if m.backendsCollect {
-		labels = append(labels, "host", req.URL.Host)
-	}
-
 	histograms := m.reqDurationHistogram.With(labels...)
 	histograms.ObserveFromStart(start)
+
+	// TLS metrics
+	if req.TLS != nil {
+		var tlsLabels []string
+		tlsLabels = append(tlsLabels, m.baseLabels...)
+		tlsLabels = append(tlsLabels, "tls_version", getRequestTLSVersion(req), "tls_cipher", getRequestTLSCipher(req))
+
+		m.reqsTLSCounter.With(tlsLabels...).Add(1)
+	}
 
 	m.reqsCounter.With(labels...).Add(1)
 }

@@ -17,6 +17,7 @@ type Prometheus struct {
 	Buckets              []float64 `description:"Buckets for latency metrics." json:"buckets,omitempty" toml:"buckets,omitempty" yaml:"buckets,omitempty" export:"true"`
 	AddEntryPointsLabels bool      `description:"Enable metrics on entry points." json:"addEntryPointsLabels,omitempty" toml:"addEntryPointsLabels,omitempty" yaml:"addEntryPointsLabels,omitempty" export:"true"`
 	AddServicesLabels    bool      `description:"Enable metrics on services." json:"addServicesLabels,omitempty" toml:"addServicesLabels,omitempty" yaml:"addServicesLabels,omitempty" export:"true"`
+	AddBackendsLabels    bool      `description:"Enable metrics on servers behind services." json:"addBackendsLabels,omitempty" toml:"addBackendsLabels,omitempty" yaml:"addBackendsLabels,omitempty" export:"true"`
 	EntryPoint           string    `description:"EntryPoint" export:"true" json:"entryPoint,omitempty" toml:"entryPoint,omitempty" yaml:"entryPoint,omitempty"`
 	ManualRouting        bool      `description:"Manual routing" json:"manualRouting,omitempty" toml:"manualRouting,omitempty" yaml:"manualRouting,omitempty"`
 }

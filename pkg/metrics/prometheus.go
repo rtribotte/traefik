@@ -29,25 +29,36 @@ const (
 	configLastReloadFailureName    = metricConfigPrefix + "last_reload_failure"
 
 	// entry point
-	metricEntryPointPrefix     = MetricNamePrefix + "entrypoint_"
-	entryPointReqsTotalName    = metricEntryPointPrefix + "requests_total"
-	entryPointReqsTLSTotalName = metricEntryPointPrefix + "requests_tls_total"
-	entryPointReqDurationName  = metricEntryPointPrefix + "request_duration_seconds"
-	entryPointOpenConnsName    = metricEntryPointPrefix + "open_connections"
+	metricEntryPointPrefix        = MetricNamePrefix + "entrypoint_"
+	entryPointReqsTotalName       = metricEntryPointPrefix + "requests_total"
+	entryPointReqsTLSTotalName    = metricEntryPointPrefix + "requests_tls_total"
+	entryPointReqDurationName     = metricEntryPointPrefix + "request_duration_seconds"
+	entryPointOpenConnsName       = metricEntryPointPrefix + "open_connections"
+	entryPointUpstreamBytesName   = metricEntryPointPrefix + "request_bytes"
+	entryPointDownstreamBytesName = metricEntryPointPrefix + "response_bytes"
 
 	// service level.
 
 	// MetricServicePrefix prefix of all service metric names
-	MetricServicePrefix     = MetricNamePrefix + "service_"
-	serviceReqsTotalName    = MetricServicePrefix + "requests_total"
-	serviceReqsTLSTotalName = MetricServicePrefix + "requests_tls_total"
-	serviceReqDurationName  = MetricServicePrefix + "request_duration_seconds"
-	serviceOpenConnsName    = MetricServicePrefix + "open_connections"
-	serviceRetriesTotalName = MetricServicePrefix + "retries_total"
-	serviceServerUpName     = MetricServicePrefix + "server_up"
+	MetricServicePrefix        = MetricNamePrefix + "service_"
+	serviceReqsTotalName       = MetricServicePrefix + "requests_total"
+	serviceReqsTLSTotalName    = MetricServicePrefix + "requests_tls_total"
+	serviceReqDurationName     = MetricServicePrefix + "request_duration_seconds"
+	serviceOpenConnsName       = MetricServicePrefix + "open_connections"
+	serviceRetriesTotalName    = MetricServicePrefix + "retries_total"
+	serviceServerUpName        = MetricServicePrefix + "server_up"
+	serviceUpstreamBytesName   = MetricServicePrefix + "request_bytes"
+	serviceDownstreamBytesName = MetricServicePrefix + "response_bytes"
 
-	//server
-	serverReqDurationName = MetricServicePrefix + "server_request_duration_seconds"
+	//backends level
+
+	// MetricBackendsPrefix prefix of all backends metric names
+	MetricBackendsPrefix        = MetricNamePrefix + "backends_"
+	backendsReqsTotalName       = MetricBackendsPrefix + "requests_total"
+	backendsReqsTLSTotalName    = MetricBackendsPrefix + "requests_tls_total"
+	backendsReqDurationName     = MetricBackendsPrefix + "request_duration_seconds"
+	backendsUpstreamBytesName   = MetricBackendsPrefix + "request_bytes"
+	backendsDownstreamBytesName = MetricBackendsPrefix + "response_bytes"
 )
 
 // promState holds all metric state internally and acts as the only Collector we register for Prometheus.
@@ -131,7 +142,7 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 	reg := &standardRegistry{
 		epEnabled:                    config.AddEntryPointsLabels,
 		svcEnabled:                   config.AddServicesLabels,
-		srv
+		bckEnabled:                   config.AddBackendsLabels,
 		configReloadsCounter:         configReloads,
 		configReloadsFailureCounter:  configReloadsFailures,
 		lastConfigReloadSuccessGauge: lastConfigReloadSuccess,
@@ -156,18 +167,33 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			Name: entryPointOpenConnsName,
 			Help: "How many open connections exist on an entrypoint, partitioned by method and protocol.",
 		}, []string{"method", "protocol", "entrypoint"})
+		entryPointUpstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    entryPointUpstreamBytesName,
+			Help:    "The length of the request on an entrypoint, partitioned by status code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "entrypoint"})
+		entryPointDownstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    entryPointDownstreamBytesName,
+			Help:    "The length of the response on an entrypoint, partitioned by status code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "entrypoint"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			entryPointReqs.cv.Describe,
 			entryPointReqsTLS.cv.Describe,
 			entryPointReqDurations.hv.Describe,
 			entryPointOpenConns.gv.Describe,
+			entryPointUpstreamBytes.hv.Describe,
+			entryPointDownstreamBytes.hv.Describe,
 		}...)
 		reg.entryPointReqsCounter = entryPointReqs
 		reg.entryPointReqsTLSCounter = entryPointReqsTLS
 		reg.entryPointReqDurationHistogram, _ = NewHistogramWithScale(entryPointReqDurations, time.Second)
 		reg.entryPointOpenConnsGauge = entryPointOpenConns
+		reg.entryPointUpstreamBytesHistogram = NewHistogram(entryPointUpstreamBytes)
+		reg.entryPointDownstreamBytesHistogram = NewHistogram(entryPointDownstreamBytes)
 	}
+
 	if config.AddServicesLabels {
 		serviceReqs := newCounterFrom(promState.collectors, stdprometheus.CounterOpts{
 			Name: serviceReqsTotalName,
@@ -194,11 +220,16 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			Name: serviceServerUpName,
 			Help: "service server is up, described by gauge value of 0 or 1.",
 		}, []string{"service", "url"})
-		serversReqDurations := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
-			Name:    serverReqDurationName,
-			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
+		serviceUpstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    serviceUpstreamBytesName,
+			Help:    "The length of the request on a service, partitioned by status code, protocol, and method.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service"})
+		serviceDownstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    serviceDownstreamBytesName,
+			Help:    "The length of the response on a service, partitioned by status code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "service"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			serviceReqs.cv.Describe,
@@ -207,7 +238,8 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 			serviceOpenConns.gv.Describe,
 			serviceRetries.cv.Describe,
 			serviceServerUp.gv.Describe,
-			serversReqDurations.hv.Describe,
+			serviceUpstreamBytes.hv.Describe,
+			serviceDownstreamBytes.hv.Describe,
 		}...)
 
 		reg.serviceReqsCounter = serviceReqs
@@ -216,7 +248,48 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		reg.serviceOpenConnsGauge = serviceOpenConns
 		reg.serviceRetriesCounter = serviceRetries
 		reg.serviceServerUpGauge = serviceServerUp
-		reg.backendsReqDurationHistogram, _ = NewHistogramWithScale(serversReqDurations, time.Second)
+		reg.serviceUpstreamBytesHistogram = NewHistogram(serviceUpstreamBytes)
+		reg.serviceDownstreamBytesHistogram = NewHistogram(serviceDownstreamBytes)
+	}
+
+	if config.AddBackendsLabels {
+		backendsReqs := newCounterFrom(promState.collectors, stdprometheus.CounterOpts{
+			Name: backendsReqsTotalName,
+			Help: "How many HTTP requests processed on a service, partitioned by status code, protocol, and method.",
+		}, []string{"code", "method", "protocol", "service", "host"})
+		backendsReqsTLS := newCounterFrom(promState.collectors, stdprometheus.CounterOpts{
+			Name: backendsReqsTLSTotalName,
+			Help: "How many HTTP requests with TLS processed on a service, partitioned by TLS version and TLS cipher.",
+		}, []string{"code", "method", "protocol", "service", "host"})
+		backendsReqDurations := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    backendsReqDurationName,
+			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "service", "host"})
+		backendsUpstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    backendsUpstreamBytesName,
+			Help:    "The length of the request on an entrypoint, partitioned by status code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "service", "host"})
+		backendsDownstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
+			Name:    backendsDownstreamBytesName,
+			Help:    "The length of the response on an entrypoint, partitioned by status code, protocol, and method.",
+			Buckets: buckets,
+		}, []string{"code", "method", "protocol", "service", "host"})
+
+		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
+			backendsReqs.cv.Describe,
+			backendsReqsTLS.cv.Describe,
+			backendsReqDurations.hv.Describe,
+			backendsUpstreamBytes.hv.Describe,
+			backendsDownstreamBytes.hv.Describe,
+		}...)
+
+		reg.backendsReqsCounter = backendsReqs
+		reg.backendsReqsTLSCounter = backendsReqsTLS
+		reg.backendsReqDurationHistogram, _ = NewHistogramWithScale(backendsReqDurations, time.Second)
+		reg.backendsUpstreamBytesHistogram = NewHistogram(backendsUpstreamBytes)
+		reg.backendsDownstreamBytesHistogram = NewHistogram(backendsDownstreamBytes)
 	}
 
 	return reg

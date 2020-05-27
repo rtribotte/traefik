@@ -45,7 +45,7 @@ type Registry interface {
 	BackendsReqsCounter() metrics.Counter
 	BackendsReqsTLSCounter() metrics.Counter
 	BackendsReqDurationHistogram() ScalableHistogram
-	BackendsUpstreamBytesByServerHistogram() ScalableHistogram
+	BackendsUpstreamBytesHistogram() ScalableHistogram
 	BackendsDownstreamBytesHistogram() ScalableHistogram
 }
 
@@ -147,8 +147,8 @@ func NewMultiRegistry(registries []Registry) Registry {
 		if r.BackendsReqDurationHistogram() != nil {
 			backendsReqDurationHistogram = append(backendsReqDurationHistogram, r.BackendsReqDurationHistogram())
 		}
-		if r.BackendsUpstreamBytesByServerHistogram() != nil {
-			backendsUpstreamBytesHistogram = append(backendsUpstreamBytesHistogram, r.BackendsUpstreamBytesByServerHistogram())
+		if r.BackendsUpstreamBytesHistogram() != nil {
+			backendsUpstreamBytesHistogram = append(backendsUpstreamBytesHistogram, r.BackendsUpstreamBytesHistogram())
 		}
 		if r.BackendsDownstreamBytesHistogram() != nil {
 			backendsDownstreamBytesHistogram = append(backendsDownstreamBytesHistogram, r.BackendsDownstreamBytesHistogram())
@@ -216,10 +216,6 @@ type standardRegistry struct {
 
 func (r *standardRegistry) IsSrvEnabled() bool {
 	return r.bckEnabled
-}
-
-func (r *standardRegistry) BackendsUpstreamBytesByServerHistogram() ScalableHistogram {
-	panic("implement me")
 }
 
 func (r *standardRegistry) IsEpEnabled() bool {
@@ -369,6 +365,13 @@ func NewHistogramWithScale(histogram metrics.Histogram, unit time.Duration) (Sca
 		histogram: histogram,
 		unit:      unit,
 	}, nil
+}
+
+// NewHistogram returns a ScalableHistogram. It returns an error if the given unit is <= 0.
+func NewHistogram(histogram metrics.Histogram) ScalableHistogram {
+	return &HistogramWithScale{
+		histogram: histogram,
+	}
 }
 
 // MultiHistogram collects multiple individual histograms and treats them as a unit.
