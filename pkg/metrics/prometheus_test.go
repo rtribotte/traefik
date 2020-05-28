@@ -104,10 +104,10 @@ func TestPrometheus(t *testing.T) {
 	// Reset state of global promState.
 	defer promState.reset()
 
-	prometheusRegistry := RegisterPrometheus(context.Background(), &types.Prometheus{AddEntryPointsLabels: true, AddServicesLabels: true})
+	prometheusRegistry := RegisterPrometheus(context.Background(), &types.Prometheus{AddEntryPointsLabels: true, AddServicesLabels: true, AddBackendsLabels: true})
 	defer promRegistry.Unregister(promState)
 
-	if !prometheusRegistry.IsEpEnabled() || !prometheusRegistry.IsSvcEnabled() {
+	if !prometheusRegistry.IsEpEnabled() || !prometheusRegistry.IsSvcEnabled() || !prometheusRegistry.IsBckEnabled() {
 		t.Errorf("PrometheusRegistry should return true for IsEnabled()")
 	}
 
@@ -128,6 +128,14 @@ func TestPrometheus(t *testing.T) {
 		EntryPointOpenConnsGauge().
 		With("method", http.MethodGet, "protocol", "http", "entrypoint", "http").
 		Set(1)
+	prometheusRegistry.
+		EntryPointUpstreamBytesHistogram().
+		With("code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "entrypoint", "http").
+		Observe(1)
+	prometheusRegistry.
+		EntryPointDownstreamBytesHistogram().
+		With("code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "entrypoint", "http").
+		Observe(1)
 
 	prometheusRegistry.
 		ServiceReqsCounter().
@@ -149,7 +157,35 @@ func TestPrometheus(t *testing.T) {
 		ServiceServerUpGauge().
 		With("service", "service1", "url", "http://127.0.0.10:80").
 		Set(1)
+	prometheusRegistry.
+		ServiceUpstreamBytesHistogram().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "url", "http://127.0.0.10:80").
+		Observe(10000)
+	prometheusRegistry.
+		ServiceDownstreamBytesHistogram().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "url", "http://127.0.0.10:80").
+		Observe(10000)
 
+	prometheusRegistry.
+		BackendsReqsCounter().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "url", "http://127.0.0.10:80").
+		Add(1)
+	prometheusRegistry.
+		BackendsReqDurationHistogram().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http", "url", "http://127.0.0.10:80").
+		Observe(10000)
+	prometheusRegistry.
+		BackendsOpenConnsGauge().
+		With("service", "service1", "method", http.MethodGet, "protocol", "http").
+		Set(1)
+	prometheusRegistry.
+		BackendsUpstreamBytesHistogram().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http").
+		Observe(10000)
+	prometheusRegistry.
+		BackendsDownstreamBytesHistogram().
+		With("service", "service1", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http").
+		Observe(10000)
 	delayForTrackingCompletion()
 
 	metricsFamilies := mustScrape()
@@ -205,6 +241,26 @@ func TestPrometheus(t *testing.T) {
 			assert: buildGaugeAssert(t, entryPointOpenConnsName, 1),
 		},
 		{
+			name: entryPointUpstreamBytesName,
+			labels: map[string]string{
+				"code":       "200",
+				"method":     http.MethodGet,
+				"protocol":   "http",
+				"entrypoint": "http",
+			},
+			assert: buildHistogramAssert(t, entryPointUpstreamBytesName, 1),
+		},
+		{
+			name: entryPointDownstreamBytesName,
+			labels: map[string]string{
+				"code":       "200",
+				"method":     http.MethodGet,
+				"protocol":   "http",
+				"entrypoint": "http",
+			},
+			assert: buildHistogramAssert(t, entryPointDownstreamBytesName, 1),
+		},
+		{
 			name: serviceReqsTotalName,
 			labels: map[string]string{
 				"code":     "200",
@@ -247,6 +303,26 @@ func TestPrometheus(t *testing.T) {
 				"url":     "http://127.0.0.10:80",
 			},
 			assert: buildGaugeAssert(t, serviceServerUpName, 1),
+		},
+		{
+			name: serviceUpstreamBytesName,
+			labels: map[string]string{
+				"code":     "200",
+				"method":   http.MethodGet,
+				"protocol": "http",
+				"service":  "service1",
+			},
+			assert: buildHistogramAssert(t, serviceUpstreamBytesName, 1),
+		},
+		{
+			name: serviceDownstreamBytesName,
+			labels: map[string]string{
+				"code":     "200",
+				"method":   http.MethodGet,
+				"protocol": "http",
+				"service":  "service1",
+			},
+			assert: buildHistogramAssert(t, serviceDownstreamBytesName, 1),
 		},
 	}
 

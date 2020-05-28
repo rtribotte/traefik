@@ -83,7 +83,9 @@ func NewBackendsMiddleware(ctx context.Context, next http.Handler, registry metr
 		reqDurationHistogram:     registry.BackendsReqDurationHistogram(),
 		upstreamBytesHistogram:   registry.BackendsUpstreamBytesHistogram(),
 		downstreamBytesHistogram: registry.BackendsDownstreamBytesHistogram(),
+		openConnsGauge:           registry.BackendsOpenConnsGauge(),
 		baseLabels:               []string{"service", serviceName},
+		backends:                 true,
 	}
 }
 
@@ -113,19 +115,19 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	labels = append(labels, m.baseLabels...)
 	labels = append(labels, "method", getMethod(req), "protocol", getRequestProtocol(req))
 
-	m.openConnsGauge.With(labels...).Add(1)
-	defer m.openConnsGauge.With(labels...).Add(-1)
-
 	recorder := newResponseRecorder(rw)
 	start := time.Now()
-
-	m.next.ServeHTTP(recorder, req)
-
-	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
 	if m.backends {
 		labels = append(labels, "host", req.URL.Host)
 	}
+
+	m.openConnsGauge.With(labels...).Add(1)
+	defer m.openConnsGauge.With(labels...).Add(-1)
+
+	m.next.ServeHTTP(recorder, req)
+
+	labels = append(labels, "code", strconv.Itoa(recorder.getCode()))
 
 	if req.ContentLength >= 0 {
 		m.upstreamBytesHistogram.With(labels...).Observe(float64(req.ContentLength))

@@ -45,6 +45,7 @@ type Registry interface {
 	BackendsReqsCounter() metrics.Counter
 	BackendsReqsTLSCounter() metrics.Counter
 	BackendsReqDurationHistogram() ScalableHistogram
+	BackendsOpenConnsGauge() metrics.Gauge
 	BackendsUpstreamBytesHistogram() metrics.Histogram
 	BackendsDownstreamBytesHistogram() metrics.Histogram
 }
@@ -80,6 +81,7 @@ func NewMultiRegistry(registries []Registry) Registry {
 	var backendsReqsCounter []metrics.Counter
 	var backendsReqsTLSCounter []metrics.Counter
 	var backendsReqDurationHistogram []ScalableHistogram
+	var backendsOpenConnsGauge []metrics.Gauge
 	var backendsUpstreamBytesHistogram []metrics.Histogram
 	var backendsDownstreamBytesHistogram []metrics.Histogram
 
@@ -147,6 +149,9 @@ func NewMultiRegistry(registries []Registry) Registry {
 		if r.BackendsReqDurationHistogram() != nil {
 			backendsReqDurationHistogram = append(backendsReqDurationHistogram, r.BackendsReqDurationHistogram())
 		}
+		if r.BackendsOpenConnsGauge() != nil {
+			backendsOpenConnsGauge = append(backendsOpenConnsGauge, r.BackendsOpenConnsGauge())
+		}
 		if r.BackendsUpstreamBytesHistogram() != nil {
 			backendsUpstreamBytesHistogram = append(backendsUpstreamBytesHistogram, r.BackendsUpstreamBytesHistogram())
 		}
@@ -158,7 +163,7 @@ func NewMultiRegistry(registries []Registry) Registry {
 	return &standardRegistry{
 		epEnabled:                          len(entryPointReqsCounter) > 0 || len(entryPointReqDurationHistogram) > 0 || len(entryPointOpenConnsGauge) > 0,
 		svcEnabled:                         len(serviceReqsCounter) > 0 || len(serviceReqDurationHistogram) > 0 || len(serviceOpenConnsGauge) > 0 || len(serviceRetriesCounter) > 0 || len(serviceServerUpGauge) > 0,
-		bckEnabled:                         len(backendsReqsCounter) > 0 || len(backendsReqDurationHistogram) > 0,
+		bckEnabled:                         len(backendsReqsCounter) > 0 || len(backendsReqDurationHistogram) > 0 || len(backendsOpenConnsGauge) > 0,
 		configReloadsCounter:               multi.NewCounter(configReloadsCounter...),
 		configReloadsFailureCounter:        multi.NewCounter(configReloadsFailureCounter...),
 		lastConfigReloadSuccessGauge:       multi.NewGauge(lastConfigReloadSuccessGauge...),
@@ -180,6 +185,7 @@ func NewMultiRegistry(registries []Registry) Registry {
 		backendsReqsCounter:                multi.NewCounter(backendsReqsCounter...),
 		backendsReqsTLSCounter:             multi.NewCounter(backendsReqsTLSCounter...),
 		backendsReqDurationHistogram:       NewMultiHistogram(backendsReqDurationHistogram...),
+		backendsOpenConnsGauge:             multi.NewGauge(backendsOpenConnsGauge...),
 		backendsUpstreamBytesHistogram:     multi.NewHistogram(backendsUpstreamBytesHistogram...),
 		backendsDownstreamBytesHistogram:   multi.NewHistogram(backendsDownstreamBytesHistogram...),
 	}
@@ -210,6 +216,7 @@ type standardRegistry struct {
 	backendsReqsCounter                metrics.Counter
 	backendsReqsTLSCounter             metrics.Counter
 	backendsReqDurationHistogram       ScalableHistogram
+	backendsOpenConnsGauge             metrics.Gauge
 	backendsUpstreamBytesHistogram     metrics.Histogram
 	backendsDownstreamBytesHistogram   metrics.Histogram
 }
@@ -308,6 +315,10 @@ func (r *standardRegistry) BackendsReqsTLSCounter() metrics.Counter {
 
 func (r *standardRegistry) BackendsReqDurationHistogram() ScalableHistogram {
 	return r.backendsReqDurationHistogram
+}
+
+func (r *standardRegistry) BackendsOpenConnsGauge() metrics.Gauge {
+	return r.backendsOpenConnsGauge
 }
 
 func (r *standardRegistry) BackendsUpstreamBytesHistogram() metrics.Histogram {

@@ -256,26 +256,26 @@ func initStandardRegistry(config *types.Prometheus) Registry {
 		backendsReqs := newCounterFrom(promState.collectors, stdprometheus.CounterOpts{
 			Name: backendsReqsTotalName,
 			Help: "How many HTTP requests processed on a service, partitioned by status code, protocol, and method.",
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 		backendsReqsTLS := newCounterFrom(promState.collectors, stdprometheus.CounterOpts{
 			Name: backendsReqsTLSTotalName,
 			Help: "How many HTTP requests with TLS processed on a service, partitioned by TLS version and TLS cipher.",
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 		backendsReqDurations := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
 			Name:    backendsReqDurationName,
 			Help:    "How long it took to process the request on server, partitioned by status service/server, code, protocol, and method.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 		backendsUpstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
 			Name:    backendsUpstreamBytesName,
-			Help:    "The length of the request on an entrypoint, partitioned by status code, protocol, and method.",
+			Help:    "The length of the request on an entrypoint, partitioned by status code, protocol, method, and url.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 		backendsDownstreamBytes := newHistogramFrom(promState.collectors, stdprometheus.HistogramOpts{
 			Name:    backendsDownstreamBytesName,
-			Help:    "The length of the response on an entrypoint, partitioned by status code, protocol, and method.",
+			Help:    "The length of the response on an entrypoint, partitioned by status code, protocol, method, and url.",
 			Buckets: buckets,
-		}, []string{"code", "method", "protocol", "service", "host"})
+		}, []string{"code", "method", "protocol", "service", "url"})
 
 		promState.describers = append(promState.describers, []func(chan<- *stdprometheus.Desc){
 			backendsReqs.cv.Describe,
