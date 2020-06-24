@@ -1,9 +1,12 @@
 package compress
 
 import (
+	"bufio"
 	"compress/gzip"
 	"context"
+	"fmt"
 	"mime"
+	"net"
 	"net/http"
 	"strings"
 
@@ -48,6 +51,72 @@ type compressResponseWriter struct {
 	exclusionComputed bool
 	compressWriter    http.ResponseWriter
 	originalWriter    http.ResponseWriter
+}
+
+type compressResponseWriterWithCloseNotify struct {
+	compressResponseWriter
+	closeChan chan bool
+}
+
+// CloseNotify returns a channel that receives at most a
+// single value (true) when the client connection has gone away.
+func (w compressResponseWriterWithCloseNotify) CloseNotify() <-chan bool {
+	return w.closeChan
+}
+
+func (w compressResponseWriter) wrapWithCloseNotify() *compressResponseWriterWithCloseNotify {
+	compressWriterCloseNotifier, compressCloseNotifierOk := w.compressWriter.(http.CloseNotifier)
+	originalWriterCloseNotifier, originalCloseNotifierOk := w.originalWriter.(http.CloseNotifier)
+
+	if compressCloseNotifierOk || originalCloseNotifierOk {
+		closeChan := make(chan bool)
+
+		cwCloseNotifier := &compressResponseWriterWithCloseNotify{
+			compressResponseWriter: w,
+			closeChan:              closeChan,
+		}
+
+		go func() {
+			if compressCloseNotifierOk && originalCloseNotifierOk {
+				select {
+				case <-compressWriterCloseNotifier.CloseNotify():
+					closeChan <- true
+				case <-originalWriterCloseNotifier.CloseNotify():
+					closeChan <- true
+				}
+			} else if compressCloseNotifierOk {
+				select {
+				case <-compressWriterCloseNotifier.CloseNotify():
+					closeChan <- true
+				}
+			} else {
+				select {
+				case <-originalWriterCloseNotifier.CloseNotify():
+					closeChan <- true
+				}
+			}
+		}()
+
+		return cwCloseNotifier
+	}
+
+	return nil
+}
+
+func (w *compressResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if w.exclusionComputed && w.originalWriter != nil {
+		if hj, ok := w.originalWriter.(http.Hijacker); ok {
+			return hj.Hijack()
+		}
+
+		return nil, nil, fmt.Errorf("http.Hijacker interface is not supported")
+	}
+
+	if hj, ok := w.compressWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+
+	return nil, nil, fmt.Errorf("http.Hijacker interface is not supported")
 }
 
 func (w *compressResponseWriter) Flush() {
@@ -121,6 +190,13 @@ func (c *compress) handleExclusions(h http.Handler, ow http.ResponseWriter) http
 			originalWriter: ow,
 			compressWriter: w,
 		}
+
+		// wrap if http.CloseNotifier supported by at least one ResponseWriter
+		if cwCloseNotifier := cw.wrapWithCloseNotify(); cwCloseNotifier != nil {
+			h.ServeHTTP(cwCloseNotifier, r)
+			return
+		}
+
 		h.ServeHTTP(cw, r)
 	})
 }
