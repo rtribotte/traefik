@@ -53,14 +53,6 @@ const (
 	deflateEncoding = "deflate"
 )
 
-//
-//func (w *compressResponseWriter) WriteHeader(c int) {
-//	w.ResponseWriter.Header().Del("Content-Length")
-//	if w.code == 0 {
-//		w.code = c
-//	}
-//}
-
 func (w *compressResponseWriter) Header() http.Header {
 	return w.ResponseWriter.Header()
 }
@@ -72,6 +64,13 @@ func (w *compressResponseWriter) writeHeader() {
 	}
 }
 
+func (w *compressResponseWriter) WriteHeader(c int) {
+	//w.ResponseWriter.Header().Del("Content-Length")
+	if w.code == 0 {
+		w.code = c
+	}
+}
+
 func (w *compressResponseWriter) Write(b []byte) (int, error) {
 	h := w.ResponseWriter.Header()
 	if h.Get("Content-Type") == "" {
@@ -80,19 +79,19 @@ func (w *compressResponseWriter) Write(b []byte) (int, error) {
 	h.Del("Content-Length")
 
 	if contains(w.exlusions, h.Get("Content-Type")) {
-		w.writeHeader()
+		w.WriteHeader(http.StatusOK)
 		return w.ResponseWriter.Write(b)
 	}
 
 	e := h.Get("Content-Encoding")
 	// Don't compress short pieces of data since it won't improve performance. Ignore compressed data too
 	if len(b) < 1400 || e == brEncoding || e == gzipEncoding || e == deflateEncoding {
-		w.writeHeader()
+		w.WriteHeader(http.StatusOK)
 		return w.ResponseWriter.Write(b)
 	}
 
 	h.Set("Content-Encoding", w.encoding)
-	w.writeHeader()
+	w.WriteHeader(http.StatusOK)
 
 	if w.encoding == brEncoding {
 		if w.level < brotli.BestSpeed || w.level > brotli.BestCompression {
@@ -133,9 +132,9 @@ func compressHandlerLevel(h http.Handler, level int, exclusions []string) http.H
 			curEnc = strings.TrimSpace(curEnc)
 			if curEnc == brEncoding || curEnc == gzipEncoding {
 				encoding = curEnc
-				if curEnc == brEncoding {
-					break
-				}
+				//if curEnc == brEncoding {
+				break
+				//}
 			}
 		}
 
@@ -181,7 +180,6 @@ func (w *compressResponseWriter) Flush() {
 	if fw, ok := w.ResponseWriter.(http.Flusher); ok {
 		fw.Flush()
 	}
-	return
 }
 
 //func (w *compressResponseWriter) WriteHeader(code int) {
