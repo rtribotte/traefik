@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/andybalholm/brotli"
 	"github.com/containous/traefik/v2/pkg/config/dynamic"
 	"github.com/containous/traefik/v2/pkg/log"
@@ -54,12 +53,13 @@ const (
 	deflateEncoding = "deflate"
 )
 
-func (w *compressResponseWriter) WriteHeader(c int) {
-	w.ResponseWriter.Header().Del("Content-Length")
-	if w.code == 0 {
-		w.code = c
-	}
-}
+//
+//func (w *compressResponseWriter) WriteHeader(c int) {
+//	w.ResponseWriter.Header().Del("Content-Length")
+//	if w.code == 0 {
+//		w.code = c
+//	}
+//}
 
 func (w *compressResponseWriter) Header() http.Header {
 	return w.ResponseWriter.Header()
@@ -79,9 +79,7 @@ func (w *compressResponseWriter) Write(b []byte) (int, error) {
 	}
 	h.Del("Content-Length")
 
-	contentType := w.Header().Get("Content-Type")
-
-	if contains(w.excluded(), contentType) {
+	if contains(w.exlusions, h.Get("Content-Type")) {
 		w.writeHeader()
 		return w.ResponseWriter.Write(b)
 	}
@@ -114,24 +112,20 @@ func (w *compressResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
-type flusher interface {
-	Flush() error
-}
-
 // CompressHandler gzip/brotli compresses HTTP responses for clients that support it
 // via the 'Accept-Encoding' header.
 //
 // Compressing TLS traffic may leak the page contents to an attacker if the
 // page contains user input: http://security.stackexchange.com/a/102015/12208
-func CompressHandler(h http.Handler) http.Handler {
-	return CompressHandlerLevel(h, 6)
+func compressHandler(h http.Handler) http.Handler {
+	return compressHandlerLevel(h, 6, []string{})
 }
 
 // CompressHandlerLevel gzip/brotli compresses HTTP responses with specified compression level
 // for clients that support it via the 'Accept-Encoding' header.
 //
 // The compression level should be valid for encodings you use
-func CompressHandlerLevel(h http.Handler, level int) http.Handler {
+func compressHandlerLevel(h http.Handler, level int, exclusions []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// detect what encoding to use
 		var encoding string
@@ -159,6 +153,7 @@ func CompressHandlerLevel(h http.Handler, level int) http.Handler {
 			ResponseWriter: w,
 			encoding:       encoding,
 			level:          level,
+			exlusions:      exclusions,
 		}
 
 		h.ServeHTTP(w, r)
@@ -166,24 +161,12 @@ func CompressHandlerLevel(h http.Handler, level int) http.Handler {
 }
 
 type compressResponseWriter struct {
-	excluded          func() []string
-	exclusionComputed bool
-	Writer            io.WriteCloser
+	exlusions []string
+	Writer    io.WriteCloser
 	http.ResponseWriter
 	encoding string
 	level    int
 	code     int
-}
-
-type compressResponseWriterWithCloseNotify struct {
-	compressResponseWriter
-	closeChan chan bool
-}
-
-// CloseNotify returns a channel that receives at most a
-// single value (true) when the client connection has gone away.
-func (w compressResponseWriterWithCloseNotify) CloseNotify() <-chan bool {
-	return w.closeChan
 }
 
 func (w *compressResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
@@ -201,30 +184,30 @@ func (w *compressResponseWriter) Flush() {
 	return
 }
 
-func (w *compressResponseWriter) WriteHeader(code int) {
-	if !w.exclusionComputed {
-		w.exclusionComputed = true
-		contentType := w.Header().Get("Content-Type")
-
-		if !contains(w.excluded(), contentType) {
-			w.originalWriter = nil
-		} else {
-			// Copy headers to original response writer fallback
-			for key, values := range w.compressWriter.Header() {
-				for _, value := range values {
-					w.originalWriter.Header().Add(key, value)
-				}
-			}
-		}
-	}
-
-	if w.originalWriter != nil {
-		w.originalWriter.WriteHeader(code)
-		return
-	}
-
-	w.compressWriter.WriteHeader(code)
-}
+//func (w *compressResponseWriter) WriteHeader(code int) {
+//	if !w.exclusionComputed {
+//		w.exclusionComputed = true
+//		contentType := w.Header().Get("Content-Type")
+//
+//		if !contains(w.exlusions(), contentType) {
+//			w.originalWriter = nil
+//		} else {
+//			// Copy headers to original response writer fallback
+//			for key, values := range w.compressWriter.Header() {
+//				for _, value := range values {
+//					w.originalWriter.Header().Add(key, value)
+//				}
+//			}
+//		}
+//	}
+//
+//	if w.originalWriter != nil {
+//		w.originalWriter.WriteHeader(code)
+//		return
+//	}
+//
+//	w.compressWriter.WriteHeader(code)
+//}
 
 func (c *compress) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	mediaType, _, err := mime.ParseMediaType(req.Header.Get("Content-Type"))
@@ -235,8 +218,8 @@ func (c *compress) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if contains(c.excludes, mediaType) {
 		c.next.ServeHTTP(rw, req)
 	} else {
-		ctx := middlewares.GetLoggerCtx(req.Context(), c.name, typeName)
-		gzipHandler(ctx, c.next).ServeHTTP(rw, req)
+		//ctx := middlewares.GetLoggerCtx(req.Context(), c.name, typeName)
+		compressHandlerLevel(c.next, 6, c.excludes).ServeHTTP(rw, req)
 	}
 }
 
@@ -244,16 +227,16 @@ func (c *compress) GetTracingInformation() (string, ext.SpanKindEnum) {
 	return c.name, tracing.SpanKindNoneEnum
 }
 
-func gzipHandler(ctx context.Context, h http.Handler) http.Handler {
-	wrapper, err := gziphandler.GzipHandlerWithOpts(
-		gziphandler.CompressionLevel(gzip.DefaultCompression),
-		gziphandler.MinSize(gziphandler.DefaultMinSize))
-	if err != nil {
-		log.FromContext(ctx).Error(err)
-	}
-
-	return wrapper(h)
-}
+//func gzipHandler(ctx context.Context, h http.Handler) http.Handler {
+//	wrapper, err := gziphandler.GzipHandlerWithOpts(
+//		gziphandler.CompressionLevel(gzip.DefaultCompression),
+//		gziphandler.MinSize(gziphandler.DefaultMinSize))
+//	if err != nil {
+//		log.FromContext(ctx).Error(err)
+//	}
+//
+//	return wrapper(h)
+//}
 
 func contains(values []string, val string) bool {
 	for _, v := range values {
