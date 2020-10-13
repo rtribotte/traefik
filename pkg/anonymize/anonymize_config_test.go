@@ -13,6 +13,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/provider/docker"
 	"github.com/traefik/traefik/v2/pkg/provider/file"
 	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/crd"
+	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/gateway"
 	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/ingress"
 	traefiktls "github.com/traefik/traefik/v2/pkg/tls"
 	"github.com/traefik/traefik/v2/pkg/tracing/datadog"
@@ -178,6 +179,21 @@ func TestDo_globalConfiguration(t *testing.T) {
 		Namespaces:             []string{"a", "b"},
 		LabelSelector:          "myLabelSelector",
 		IngressClass:           "MyIngressClass",
+	}
+
+	config.Providers.KubernetesGateway = &gateway.Provider{
+		Endpoint:         "MyEndpoint",
+		Token:            "MyToken",
+		CertAuthFilePath: "MyCertAuthPath",
+		Namespaces:       []string{"a", "b"},
+		LabelSelector:    "myLabelSelector",
+		ThrottleDuration: 0,
+		EntryPoints: map[string]gateway.Entrypoint{
+			"a": {
+				Address:        ":80",
+				HasHTTPTLSConf: false,
+			},
+		},
 	}
 
 	// FIXME Test the other providers once they are migrated
