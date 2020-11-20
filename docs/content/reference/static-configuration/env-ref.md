@@ -580,7 +580,7 @@ Kubernetes label selector to use.
 Kubernetes namespaces.
 
 `TRAEFIK_PROVIDERS_KUBERNETESGATEWAY_THROTTLEDURATION`:  
-Ingress refresh throttle duration (Default: ```0```)
+Kubernetes refresh throttle duration (Default: ```0```)
 
 `TRAEFIK_PROVIDERS_KUBERNETESGATEWAY_TOKEN`:  
 Kubernetes bearer token (not needed for in-cluster client).

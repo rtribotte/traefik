@@ -94,7 +94,7 @@ require (
 	k8s.io/client-go v0.19.2
 	k8s.io/code-generator v0.19.2
 	mvdan.cc/xurls/v2 v2.1.0
-	sigs.k8s.io/service-apis v0.1.0-rc2
+	sigs.k8s.io/service-apis v0.1.0
 )
 
 // Docker v19.03.6

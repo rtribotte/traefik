@@ -33,6 +33,7 @@ func (reh *resourceEventHandler) OnAdd(obj interface{}) {
 
 func (reh *resourceEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	switch oldObj.(type) {
+	// TODO check if we want to keep this filter
 	case *v1alpha1.GatewayClass:
 		//Skip update for gateway classes
 		return
@@ -54,8 +55,6 @@ type Client interface {
 	GetGatewayClasses() ([]*v1alpha1.GatewayClass, error)
 	UpdateGatewayStatus(gateway *v1alpha1.Gateway, gatewayStatus v1alpha1.GatewayStatus) error
 	UpdateGatewayClassStatus(gatewayClass *v1alpha1.GatewayClass, condition metav1.Condition) error
-	//UpdateGatewayStatusCondition(gateway *v1alpha1.Gateway, condition metav1.Condition) error
-	//UpdateGatewayListenerStatusCondition(gateway *v1alpha1.Gateway, port v1alpha1.PortNumber, condition metav1.Condition) error
 	GetGateways() ([]*v1alpha1.Gateway, error)
 	GetHTTPRoutes(namespace string, selector labels.Selector) ([]*v1alpha1.HTTPRoute, error)
 
@@ -74,6 +73,8 @@ type clientWrapper struct {
 
 	isNamespaceAll    bool
 	watchedNamespaces []string
+
+	labelSelector string
 }
 
 func createClientFromConfig(c *rest.Config) (*clientWrapper, error) {
@@ -158,7 +159,11 @@ func (c *clientWrapper) WatchAll(namespaces []string, stopCh <-chan struct{}) (<
 	}
 	c.watchedNamespaces = namespaces
 
-	c.factoryGatewayClass = externalversions.NewSharedInformerFactoryWithOptions(c.csGateway, resyncPeriod)
+	labelSelectorOptions := func(options *metav1.ListOptions) {
+		options.LabelSelector = c.labelSelector
+	}
+
+	c.factoryGatewayClass = externalversions.NewSharedInformerFactoryWithOptions(c.csGateway, resyncPeriod, externalversions.WithTweakListOptions(labelSelectorOptions))
 	c.factoryGatewayClass.Networking().V1alpha1().GatewayClasses().Informer().AddEventHandler(eventHandler)
 
 	for _, ns := range namespaces {
@@ -167,9 +172,9 @@ func (c *clientWrapper) WatchAll(namespaces []string, stopCh <-chan struct{}) (<
 		factoryGateway.Networking().V1alpha1().HTTPRoutes().Informer().AddEventHandler(eventHandler)
 
 		factoryKube := informers.NewSharedInformerFactoryWithOptions(c.csKube, resyncPeriod, informers.WithNamespace(ns))
-		factoryKube.Extensions().V1beta1().Ingresses().Informer().AddEventHandler(eventHandler)
 		factoryKube.Core().V1().Services().Informer().AddEventHandler(eventHandler)
 		factoryKube.Core().V1().Endpoints().Informer().AddEventHandler(eventHandler)
+		// TODO: filter the helm secrets https://github.com/traefik/traefik/pull/7562
 		factoryKube.Core().V1().Secrets().Informer().AddEventHandler(eventHandler)
 
 		c.factoriesGateway[ns] = factoryGateway

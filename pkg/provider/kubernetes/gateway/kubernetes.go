@@ -32,13 +32,12 @@ const (
 
 // Provider holds configurations of the provider.
 type Provider struct {
-	Endpoint         string   `description:"Kubernetes server endpoint (required for external cluster client)." json:"endpoint,omitempty" toml:"endpoint,omitempty" yaml:"endpoint,omitempty"`
-	Token            string   `description:"Kubernetes bearer token (not needed for in-cluster client)." json:"token,omitempty" toml:"token,omitempty" yaml:"token,omitempty"`
-	CertAuthFilePath string   `description:"Kubernetes certificate authority file path (not needed for in-cluster client)." json:"certAuthFilePath,omitempty" toml:"certAuthFilePath,omitempty" yaml:"certAuthFilePath,omitempty"`
-	Namespaces       []string `description:"Kubernetes namespaces." json:"namespaces,omitempty" toml:"namespaces,omitempty" yaml:"namespaces,omitempty" export:"true"`
-	// TODO implement
-	LabelSelector     string          `description:"Kubernetes label selector to use." json:"labelSelector,omitempty" toml:"labelSelector,omitempty" yaml:"labelSelector,omitempty" export:"true"`
-	ThrottleDuration  ptypes.Duration `description:"Ingress refresh throttle duration" json:"throttleDuration,omitempty" toml:"throttleDuration,omitempty" yaml:"throttleDuration,omitempty"`
+	Endpoint          string          `description:"Kubernetes server endpoint (required for external cluster client)." json:"endpoint,omitempty" toml:"endpoint,omitempty" yaml:"endpoint,omitempty"`
+	Token             string          `description:"Kubernetes bearer token (not needed for in-cluster client)." json:"token,omitempty" toml:"token,omitempty" yaml:"token,omitempty"`
+	CertAuthFilePath  string          `description:"Kubernetes certificate authority file path (not needed for in-cluster client)." json:"certAuthFilePath,omitempty" toml:"certAuthFilePath,omitempty" yaml:"certAuthFilePath,omitempty"`
+	Namespaces        []string        `description:"Kubernetes namespaces." json:"namespaces,omitempty" toml:"namespaces,omitempty" yaml:"namespaces,omitempty" export:"true"`
+	LabelSelector     string          `description:"Kubernetes label selector to select specific GatewayClasses." json:"labelSelector,omitempty" toml:"labelSelector,omitempty" yaml:"labelSelector,omitempty" export:"true"`
+	ThrottleDuration  ptypes.Duration `description:"Kubernetes refresh throttle duration" json:"throttleDuration,omitempty" toml:"throttleDuration,omitempty" yaml:"throttleDuration,omitempty"`
 	lastConfiguration safe.Safe
 	EntryPoints       map[string]Entrypoint `json:"-" toml:"-" yaml:"-" label:"-" file:"-"`
 }
@@ -50,12 +49,13 @@ type Entrypoint struct {
 }
 
 func (p *Provider) newK8sClient(ctx context.Context) (*clientWrapper, error) {
-	//labelSel, err := labels.Parse(p.LabelSelector)
-	//if err != nil {
-	//	return nil, fmt.Errorf("invalid label selector: %q", p.LabelSelector)
-	//}
-	//log.FromContext(ctx).Infof("label selector is: %q", labelSel)
-	var err error
+	// Label selector validation
+	_, err := labels.Parse(p.LabelSelector)
+	if err != nil {
+		return nil, fmt.Errorf("invalid label selector: %q", p.LabelSelector)
+	}
+	log.FromContext(ctx).Infof("label selector is: %q", p.LabelSelector)
+
 	withEndpoint := ""
 	if p.Endpoint != "" {
 		withEndpoint = fmt.Sprintf(" with endpoint %s", p.Endpoint)
@@ -74,11 +74,12 @@ func (p *Provider) newK8sClient(ctx context.Context) (*clientWrapper, error) {
 		client, err = newExternalClusterClient(p.Endpoint, p.Token, p.CertAuthFilePath)
 	}
 
-	//if err == nil {
-	//	client.labelSelector = labelSel
-	//}
+	if err != nil {
+		return nil, err
+	}
+	client.labelSelector = p.LabelSelector
 
-	return client, err
+	return client, nil
 }
 
 // Init the provider.
@@ -387,6 +388,7 @@ func (p *Provider) loadConfigurationFromGateway(ctx context.Context, client Clie
 				continue
 			}
 
+			// TODO: support RouteNamespaces
 			httpRoutes, err := client.GetHTTPRoutes(gateway.Namespace, labels.SelectorFromSet(listener.Routes.Selector.MatchLabels))
 			if err != nil {
 				msg := fmt.Sprintf("Cannot fetch HTTPRoutes for namespace %q and matchLabels %v", gateway.Namespace, listener.Routes.Selector.MatchLabels)
@@ -433,7 +435,7 @@ func (p *Provider) loadConfigurationFromGateway(ctx context.Context, client Clie
 							Type:               string(v1alpha1.ListenerConditionResolvedRefs),
 							Status:             metav1.ConditionFalse,
 							LastTransitionTime: metav1.Now(),
-							Reason:             string(v1alpha1.ListenerReasonDroppedRoutes),
+							Reason:             string(v1alpha1.ListenerReasonDegradedRoutes),
 							Message:            msg,
 						}
 						listenerStatuses[i].Conditions = append(listenerStatuses[i].Conditions, condition)
@@ -454,7 +456,7 @@ func (p *Provider) loadConfigurationFromGateway(ctx context.Context, client Clie
 								Type:               string(v1alpha1.ListenerConditionResolvedRefs),
 								Status:             metav1.ConditionFalse,
 								LastTransitionTime: metav1.Now(),
-								Reason:             string(v1alpha1.ListenerReasonDroppedRoutes),
+								Reason:             string(v1alpha1.ListenerReasonDegradedRoutes),
 								Message:            msg,
 							}
 							listenerStatuses[i].Conditions = append(listenerStatuses[i].Conditions, condition)
@@ -566,13 +568,6 @@ func (p *Provider) loadConfigurationFromGateway(ctx context.Context, client Clie
 
 	return conf
 }
-
-//func updateGatewayListenerNotValid(client Client, msg string, gateway *v1alpha1.Gateway) error {
-//
-//	gateway.Status.Conditions = []metav1.Condition{condition}
-//
-//	return client.UpdateGatewayStatus(gateway)
-//}
 
 func hostRule(httpRouteSpec v1alpha1.HTTPRouteSpec) string {
 	if len(httpRouteSpec.Hostnames) > 0 {
