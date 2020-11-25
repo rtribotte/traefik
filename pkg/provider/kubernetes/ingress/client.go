@@ -171,7 +171,6 @@ func (c *clientWrapper) WatchAll(namespaces []string, stopCh <-chan struct{}) (<
 	}
 
 	serverVersion, err := c.GetServerVersion()
-
 	if err != nil {
 		log.WithoutContext().Errorf("Failed to get server version: %v", err)
 		return eventCh, nil
@@ -182,7 +181,6 @@ func (c *clientWrapper) WatchAll(namespaces []string, stopCh <-chan struct{}) (<
 
 		if supportsNetworkingBetaIngress(serverVersion) {
 			factoryIngress.Networking().V1beta1().Ingresses().Informer().AddEventHandler(eventHandler)
-
 		}
 
 		if supportsNetworkingV1Ingress(serverVersion) {
@@ -380,7 +378,6 @@ func (c *clientWrapper) UpdateIngressStatus(src *networkingv1.Ingress, ingStatus
 	logger.Info("Updated ingress status")
 	return nil
 }
-
 
 func (c *clientWrapper) updateIngressStatusOld(src *networkingv1.Ingress, ingStatus []corev1.LoadBalancerIngress) error {
 	ing, err := c.factoriesIngress[c.lookupNamespace(src.Namespace)].Extensions().V1beta1().Ingresses().Lister().Ingresses(src.Namespace).Get(src.Name)
