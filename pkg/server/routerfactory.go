@@ -7,6 +7,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/config/static"
 	"github.com/traefik/traefik/v2/pkg/log"
 	"github.com/traefik/traefik/v2/pkg/server/middleware"
+	tcpmiddleware "github.com/traefik/traefik/v2/pkg/server/middleware/tcp"
 	"github.com/traefik/traefik/v2/pkg/server/router"
 	routertcp "github.com/traefik/traefik/v2/pkg/server/router/tcp"
 	routerudp "github.com/traefik/traefik/v2/pkg/server/router/udp"
@@ -77,7 +78,9 @@ func (f *RouterFactory) CreateRouters(rtConf *runtime.Configuration) (map[string
 	// TCP
 	svcTCPManager := tcp.NewManager(rtConf)
 
-	rtTCPManager := routertcp.NewManager(rtConf, svcTCPManager, handlersNonTLS, handlersTLS, f.tlsManager)
+	middlewaresTCPBuilder := tcpmiddleware.NewBuilder(rtConf.TCPMiddlewares)
+
+	rtTCPManager := routertcp.NewManager(rtConf, svcTCPManager, middlewaresTCPBuilder, handlersNonTLS, handlersTLS, f.tlsManager)
 	routersTCP := rtTCPManager.BuildHandlers(ctx, f.entryPointsTCP)
 
 	// UDP

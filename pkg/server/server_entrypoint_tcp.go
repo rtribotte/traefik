@@ -198,7 +198,7 @@ func (e *TCPEntryPoint) Start(ctx context.Context) {
 			return
 		}
 
-		writeCloser, err := writeCloser(conn)
+		writeCloser, err := writeCloser(ctx, conn)
 		if err != nil {
 			panic(err)
 		}
@@ -325,26 +325,34 @@ func (e *TCPEntryPoint) SwitchRouter(rt *tcp.Router) {
 // writeCloserWrapper wraps together a connection, and the concrete underlying
 // connection type that was found to satisfy WriteCloser.
 type writeCloserWrapper struct {
-	net.Conn
-	writeCloser tcp.WriteCloser
+	net.TCPConn
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
-func (c *writeCloserWrapper) CloseWrite() error {
-	return c.writeCloser.CloseWrite()
+func (w *writeCloserWrapper) Context() context.Context {
+	return w.ctx
+}
+
+func (w *writeCloserWrapper) Close() error {
+	w.cancel()
+	return w.TCPConn.Close()
 }
 
 // writeCloser returns the given connection, augmented with the WriteCloser
 // implementation, if any was found within the underlying conn.
-func writeCloser(conn net.Conn) (tcp.WriteCloser, error) {
+func writeCloser(ctx context.Context, conn net.Conn) (tcp.WriteCloser, error) {
+	cancelCtx, cancel := context.WithCancel(ctx)
+
 	switch typedConn := conn.(type) {
 	case *proxyproto.Conn:
 		underlying, ok := typedConn.TCPConn()
 		if !ok {
 			return nil, fmt.Errorf("underlying connection is not a tcp connection")
 		}
-		return &writeCloserWrapper{writeCloser: underlying, Conn: typedConn}, nil
+		return &writeCloserWrapper{TCPConn: *underlying, ctx: cancelCtx, cancel: cancel}, nil
 	case *net.TCPConn:
-		return typedConn, nil
+		return &writeCloserWrapper{TCPConn: *typedConn, ctx: cancelCtx, cancel: cancel}, nil
 	default:
 		return nil, fmt.Errorf("unknown connection type %T", typedConn)
 	}

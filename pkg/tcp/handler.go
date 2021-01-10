@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"context"
 	"net"
 )
 
@@ -25,4 +26,6 @@ type WriteCloser interface {
 	// has terminated sending on that connection.
 	// It corresponds to sending a FIN packet.
 	CloseWrite() error
+
+	Context() context.Context
 }

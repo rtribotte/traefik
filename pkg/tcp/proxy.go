@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -68,24 +69,29 @@ func (p *Proxy) ServeTCP(conn WriteCloser) {
 		return
 	}
 
+	closeWriter := &connWrapper{
+		TCPConn: *connBackend,
+		ctx:     conn.Context(),
+	}
+
 	// maybe not needed, but just in case
-	defer connBackend.Close()
+	defer closeWriter.Close()
 	errChan := make(chan error)
 
 	if p.proxyProtocol != nil && p.proxyProtocol.Version > 0 && p.proxyProtocol.Version < 3 {
 		header := proxyproto.HeaderProxyFromAddrs(byte(p.proxyProtocol.Version), conn.RemoteAddr(), conn.LocalAddr())
-		if _, err := header.WriteTo(connBackend); err != nil {
-			log.WithoutContext().Errorf("Error while writing proxy protocol headers to backend connection: %v", err)
+		if _, err := header.WriteTo(closeWriter); err != nil {
+			log.FromContext(conn.Context()).Errorf("Error while writing proxy protocol headers to backend connection: %v", err)
 			return
 		}
 	}
 
-	go p.connCopy(conn, connBackend, errChan)
-	go p.connCopy(connBackend, conn, errChan)
+	go p.connCopy(conn, closeWriter, errChan)
+	go p.connCopy(closeWriter, conn, errChan)
 
 	err = <-errChan
 	if err != nil {
-		log.WithoutContext().Errorf("Error during connection: %v", err)
+		log.FromContext(conn.Context()).Errorf("Error during connection: %v", err)
 	}
 
 	<-errChan
@@ -97,14 +103,23 @@ func (p Proxy) connCopy(dst, src WriteCloser, errCh chan error) {
 
 	errClose := dst.CloseWrite()
 	if errClose != nil {
-		log.WithoutContext().Debugf("Error while terminating connection: %v", errClose)
+		log.FromContext(dst.Context()).Debugf("Error while terminating connection: %v", errClose)
 		return
 	}
 
 	if p.terminationDelay >= 0 {
 		err := dst.SetReadDeadline(time.Now().Add(p.terminationDelay))
 		if err != nil {
-			log.WithoutContext().Debugf("Error while setting deadline: %v", err)
+			log.FromContext(dst.Context()).Debugf("Error while setting deadline: %v", err)
 		}
 	}
+}
+
+type connWrapper struct {
+	net.TCPConn
+	ctx context.Context
+}
+
+func (w *connWrapper) Context() context.Context {
+	return w.ctx
 }
