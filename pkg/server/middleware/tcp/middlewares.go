@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/traefik/traefik/v2/pkg/config/runtime"
+	"github.com/traefik/traefik/v2/pkg/middlewares/tcp/chain"
 	ipwhitelist "github.com/traefik/traefik/v2/pkg/middlewares/tcp/ipwhitelist"
+	retry "github.com/traefik/traefik/v2/pkg/middlewares/tcp/retry"
 	"github.com/traefik/traefik/v2/pkg/server/provider"
 	"github.com/traefik/traefik/v2/pkg/tcp"
 )
@@ -85,6 +87,22 @@ func (b *Builder) buildConstructor(ctx context.Context, middlewareName string) (
 	var middleware tcp.Constructor
 	badConf := errors.New("cannot create TCP middleware: multi-types middleware not supported, consider declaring two different pieces of middleware instead")
 
+	// Chain
+	if config.Chain != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+
+		var qualifiedNames []string
+		for _, name := range config.Chain.Middlewares {
+			qualifiedNames = append(qualifiedNames, provider.GetQualifiedName(ctx, name))
+		}
+		config.Chain.Middlewares = qualifiedNames
+		middleware = func(next tcp.Handler) (tcp.Handler, error) {
+			return chain.New(ctx, next, *config.Chain, b, middlewareName)
+		}
+	}
+
 	// IPWhiteList
 	if config.IPWhiteList != nil {
 		if middleware != nil {
@@ -92,6 +110,16 @@ func (b *Builder) buildConstructor(ctx context.Context, middlewareName string) (
 		}
 		middleware = func(next tcp.Handler) (tcp.Handler, error) {
 			return ipwhitelist.New(ctx, next, *config.IPWhiteList, middlewareName)
+		}
+	}
+
+	// Retry
+	if config.Retry != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+		middleware = func(next tcp.Handler) (tcp.Handler, error) {
+			return retry.New(ctx, next, *config.Retry, retry.Listeners{}, middlewareName)
 		}
 	}
 

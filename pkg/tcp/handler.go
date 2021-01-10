@@ -29,3 +29,9 @@ type WriteCloser interface {
 
 	Context() context.Context
 }
+
+// ContextWriteCloser describes a WriteCloser with a Context method.
+type ContextWriteCloser interface {
+	WriteCloser
+	Context() context.Context
+}
