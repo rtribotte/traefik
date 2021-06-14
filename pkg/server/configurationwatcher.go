@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/eapache/channels"
 	"github.com/sirupsen/logrus"
 	"github.com/traefik/traefik/v2/pkg/config/dynamic"
 	"github.com/traefik/traefik/v2/pkg/log"
@@ -25,7 +26,7 @@ type ConfigurationWatcher struct {
 
 	configurationChan          chan dynamic.Message
 	configurationValidatedChan chan dynamic.Message
-	providerConfigUpdateMap    map[string]chan dynamic.Message
+	providerConfigUpdateMap    map[string]*channels.RingChannel
 
 	requiredProvider       string
 	configurationListeners []func(dynamic.Configuration)
@@ -44,8 +45,8 @@ func NewConfigurationWatcher(
 	watcher := &ConfigurationWatcher{
 		provider:                   pvd,
 		configurationChan:          make(chan dynamic.Message, 100),
-		configurationValidatedChan: make(chan dynamic.Message),
-		providerConfigUpdateMap:    make(map[string]chan dynamic.Message),
+		configurationValidatedChan: make(chan dynamic.Message, 100),
+		providerConfigUpdateMap:    make(map[string]*channels.RingChannel),
 		providersThrottleDuration:  providersThrottleDuration,
 		routinesPool:               routinesPool,
 		defaultEntryPoints:         defaultEntryPoints,
@@ -67,6 +68,7 @@ func (c *ConfigurationWatcher) Start() {
 
 // Stop the configuration watcher.
 func (c *ConfigurationWatcher) Stop() {
+	//c.routinesPool.Stop()
 	close(c.configurationChan)
 	close(c.configurationValidatedChan)
 }
@@ -123,15 +125,29 @@ func (c *ConfigurationWatcher) listenProviders(ctx context.Context) {
 }
 
 func (c *ConfigurationWatcher) listenConfigurations(ctx context.Context) {
+	// Ticker should be set to the same default duration as the ProvidersThrottleDuration option.
+	//ticker := time.NewTicker(2 * time.Second)
+	hasNewConfiguration := false
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		//case <-ticker.C:
+		//	if hasNewConfiguration {
+		//		c.applyMessage()
+		//		hasNewConfiguration = false
+		//	}
 		case configMsg, ok := <-c.configurationValidatedChan:
 			if !ok || configMsg.Configuration == nil {
 				return
 			}
 			c.loadMessage(configMsg)
+			hasNewConfiguration = true
+		default:
+			if hasNewConfiguration {
+				c.applyMessage()
+				hasNewConfiguration = false
+			}
 		}
 	}
 }
@@ -144,12 +160,16 @@ func (c *ConfigurationWatcher) loadMessage(configMsg dynamic.Message) {
 	newConfigurations[configMsg.ProviderName] = configMsg.Configuration
 
 	c.currentConfigurations.Set(newConfigurations)
+}
 
-	conf := mergeConfiguration(newConfigurations, c.defaultEntryPoints)
+func (c *ConfigurationWatcher) applyMessage() {
+	currentConfigurations := c.currentConfigurations.Get().(dynamic.Configurations)
+
+	conf := mergeConfiguration(currentConfigurations, c.defaultEntryPoints)
 	conf = applyModel(conf)
 
 	// We wait for first configuration of the require provider before applying configurations.
-	if _, ok := newConfigurations[c.requiredProvider]; c.requiredProvider == "" || ok {
+	if _, ok := currentConfigurations[c.requiredProvider]; c.requiredProvider == "" || ok {
 		for _, listener := range c.configurationListeners {
 			listener(conf)
 		}
@@ -186,86 +206,39 @@ func (c *ConfigurationWatcher) preLoadConfiguration(configMsg dynamic.Message) {
 
 	providerConfigUpdateCh, ok := c.providerConfigUpdateMap[configMsg.ProviderName]
 	if !ok {
-		providerConfigUpdateCh = make(chan dynamic.Message)
+		providerConfigUpdateCh = channels.NewRingChannel(1)
+
 		c.providerConfigUpdateMap[configMsg.ProviderName] = providerConfigUpdateCh
+
 		c.routinesPool.GoCtx(func(ctxPool context.Context) {
-			c.throttleProviderConfigReload(ctxPool, c.providersThrottleDuration, c.configurationValidatedChan, providerConfigUpdateCh)
+			defer providerConfigUpdateCh.Close()
+			c.throttleProviderConfigReload(ctxPool, providerConfigUpdateCh)
 		})
 	}
 
-	providerConfigUpdateCh <- configMsg
+	providerConfigUpdateCh.In() <- *configMsg.DeepCopy()
 }
 
 // throttleProviderConfigReload throttles the configuration reload speed for a single provider.
 // It will immediately publish a new configuration and then only publish the next configuration after the throttle duration.
 // Note that in the case it receives N new configs in the timeframe of the throttle duration after publishing,
 // it will publish the last of the newly received configurations.
-// Handles if publish channel is blocking, during that it still processes incoming configurations.
-func (c *ConfigurationWatcher) throttleProviderConfigReload(ctx context.Context, throttle time.Duration, publish chan<- dynamic.Message, in <-chan dynamic.Message) {
-	nextSend := time.NewTimer(0)
-	defer func() {
-		if !nextSend.Stop() {
-			<-nextSend.C
-		}
-	}()
-
+func (c *ConfigurationWatcher) throttleProviderConfigReload(ctx context.Context, in *channels.RingChannel) {
 	var previousConfig dynamic.Message
-
-	// throttling loop
 	for {
-		var nextConfig dynamic.Message
-		var ok bool
-
-		// Read all configs during throttle duration
-	Read:
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case nextConfig, ok = <-in:
-				if !ok {
-					return
+		select {
+		case <-ctx.Done():
+			return
+		case nextConfig := <-in.Out():
+			if config, ok := nextConfig.(dynamic.Message); ok {
+				if reflect.DeepEqual(previousConfig, nextConfig) {
+					logger := log.WithoutContext().WithField(log.ProviderName, config.ProviderName)
+					logger.Info("Skipping same configuration")
+					continue
 				}
-			case <-nextSend.C:
-				break Read
-			}
-		}
-
-		// If still no data, wait for one
-		if !ok {
-			select {
-			case <-ctx.Done():
-				return
-			case nextConfig, ok = <-in:
-				if !ok {
-					return
-				}
-			}
-		}
-
-		// Try to send only if the to-be-sent configuration
-		// is different than last one.
-		// Meanwhile if another arrives, then try to send that
-	Send:
-		for {
-			if reflect.DeepEqual(previousConfig, nextConfig) {
-				logger := log.WithoutContext().WithField(log.ProviderName, nextConfig.ProviderName)
-				logger.Info("Skipping same configuration")
-				nextSend.Reset(0)
-				break Send
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case nextConfig, ok = <-in:
-				if !ok {
-					return
-				}
-			case publish <- *nextConfig.DeepCopy():
-				nextSend.Reset(throttle)
-				previousConfig = *nextConfig.DeepCopy()
-				break Send
+				previousConfig = config
+				c.configurationValidatedChan <- *config.DeepCopy()
+				time.Sleep(c.providersThrottleDuration)
 			}
 		}
 	}
@@ -288,7 +261,7 @@ func isEmptyConfiguration(conf *dynamic.Configuration) bool {
 
 	httpEmpty := conf.HTTP.Routers == nil && conf.HTTP.Services == nil && conf.HTTP.Middlewares == nil
 	tlsEmpty := conf.TLS == nil || conf.TLS.Certificates == nil && conf.TLS.Stores == nil && conf.TLS.Options == nil
-	tcpEmpty := conf.TCP.Routers == nil && conf.TCP.Services == nil && conf.TCP.Middlewares == nil
+	tcpEmpty := conf.TCP.Routers == nil && conf.TCP.Services == nil
 	udpEmpty := conf.UDP.Routers == nil && conf.UDP.Services == nil
 
 	return httpEmpty && tlsEmpty && tcpEmpty && udpEmpty
