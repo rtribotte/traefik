@@ -72,21 +72,23 @@ func TestHTTP3AdvertisedPort(t *testing.T) {
 		HTTP3: &static.HTTP3Config{
 			AdvertisedPort: 8080,
 		},
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	router, err := tcp.NewRouter()
 	require.NoError(t, err)
 
-	router.AddHTTPTLSConfig("*", &tls.Config{
-		Certificates: []tls.Certificate{tlsCert},
-	})
-	router.SetHTTPSHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-	}), nil)
-
 	go entryPoint.Start(context.Background())
-	entryPoint.SwitchRouter(router)
+
+	httpsHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+	})
+
+	entryPoint.SwitchRouter(nil, httpsHandler, router)
+
+	router.ConfigureHTTPSForwarding(nil, map[string]*tls.Config{"*": {
+		Certificates: []tls.Certificate{tlsCert},
+	}})
 
 	conn, err := tls.Dial("tcp", "127.0.0.1:8090", &tls.Config{
 		InsecureSkipVerify: true,

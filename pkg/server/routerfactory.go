@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/traefik/traefik/v2/pkg/config/runtime"
 	"github.com/traefik/traefik/v2/pkg/config/static"
@@ -31,11 +32,10 @@ type RouterFactory struct {
 	pluginBuilder middleware.PluginsBuilder
 
 	chainBuilder *middleware.ChainBuilder
-	tlsManager   *tls.Manager
 }
 
 // NewRouterFactory creates a new RouterFactory.
-func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *service.ManagerFactory, tlsManager *tls.Manager,
+func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *service.ManagerFactory,
 	chainBuilder *middleware.ChainBuilder, pluginBuilder middleware.PluginsBuilder, metricsRegistry metrics.Registry) *RouterFactory {
 	var entryPointsTCP, entryPointsUDP []string
 	for name, cfg := range staticConfiguration.EntryPoints {
@@ -57,14 +57,20 @@ func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *
 		entryPointsUDP:  entryPointsUDP,
 		managerFactory:  managerFactory,
 		metricsRegistry: metricsRegistry,
-		tlsManager:      tlsManager,
 		chainBuilder:    chainBuilder,
 		pluginBuilder:   pluginBuilder,
 	}
 }
 
-// CreateRouters creates new TCPRouters and UDPRouters.
-func (f *RouterFactory) CreateRouters(rtConf *runtime.Configuration) (map[string]*tcpCore.Router, map[string]udpCore.Handler) {
+type Routers struct {
+	HTTPHandlers  map[string]http.Handler
+	HTTPSHandlers map[string]http.Handler
+	TCPRouters    map[string]*tcpCore.Router
+	UDPHandlers   map[string]udpCore.Handler
+}
+
+// CreateRouters creates new HTTPHandlers, HTTPSHandlers, TCPRouters and UDPHandlers.
+func (f *RouterFactory) CreateRouters(tlsManager *tls.Manager, rtConf *runtime.Configuration) Routers {
 	ctx := context.Background()
 
 	// HTTP
@@ -84,8 +90,17 @@ func (f *RouterFactory) CreateRouters(rtConf *runtime.Configuration) (map[string
 
 	middlewaresTCPBuilder := middlewaretcp.NewBuilder(rtConf.TCPMiddlewares)
 
-	rtTCPManager := routertcp.NewManager(rtConf, svcTCPManager, middlewaresTCPBuilder, handlersNonTLS, handlersTLS, f.tlsManager)
-	routersTCP := rtTCPManager.BuildHandlers(ctx, f.entryPointsTCP)
+	rtTCPManager := routertcp.NewManager(rtConf, svcTCPManager, middlewaresTCPBuilder, tlsManager)
+	handlersTLS, routersTCP := rtTCPManager.BuildHandlers(ctx, f.entryPointsTCP, handlersTLS)
+
+	// TCP to HTTPS Forwarding configuration
+	defaultTLSConf, err := tlsManager.GetDefaultConfig()
+	if err != nil {
+		log.FromContext(ctx).Errorf("Error during the build of the default TLS configuration: %v", err)
+	}
+	for entryPointName, tcpRouter := range routersTCP {
+		tcpRouter.ConfigureHTTPSForwarding(defaultTLSConf, tlsManager.GetHostHTTPSConfigs(entryPointName))
+	}
 
 	// UDP
 	svcUDPManager := udp.NewManager(rtConf)
@@ -94,5 +109,5 @@ func (f *RouterFactory) CreateRouters(rtConf *runtime.Configuration) (map[string
 
 	rtConf.PopulateUsedBy()
 
-	return routersTCP, routersUDP
+	return Routers{handlersNonTLS, handlersTLS, routersTCP, routersUDP}
 }

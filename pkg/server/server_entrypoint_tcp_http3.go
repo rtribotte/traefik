@@ -3,29 +3,24 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/http3"
 	"github.com/traefik/traefik/v2/pkg/config/static"
 	"github.com/traefik/traefik/v2/pkg/log"
-	"github.com/traefik/traefik/v2/pkg/tcp"
+	traefiktls "github.com/traefik/traefik/v2/pkg/tls"
 )
 
 type http3server struct {
 	*http3.Server
 
 	http3conn net.PacketConn
-
-	lock   sync.RWMutex
-	getter func(info *tls.ClientHelloInfo) (*tls.Config, error)
 }
 
-func newHTTP3Server(ctx context.Context, configuration *static.EntryPoint, httpsServer *httpServer) (*http3server, error) {
+func newHTTP3Server(ctx context.Context, configuration *static.EntryPoint, httpsServer *httpServer, tlsConfigLookup traefiktls.ConfigLookup) (*http3server, error) {
 	if configuration.HTTP3 == nil {
 		return nil, nil
 	}
@@ -37,9 +32,6 @@ func newHTTP3Server(ctx context.Context, configuration *static.EntryPoint, https
 
 	h3 := &http3server{
 		http3conn: conn,
-		getter: func(info *tls.ClientHelloInfo) (*tls.Config, error) {
-			return nil, errors.New("no tls config")
-		},
 	}
 
 	h3.Server = &http3.Server{
@@ -50,7 +42,7 @@ func newHTTP3Server(ctx context.Context, configuration *static.EntryPoint, https
 			ReadTimeout:  time.Duration(configuration.Transport.RespondingTimeouts.ReadTimeout),
 			WriteTimeout: time.Duration(configuration.Transport.RespondingTimeouts.WriteTimeout),
 			IdleTimeout:  time.Duration(configuration.Transport.RespondingTimeouts.IdleTimeout),
-			TLSConfig:    &tls.Config{GetConfigForClient: h3.getGetConfigForClient},
+			TLSConfig:    &tls.Config{GetConfigForClient: tlsConfigLookup},
 		},
 	}
 
@@ -91,18 +83,4 @@ func getQuicHeadersSetter(configuration *static.EntryPoint) func(header http.Hea
 
 func (e *http3server) Start() error {
 	return e.Serve(e.http3conn)
-}
-
-func (e *http3server) Switch(rt *tcp.Router) {
-	e.lock.Lock()
-	defer e.lock.Unlock()
-
-	e.getter = rt.GetTLSGetClientInfo()
-}
-
-func (e *http3server) getGetConfigForClient(info *tls.ClientHelloInfo) (*tls.Config, error) {
-	e.lock.RLock()
-	defer e.lock.RUnlock()
-
-	return e.getter(info)
 }

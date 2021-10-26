@@ -334,10 +334,9 @@ func TestRuntimeConfiguration(t *testing.T) {
 
 			middlewaresBuilder := tcpmiddleware.NewBuilder(conf.TCPMiddlewares)
 
-			routerManager := NewManager(conf, serviceManager, middlewaresBuilder,
-				nil, nil, tlsManager)
+			routerManager := NewManager(conf, serviceManager, middlewaresBuilder, tlsManager)
 
-			_ = routerManager.BuildHandlers(context.Background(), entryPoints)
+			_, _ = routerManager.BuildHandlers(context.Background(), entryPoints, nil)
 
 			// even though conf was passed by argument to the manager builders above,
 			// it's ok to use it as the result we check, because everything worth checking
@@ -566,11 +565,11 @@ func TestDomainFronting(t *testing.T) {
 
 			middlewaresBuilder := tcpmiddleware.NewBuilder(conf.TCPMiddlewares)
 
-			routerManager := NewManager(conf, serviceManager, middlewaresBuilder, nil, httpsHandler, tlsManager)
+			routerManager := NewManager(conf, serviceManager, middlewaresBuilder, tlsManager)
 
-			routers := routerManager.BuildHandlers(context.Background(), entryPoints)
+			handlersTLS, routersTCP := routerManager.BuildHandlers(context.Background(), entryPoints, httpsHandler)
 
-			router, ok := routers["web"]
+			_, ok := routersTCP["web"]
 			require.True(t, ok)
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -581,7 +580,7 @@ func TestDomainFronting(t *testing.T) {
 
 			rw := httptest.NewRecorder()
 
-			router.GetHTTPSHandler().ServeHTTP(rw, req)
+			handlersTLS["web"].ServeHTTP(rw, req)
 
 			assert.Equal(t, test.expectedStatus, rw.Code)
 		})

@@ -36,6 +36,49 @@ type Manager struct {
 	stores       map[string]*CertificateStore
 	configs      map[string]Options
 	certs        []*CertAndStores
+	tlsConfigs   map[string]*TLSConfigStore
+}
+
+// AddHostHTTPSConfig defines a handler for a given sniHost and sets the matching tlsConfig.
+func (m *Manager) AddHostHTTPSConfig(entryPoint string, sniHost string, config *tls.Config) {
+	if m.tlsConfigs == nil {
+		m.tlsConfigs = map[string]*TLSConfigStore{}
+	}
+	if _, ok := m.tlsConfigs[entryPoint]; !ok {
+		m.tlsConfigs[entryPoint] = NewTLSConfigStore()
+	}
+	m.tlsConfigs[entryPoint].AddConfig(sniHost, config)
+}
+
+// GetHostHTTPSConfigs returns the collection of tls.Config keyed by host for an entryPoint.
+func (m *Manager) GetHostHTTPSConfigs(entryPoint string) map[string]*tls.Config {
+	if _, ok := m.tlsConfigs[entryPoint]; !ok {
+		return nil
+	}
+
+	return m.tlsConfigs[entryPoint].GetConfigs()
+}
+
+// ConfigLookup returns a tls.Config for the given serverName value in the tls.ClientHelloInfo.
+type ConfigLookup func(info *tls.ClientHelloInfo) (*tls.Config, error)
+
+// GetConfigLookup returns a lookup utility for tls.Config for the given EntryPoint.
+func (m *Manager) GetConfigLookup(entryPoint string) ConfigLookup {
+	return func(info *tls.ClientHelloInfo) (*tls.Config, error) {
+		if info == nil {
+			return m.GetDefaultConfig()
+		}
+
+		if _, ok := m.tlsConfigs[entryPoint]; !ok {
+			return m.GetDefaultConfig()
+		}
+
+		if tlsConfig := m.tlsConfigs[entryPoint].GetConfig(info.ServerName); tlsConfig != nil {
+			return tlsConfig, nil
+		}
+
+		return m.GetDefaultConfig()
+	}
 }
 
 // NewManager creates a new Manager.
@@ -57,6 +100,8 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 	m.configs = configs
 	m.storesConfig = stores
 	m.certs = certs
+
+	m.tlsConfigs = make(map[string]*TLSConfigStore)
 
 	if m.storesConfig == nil {
 		m.storesConfig = make(map[string]Store)
@@ -106,6 +151,11 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 		}
 		st.DynamicCerts.Set(certs)
 	}
+}
+
+// Get gets the Default TLS configuration in the default store.
+func (m *Manager) GetDefaultConfig() (*tls.Config, error) {
+	return m.Get(DefaultTLSStoreName, DefaultTLSConfigName)
 }
 
 // Get gets the TLS configuration to use for a given store / configuration.

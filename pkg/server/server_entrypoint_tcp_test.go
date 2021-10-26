@@ -19,27 +19,30 @@ import (
 )
 
 func TestShutdownHijacked(t *testing.T) {
-	router := &tcp.Router{}
-	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	router, err := tcp.NewRouter()
+	require.NoError(t, err)
+	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		conn, _, err := rw.(http.Hijacker).Hijack()
 		require.NoError(t, err)
 
 		resp := http.Response{StatusCode: http.StatusOK}
 		err = resp.Write(conn)
 		require.NoError(t, err)
-	}))
+	})
 
-	testShutdown(t, router)
+	testShutdown(t, handler, router)
 }
 
 func TestShutdownHTTP(t *testing.T) {
-	router := &tcp.Router{}
-	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	router, err := tcp.NewRouter()
+	require.NoError(t, err)
+
+	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 		time.Sleep(time.Second)
-	}))
+	})
 
-	testShutdown(t, router)
+	testShutdown(t, handler, router)
 }
 
 func TestShutdownTCP(t *testing.T) {
@@ -62,10 +65,10 @@ func TestShutdownTCP(t *testing.T) {
 	}))
 	require.NoError(t, err)
 
-	testShutdown(t, router)
+	testShutdown(t, nil, router)
 }
 
-func testShutdown(t *testing.T, router *tcp.Router) {
+func testShutdown(t *testing.T, handler http.Handler, router *tcp.Router) {
 	t.Helper()
 
 	epConfig := &static.EntryPointsTransport{}
@@ -82,11 +85,13 @@ func testShutdown(t *testing.T, router *tcp.Router) {
 		Address:          "127.0.0.1:0",
 		Transport:        epConfig,
 		ForwardedHeaders: &static.ForwardedHeaders{},
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	conn, err := startEntrypoint(entryPoint, router)
 	require.NoError(t, err)
+
+	entryPoint.SwitchRouter(handler, nil, router)
 
 	epAddr := entryPoint.listener.Addr().String()
 
@@ -141,7 +146,7 @@ func testShutdown(t *testing.T, router *tcp.Router) {
 func startEntrypoint(entryPoint *TCPEntryPoint, router *tcp.Router) (net.Conn, error) {
 	go entryPoint.Start(context.Background())
 
-	entryPoint.SwitchRouter(router)
+	entryPoint.SwitchRouter(nil, nil, router)
 
 	for i := 0; i < 10; i++ {
 		conn, err := net.Dial("tcp", entryPoint.listener.Addr().String())
@@ -165,13 +170,11 @@ func TestReadTimeoutWithoutFirstByte(t *testing.T) {
 		Address:          ":0",
 		Transport:        epConfig,
 		ForwardedHeaders: &static.ForwardedHeaders{},
-	})
+	}, nil)
 	require.NoError(t, err)
 
-	router := &tcp.Router{}
-	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-	}))
+	router, err := tcp.NewRouter()
+	require.NoError(t, err)
 
 	conn, err := startEntrypoint(entryPoint, router)
 	require.NoError(t, err)
@@ -201,13 +204,11 @@ func TestReadTimeoutWithFirstByte(t *testing.T) {
 		Address:          ":0",
 		Transport:        epConfig,
 		ForwardedHeaders: &static.ForwardedHeaders{},
-	})
+	}, nil)
 	require.NoError(t, err)
 
-	router := &tcp.Router{}
-	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-	}))
+	router, err := tcp.NewRouter()
+	require.NoError(t, err)
 
 	conn, err := startEntrypoint(entryPoint, router)
 	require.NoError(t, err)

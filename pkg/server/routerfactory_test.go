@@ -53,14 +53,14 @@ func TestReuseService(t *testing.T) {
 	managerFactory := service.NewManagerFactory(staticConfig, nil, metrics.NewVoidRegistry(), roundTripperManager, nil)
 	tlsManager := tls.NewManager()
 
-	factory := NewRouterFactory(staticConfig, managerFactory, tlsManager, middleware.NewChainBuilder(staticConfig, metrics.NewVoidRegistry(), nil), nil, metrics.NewVoidRegistry())
+	factory := NewRouterFactory(staticConfig, managerFactory, middleware.NewChainBuilder(staticConfig, metrics.NewVoidRegistry(), nil), nil, metrics.NewVoidRegistry())
 
-	entryPointsHandlers, _ := factory.CreateRouters(runtime.NewConfig(dynamic.Configuration{HTTP: dynamicConfigs}))
+	routers := factory.CreateRouters(tlsManager, runtime.NewConfig(dynamic.Configuration{HTTP: dynamicConfigs}))
 
 	// Test that the /ok path returns a status 200.
 	responseRecorderOk := &httptest.ResponseRecorder{}
 	requestOk := httptest.NewRequest(http.MethodGet, testServer.URL+"/ok", nil)
-	entryPointsHandlers["web"].GetHTTPHandler().ServeHTTP(responseRecorderOk, requestOk)
+	routers.HTTPHandlers["web"].ServeHTTP(responseRecorderOk, requestOk)
 
 	assert.Equal(t, http.StatusOK, responseRecorderOk.Result().StatusCode, "status code")
 
@@ -68,7 +68,7 @@ func TestReuseService(t *testing.T) {
 	// the basic authentication defined on the frontend.
 	responseRecorderUnauthorized := &httptest.ResponseRecorder{}
 	requestUnauthorized := httptest.NewRequest(http.MethodGet, testServer.URL+"/unauthorized", nil)
-	entryPointsHandlers["web"].GetHTTPHandler().ServeHTTP(responseRecorderUnauthorized, requestUnauthorized)
+	routers.HTTPHandlers["web"].ServeHTTP(responseRecorderUnauthorized, requestUnauthorized)
 
 	assert.Equal(t, http.StatusUnauthorized, responseRecorderUnauthorized.Result().StatusCode, "status code")
 }
@@ -189,14 +189,14 @@ func TestServerResponseEmptyBackend(t *testing.T) {
 			managerFactory := service.NewManagerFactory(staticConfig, nil, metrics.NewVoidRegistry(), roundTripperManager, nil)
 			tlsManager := tls.NewManager()
 
-			factory := NewRouterFactory(staticConfig, managerFactory, tlsManager, middleware.NewChainBuilder(staticConfig, metrics.NewVoidRegistry(), nil), nil, metrics.NewVoidRegistry())
+			factory := NewRouterFactory(staticConfig, managerFactory, middleware.NewChainBuilder(staticConfig, metrics.NewVoidRegistry(), nil), nil, metrics.NewVoidRegistry())
 
-			entryPointsHandlers, _ := factory.CreateRouters(runtime.NewConfig(dynamic.Configuration{HTTP: test.config(testServer.URL)}))
+			routers := factory.CreateRouters(tlsManager, runtime.NewConfig(dynamic.Configuration{HTTP: test.config(testServer.URL)}))
 
 			responseRecorder := &httptest.ResponseRecorder{}
 			request := httptest.NewRequest(http.MethodGet, testServer.URL+requestPath, nil)
 
-			entryPointsHandlers["web"].GetHTTPHandler().ServeHTTP(responseRecorder, request)
+			routers.HTTPHandlers["web"].ServeHTTP(responseRecorder, request)
 
 			assert.Equal(t, test.expectedStatusCode, responseRecorder.Result().StatusCode, "status code")
 		})
@@ -232,14 +232,14 @@ func TestInternalServices(t *testing.T) {
 
 	voidRegistry := metrics.NewVoidRegistry()
 
-	factory := NewRouterFactory(staticConfig, managerFactory, tlsManager, middleware.NewChainBuilder(staticConfig, voidRegistry, nil), nil, voidRegistry)
+	factory := NewRouterFactory(staticConfig, managerFactory, middleware.NewChainBuilder(staticConfig, voidRegistry, nil), nil, voidRegistry)
 
-	entryPointsHandlers, _ := factory.CreateRouters(runtime.NewConfig(dynamic.Configuration{HTTP: dynamicConfigs}))
+	routers := factory.CreateRouters(tlsManager, runtime.NewConfig(dynamic.Configuration{HTTP: dynamicConfigs}))
 
 	// Test that the /ok path returns a status 200.
 	responseRecorderOk := &httptest.ResponseRecorder{}
 	requestOk := httptest.NewRequest(http.MethodGet, testServer.URL+"/api/rawdata", nil)
-	entryPointsHandlers["web"].GetHTTPHandler().ServeHTTP(responseRecorderOk, requestOk)
+	routers.HTTPHandlers["web"].ServeHTTP(responseRecorderOk, requestOk)
 
 	assert.Equal(t, http.StatusOK, responseRecorderOk.Result().StatusCode, "status code")
 }

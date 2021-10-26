@@ -21,6 +21,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/safe"
 	"github.com/traefik/traefik/v2/pkg/server/router"
 	"github.com/traefik/traefik/v2/pkg/tcp"
+	traefiktls "github.com/traefik/traefik/v2/pkg/tls"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -60,7 +61,7 @@ func (h *httpForwarder) Accept() (net.Conn, error) {
 type TCPEntryPoints map[string]*TCPEntryPoint
 
 // NewTCPEntryPoints creates a new TCPEntryPoints.
-func NewTCPEntryPoints(entryPointsConfig static.EntryPoints) (TCPEntryPoints, error) {
+func NewTCPEntryPoints(tlsManager *traefiktls.Manager, entryPointsConfig static.EntryPoints) (TCPEntryPoints, error) {
 	serverEntryPointsTCP := make(TCPEntryPoints)
 	for entryPointName, config := range entryPointsConfig {
 		protocol, err := config.GetProtocol()
@@ -74,7 +75,10 @@ func NewTCPEntryPoints(entryPointsConfig static.EntryPoints) (TCPEntryPoints, er
 
 		ctx := log.With(context.Background(), log.Str(log.EntryPointName, entryPointName))
 
-		serverEntryPointsTCP[entryPointName], err = NewTCPEntryPoint(ctx, config)
+		// The tlsConfigLookup func is a utility to get the TLSConfig for a serverName.
+		tlsConfigLookup := tlsManager.GetConfigLookup(entryPointName)
+
+		serverEntryPointsTCP[entryPointName], err = NewTCPEntryPoint(ctx, config, tlsConfigLookup)
 		if err != nil {
 			return nil, fmt.Errorf("error while building entryPoint %s: %w", entryPointName, err)
 		}
@@ -110,12 +114,12 @@ func (eps TCPEntryPoints) Stop() {
 	wg.Wait()
 }
 
-// Switch the TCP routers.
-func (eps TCPEntryPoints) Switch(routersTCP map[string]*tcp.Router) {
-	for entryPointName, rt := range routersTCP {
-		eps[entryPointName].SwitchRouter(rt)
-	}
-}
+//// Switch the TCP routers.
+//func (eps TCPEntryPoints) Switch(httpHandlers map[string]http.Handler, httpsHandlers map[string]http.Handler, routersTCP map[string]*tcp.Router) {
+//	for entryPointName, rt := range routersTCP {
+//		eps[entryPointName].SwitchRouter(httpHandlers[entryPointName], httpsHandlers[entryPointName], rt)
+//	}
+//}
 
 // TCPEntryPoint is the TCP server.
 type TCPEntryPoint struct {
@@ -130,7 +134,7 @@ type TCPEntryPoint struct {
 }
 
 // NewTCPEntryPoint creates a new TCPEntryPoint.
-func NewTCPEntryPoint(ctx context.Context, configuration *static.EntryPoint) (*TCPEntryPoint, error) {
+func NewTCPEntryPoint(ctx context.Context, configuration *static.EntryPoint, tlsConfigLookup traefiktls.ConfigLookup) (*TCPEntryPoint, error) {
 	tracker := newConnectionTracker()
 
 	listener, err := buildListener(ctx, configuration)
@@ -138,26 +142,27 @@ func NewTCPEntryPoint(ctx context.Context, configuration *static.EntryPoint) (*T
 		return nil, fmt.Errorf("error preparing server: %w", err)
 	}
 
-	rt := &tcp.Router{}
-
 	httpServer, err := createHTTPServer(ctx, listener, configuration, true)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing httpServer: %w", err)
 	}
-
-	rt.SetHTTPForwarder(httpServer.Forwarder)
 
 	httpsServer, err := createHTTPServer(ctx, listener, configuration, false)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing httpsServer: %w", err)
 	}
 
-	h3server, err := newHTTP3Server(ctx, configuration, httpsServer)
+	h3server, err := newHTTP3Server(ctx, configuration, httpsServer, tlsConfigLookup)
 	if err != nil {
 		return nil, err
 	}
 
-	rt.SetHTTPSForwarder(httpsServer.Forwarder)
+	rt, err := tcp.NewRouter()
+	if err != nil {
+		return nil, err
+	}
+
+	rt.SetHTTPForwarders(httpServer.Forwarder, httpsServer.Forwarder)
 
 	tcpSwitcher := &tcp.HandlerSwitcher{}
 	tcpSwitcher.Switch(rt)
@@ -296,32 +301,17 @@ func (e *TCPEntryPoint) Shutdown(ctx context.Context) {
 }
 
 // SwitchRouter switches the TCP router handler.
-func (e *TCPEntryPoint) SwitchRouter(rt *tcp.Router) {
-	// TODO: do that initial Set somewhere else.
-	rt.SetHTTPForwarder(e.httpServer.Forwarder)
-
-	httpHandler := rt.GetHTTPHandler()
-	if httpHandler == nil {
-		httpHandler = router.BuildDefaultHTTPRouter()
-	}
-
+func (e *TCPEntryPoint) SwitchRouter(httpHandler, httpsHandler http.Handler, tcpRouter *tcp.Router) {
 	e.httpServer.Switcher.UpdateHandler(httpHandler)
-
-	// TODO: only reload
-	rt.SetHTTPSForwarder(e.httpsServer.Forwarder)
-
-	httpsHandler := rt.GetHTTPSHandler()
-	if httpsHandler == nil {
-		httpsHandler = router.BuildDefaultHTTPRouter()
-	}
-
 	e.httpsServer.Switcher.UpdateHandler(httpsHandler)
 
-	e.switcher.Switch(rt)
+	// Sets the HTTP forwarders to the new tcp.Router.
+	tcpRouter.SetHTTPForwarders(e.httpServer.Forwarder, e.httpsServer.Forwarder)
+	e.switcher.Switch(tcpRouter)
 
-	if e.http3Server != nil {
-		e.http3Server.Switch(rt)
-	}
+	//if e.http3Server != nil {
+	//	e.http3Server.Switch(tlsConfigGetter)
+	//}
 }
 
 // writeCloserWrapper wraps together a connection, and the concrete underlying

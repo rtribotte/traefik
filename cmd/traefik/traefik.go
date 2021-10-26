@@ -39,6 +39,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/server"
 	"github.com/traefik/traefik/v2/pkg/server/middleware"
 	"github.com/traefik/traefik/v2/pkg/server/service"
+	"github.com/traefik/traefik/v2/pkg/tls"
 	traefiktls "github.com/traefik/traefik/v2/pkg/tls"
 	"github.com/traefik/traefik/v2/pkg/types"
 	"github.com/traefik/traefik/v2/pkg/version"
@@ -191,7 +192,7 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 	// Entrypoints
 
-	serverEntryPointsTCP, err := server.NewTCPEntryPoints(staticConfiguration.EntryPoints)
+	serverEntryPointsTCP, err := server.NewTCPEntryPoints(tlsManager, staticConfiguration.EntryPoints)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +259,7 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 	accessLog := setupAccessLog(staticConfiguration.AccessLog)
 	chainBuilder := middleware.NewChainBuilder(*staticConfiguration, metricsRegistry, accessLog)
-	routerFactory := server.NewRouterFactory(*staticConfiguration, managerFactory, tlsManager, chainBuilder, pluginBuilder, metricsRegistry)
+	routerFactory := server.NewRouterFactory(*staticConfiguration, managerFactory, chainBuilder, pluginBuilder, metricsRegistry)
 
 	// Watcher
 
@@ -293,7 +294,7 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 	})
 
 	// Switch router
-	watcher.AddListener(switchRouter(routerFactory, serverEntryPointsTCP, serverEntryPointsUDP, aviator))
+	watcher.AddListener(switchRouter(tlsManager, routerFactory, serverEntryPointsTCP, serverEntryPointsUDP, aviator))
 
 	// Metrics
 	if metricsRegistry.IsEpEnabled() || metricsRegistry.IsSvcEnabled() {
@@ -361,18 +362,25 @@ func getDefaultsEntrypoints(staticConfiguration *static.Configuration) []string 
 	return defaultEntryPoints
 }
 
-func switchRouter(routerFactory *server.RouterFactory, serverEntryPointsTCP server.TCPEntryPoints, serverEntryPointsUDP server.UDPEntryPoints, aviator *pilot.Pilot) func(conf dynamic.Configuration) {
+func switchRouter(tlsManager *tls.Manager, routerFactory *server.RouterFactory, serverEntryPointsTCP server.TCPEntryPoints, serverEntryPointsUDP server.UDPEntryPoints, aviator *pilot.Pilot) func(conf dynamic.Configuration) {
 	return func(conf dynamic.Configuration) {
 		rtConf := runtime.NewConfig(conf)
 
-		routers, udpRouters := routerFactory.CreateRouters(rtConf)
+		routers := routerFactory.CreateRouters(tlsManager, rtConf)
 
 		if aviator != nil {
 			aviator.SetDynamicConfiguration(conf)
 		}
 
-		serverEntryPointsTCP.Switch(routers)
-		serverEntryPointsUDP.Switch(udpRouters)
+		for name, entryPoint := range serverEntryPointsTCP {
+			httpHandler := routers.HTTPHandlers[name]
+			httpsHandler := routers.HTTPSHandlers[name]
+			tcpRouter := routers.TCPRouters[name]
+
+			entryPoint.SwitchRouter(httpHandler, httpsHandler, tcpRouter)
+		}
+
+		serverEntryPointsUDP.Switch(routers.UDPHandlers)
 	}
 }
 
