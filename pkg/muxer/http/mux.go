@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -27,6 +28,8 @@ var httpFuncs = map[string]func(*mux.Route, ...string) error{
 	"Headers":       headers,
 	"HeadersRegexp": headersRegexp,
 	"Query":         query,
+	// The context matcher func is dedicated to internal use in the context of routeBack routers.
+	"Context": context,
 }
 
 // Muxer handles routing with rules.
@@ -243,6 +246,18 @@ func query(route *mux.Route, query ...string) error {
 	route.Queries(queries...)
 	// Queries can return nil so we can't chain the GetError()
 	return route.GetError()
+}
+
+func context(route *mux.Route, context ...string) error {
+	if len(context) != 2 {
+		return errors.New("context matcher requires two elements, a key/value pair")
+	}
+
+	route.MatcherFunc(func(req *http.Request, _ *mux.RouteMatch) bool {
+		return req.Context().Value(context[0]) == context[1]
+	})
+
+	return nil
 }
 
 func addRuleOnRouter(router *mux.Router, rule *rules.Tree) error {

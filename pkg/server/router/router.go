@@ -13,6 +13,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/middlewares/accesslog"
 	metricsMiddle "github.com/traefik/traefik/v2/pkg/middlewares/metrics"
 	"github.com/traefik/traefik/v2/pkg/middlewares/recovery"
+	"github.com/traefik/traefik/v2/pkg/middlewares/routeback"
 	"github.com/traefik/traefik/v2/pkg/middlewares/tracing"
 	httpmuxer "github.com/traefik/traefik/v2/pkg/muxer/http"
 	"github.com/traefik/traefik/v2/pkg/server/middleware"
@@ -111,18 +112,36 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, configs map[string
 		return nil, err
 	}
 
+	chain := alice.New()
+	chain = chain.Append(func(next http.Handler) (http.Handler, error) {
+		return recovery.New(ctx, next)
+	})
+
+	epHandler, err := chain.Then(muxer)
+	if err != nil {
+		return nil, fmt.Errorf("build entryPoint handler: %w", err)
+	}
+
 	for routerName, routerConfig := range configs {
 		ctxRouter := log.With(provider.AddInContext(ctx, routerName), log.Str(log.RouterName, routerName))
 		logger := log.FromContext(ctxRouter)
 
-		handler, err := m.buildRouterHandler(ctxRouter, routerName, routerConfig)
+		handler, err := m.buildRouterHandler(ctxRouter, routerName, routerConfig, epHandler)
 		if err != nil {
 			routerConfig.AddError(err, true)
 			logger.Error(err)
 			continue
 		}
 
-		err = muxer.AddRoute(routerConfig.Rule, routerConfig.Priority, handler)
+		rule := routerConfig.Rule
+		// If the router is a non-terminal router (RouteBack),
+		// we need to avoid matching against it a second time,
+		// by tweaking the router's rule.
+		if routerConfig.RouteBack {
+			rule = "!Context(`RouteBack`, `" + routerName + "-routeback" + "`) && (" + rule + ")"
+		}
+
+		err = muxer.AddRoute(rule, routerConfig.Priority, handler)
 		if err != nil {
 			routerConfig.AddError(err, true)
 			logger.Error(err)
@@ -132,15 +151,10 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, configs map[string
 
 	muxer.SortRoutes()
 
-	chain := alice.New()
-	chain = chain.Append(func(next http.Handler) (http.Handler, error) {
-		return recovery.New(ctx, next)
-	})
-
-	return chain.Then(muxer)
+	return epHandler, err
 }
 
-func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, routerConfig *runtime.RouterInfo) (http.Handler, error) {
+func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, routerConfig *runtime.RouterInfo, epHandler http.Handler) (http.Handler, error) {
 	if handler, ok := m.routerHandlers[routerName]; ok {
 		return handler, nil
 	}
@@ -156,7 +170,7 @@ func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, rou
 		}
 	}
 
-	handler, err := m.buildHTTPHandler(ctx, routerConfig, routerName)
+	handler, err := m.buildHTTPHandler(ctx, routerName, routerConfig, epHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -174,21 +188,12 @@ func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, rou
 	return m.routerHandlers[routerName], nil
 }
 
-func (m *Manager) buildHTTPHandler(ctx context.Context, router *runtime.RouterInfo, routerName string) (http.Handler, error) {
+func (m *Manager) buildHTTPHandler(ctx context.Context, routerName string, router *runtime.RouterInfo, epHandler http.Handler) (http.Handler, error) {
 	var qualifiedNames []string
 	for _, name := range router.Middlewares {
 		qualifiedNames = append(qualifiedNames, provider.GetQualifiedName(ctx, name))
 	}
 	router.Middlewares = qualifiedNames
-
-	if router.Service == "" {
-		return nil, errors.New("the service is missing on the router")
-	}
-
-	sHandler, err := m.serviceManager.BuildHTTP(ctx, router.Service)
-	if err != nil {
-		return nil, err
-	}
 
 	mHandler := m.middlewaresBuilder.BuildChain(ctx, router.Middlewares)
 
@@ -202,7 +207,29 @@ func (m *Manager) buildHTTPHandler(ctx context.Context, router *runtime.RouterIn
 		chain = chain.Append(metricsMiddle.WrapRouterHandler(ctx, m.metricsRegistry, routerName, provider.GetQualifiedName(ctx, router.Service)))
 	}
 
-	return chain.Extend(*mHandler).Append(tHandler).Then(sHandler)
+	if router.RouteBack {
+		if router.Service != "" {
+			return nil, errors.New("service definition is not allowed in combination with the use of the routeBack option")
+		}
+
+		routeBackHandler, err := routeback.New(ctx, epHandler, routerName+"-routeback")
+		if err != nil {
+			return nil, err
+		}
+
+		return chain.Extend(*mHandler).Append(tHandler).Then(routeBackHandler)
+	}
+
+	if router.Service == "" {
+		return nil, errors.New("the service is missing on the router")
+	}
+
+	serviceHandler, err := m.serviceManager.BuildHTTP(ctx, router.Service)
+	if err != nil {
+		return nil, err
+	}
+
+	return chain.Extend(*mHandler).Append(tHandler).Then(serviceHandler)
 }
 
 // BuildDefaultHTTPRouter creates a default HTTP router.
