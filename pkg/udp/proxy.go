@@ -1,7 +1,7 @@
 package udp
 
 import (
-	"errors"
+	"io"
 	"net"
 
 	"github.com/traefik/traefik/v2/pkg/log"
@@ -27,34 +27,32 @@ func NewProxy(address string) (*Proxy, error) {
 func (p *Proxy) ServeUDP(conn *Conn) {
 	log.WithoutContext().Debugf("Handling connection from %s", conn.rAddr)
 
+	conn.backendsConn.setCurrentTarget(p.target)
+
+	// needed because of e.g. server.trackedConnection
+	defer conn.Close()
+
 	errChan := make(chan error)
-	go func() {
-		for {
-			buf := make([]byte, maxDatagramSize)
-			n, err := conn.Read(buf)
-			if err != nil {
-				// conn.Read only returns an error if the connection has been closed.
-				// So we want to quit early, and do not log the error.
-				errChan <- nil
-
-				return
-			}
-
-			_, err = conn.backendsConn.WriteTo(buf[:n], p.target)
-			if err != nil {
-				var netErr net.Error
-				if errors.As(err, &netErr) && (netErr.Temporary() || netErr.Timeout()) {
-					continue
-				}
-
-				errChan <- err
-				return
-			}
-		}
-	}()
+	go connCopy(conn, conn.backendsConn, errChan)
+	go connCopy(conn.backendsConn, conn, errChan)
 
 	err := <-errChan
 	if err != nil {
 		log.WithoutContext().Errorf("Error while serving UDP: %v", err)
+	}
+
+	<-errChan
+}
+
+func connCopy(dst io.WriteCloser, src io.Reader, errCh chan error) {
+	// The buffer is initialized to the maximum UDP datagram size,
+	// to make sure that the whole UDP datagram is read or written atomically (no data is discarded).
+	buffer := make([]byte, maxDatagramSize)
+
+	_, err := io.CopyBuffer(dst, src, buffer)
+	errCh <- err
+
+	if err := dst.Close(); err != nil {
+		log.WithoutContext().Debugf("Error while terminating connection: %v", err)
 	}
 }

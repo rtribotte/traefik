@@ -46,9 +46,9 @@ func TestConsecutiveWrites(t *testing.T) {
 				n2, err = conn.Read(b2)
 				require.NoError(t, err)
 
-				_, err = conn.listener.pConn.WriteTo(b[:n], conn.rAddr)
+				_, err = conn.Write(b[:n])
 				require.NoError(t, err)
-				_, err = conn.listener.pConn.WriteTo(b2[:n2], conn.rAddr)
+				_, err = conn.Write(b2[:n2])
 				require.NoError(t, err)
 			}()
 		}
@@ -99,12 +99,12 @@ func TestListenNotBlocking(t *testing.T) {
 				b := make([]byte, 2048)
 				n, err := conn.Read(b)
 				require.NoError(t, err)
-				_, err = conn.listener.pConn.WriteTo(b[:n], conn.rAddr)
+				_, err = conn.Write(b[:n])
 				require.NoError(t, err)
 
 				n, err = conn.Read(b)
 				require.NoError(t, err)
-				_, err = conn.listener.pConn.WriteTo(b[:n], conn.rAddr)
+				_, err = conn.Write(b[:n])
 				require.NoError(t, err)
 
 				// This should not block second call
@@ -256,7 +256,7 @@ func TestShutdown(t *testing.T) {
 					if string(b[:n]) == "CLOSE" {
 						return
 					}
-					_, err = conn.listener.pConn.WriteTo(b[:n], conn.rAddr)
+					_, err = conn.Write(b[:n])
 					require.NoError(t, err)
 				}
 			}()

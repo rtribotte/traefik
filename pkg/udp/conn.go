@@ -208,7 +208,7 @@ func (l *Listener) getBackendsConn(raddr net.Addr) (*backendsConn, error) {
 	l.muBackendsConns.RLock()
 	conn, exists := l.backendsConns[raddr.String()]
 	l.muBackendsConns.RUnlock()
-	if exists {
+	if exists && !conn.closed {
 		return conn, nil
 	}
 
@@ -217,84 +217,16 @@ func (l *Listener) getBackendsConn(raddr net.Addr) (*backendsConn, error) {
 		return nil, err
 	}
 
-	bConn := newBackendsConn(backendsListener)
+	bConn := &backendsConn{
+		listener: l,
+		rAddr:    raddr,
+		UDPConn:  backendsListener,
+		targets:  make(map[string]struct{}),
+	}
 
 	l.muBackendsConns.Lock()
 	l.backendsConns[raddr.String()] = bConn
 	l.muBackendsConns.Unlock()
-
-	go func() {
-		ticker := time.NewTicker(l.timeout / 10)
-		defer ticker.Stop()
-
-		for {
-			<-ticker.C
-
-			// alive conn but no response yet from backend.
-			if _, exist := l.conns[raddr.String()]; exist {
-				return
-			}
-
-			bConn.muActivity.RLock()
-			deadline := bConn.lastActivity.Add(l.timeout)
-			bConn.muActivity.RUnlock()
-
-			if time.Now().After(deadline) {
-				bConn.Close()
-
-				l.muBackendsConns.Lock()
-				delete(l.backendsConns, raddr.String())
-				l.muBackendsConns.Unlock()
-
-				return
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			buf := make([]byte, maxDatagramSize)
-			n, addr, err := bConn.ReadFrom(buf)
-			if err != nil {
-				if bConn.closed {
-					return
-				}
-
-				var netErr net.Error
-				if errors.As(err, &netErr) && (netErr.Temporary() || netErr.Timeout()) {
-					continue
-				}
-
-				log.WithoutContext().Errorf("cannot read from backend: %v", err)
-
-				bConn.Close()
-				return
-			}
-
-			bConn.muTargets.RLock()
-			_, exists := bConn.targets[addr.String()]
-			bConn.muTargets.RUnlock()
-
-			if !exists {
-				continue
-			}
-
-			bConn.muActivity.Lock()
-			bConn.lastActivity = time.Now()
-			bConn.muActivity.Unlock()
-
-			_, err = l.pConn.WriteTo(buf[:n], raddr)
-			if err != nil {
-				var netErr net.Error
-				if errors.As(err, &netErr) && (netErr.Temporary() || netErr.Timeout()) {
-					continue
-				}
-
-				log.WithoutContext().Errorf("cannot write to backend: %v", err)
-				return
-			}
-		}
-	}()
 
 	return bConn, nil
 }
@@ -325,9 +257,7 @@ type Conn struct {
 	sizeCh    chan int    // to synchronize with the end of a Read
 	msgs      [][]byte    // to store data from listener, to be consumed by Reads
 
-	muActivity   sync.RWMutex
-	lastActivity time.Time // the last time the session saw either read or write activity
-	requests     int
+	requests int
 
 	timeout  time.Duration // for timeouts
 	doneOnce sync.Once
@@ -348,11 +278,12 @@ func (c *Conn) readLoop() {
 			case msg := <-c.receiveCh:
 				c.msgs = append(c.msgs, msg)
 			case <-ticker.C:
-				c.muActivity.RLock()
-				deadline := c.lastActivity.Add(c.timeout)
-				c.muActivity.RUnlock()
+				c.backendsConn.muActivity.RLock()
+				deadline := c.backendsConn.lastActivity.Add(c.timeout)
+				c.backendsConn.muActivity.RUnlock()
 				if time.Now().After(deadline) {
 					c.Close()
+					c.backendsConn.close()
 					return
 				}
 
@@ -369,11 +300,12 @@ func (c *Conn) readLoop() {
 		case msg := <-c.receiveCh:
 			c.msgs = append(c.msgs, msg)
 		case <-ticker.C:
-			c.muActivity.RLock()
-			deadline := c.lastActivity.Add(c.timeout)
-			c.muActivity.RUnlock()
+			c.backendsConn.muActivity.RLock()
+			deadline := c.backendsConn.lastActivity.Add(c.timeout)
+			c.backendsConn.muActivity.RUnlock()
 			if time.Now().After(deadline) {
 				c.Close()
+				c.backendsConn.close()
 				return
 			}
 		}
@@ -389,10 +321,10 @@ func (c *Conn) Read(p []byte) (int, error) {
 	select {
 	case c.readCh <- p:
 		n := <-c.sizeCh
-		c.muActivity.Lock()
-		c.lastActivity = time.Now()
+		c.backendsConn.muActivity.Lock()
+		c.backendsConn.lastActivity = time.Now()
 		c.requests++
-		c.muActivity.Unlock()
+		c.backendsConn.muActivity.Unlock()
 		return n, nil
 
 	case <-c.doneCh:
@@ -405,11 +337,11 @@ func (c *Conn) Read(p []byte) (int, error) {
 // It is an error to send a message larger than the system's max UDP datagram size.
 // Deprecated.
 func (c *Conn) Write(p []byte) (n int, err error) {
-	c.muActivity.Lock()
-	c.lastActivity = time.Now()
-	c.muActivity.Unlock()
+	c.backendsConn.muActivity.Lock()
+	c.backendsConn.lastActivity = time.Now()
+	c.backendsConn.muActivity.Unlock()
 
-	return c.backendsConn.Write(p)
+	return c.listener.pConn.WriteTo(p, c.rAddr)
 }
 
 func (c *Conn) close() {
@@ -429,15 +361,21 @@ func (c *Conn) Close() error {
 }
 
 type backendsConn struct {
+	listener *Listener
+	rAddr    net.Addr
+
 	*net.UDPConn
 
-	closed bool
+	closed        bool
+	currentTarget net.Addr
+
+	doneOnce sync.Once
 
 	muTargets sync.RWMutex
 	targets   map[string]struct{}
 
 	muActivity   sync.RWMutex
-	lastActivity time.Time
+	lastActivity time.Time // the last time the session saw either read or write activity
 }
 
 func newBackendsConn(conn *net.UDPConn) *backendsConn {
@@ -448,20 +386,68 @@ func newBackendsConn(conn *net.UDPConn) *backendsConn {
 	}
 }
 
-func (c *backendsConn) WriteTo(p []byte, target net.Addr) (int, error) {
+func (c *backendsConn) setCurrentTarget(target net.Addr) {
+	c.currentTarget = target
+
+	// Retain this target as a known target.
+	c.muTargets.Lock()
+	c.targets[target.String()] = struct{}{}
+	c.muTargets.Unlock()
+}
+
+func (c *backendsConn) Read(p []byte) (int, error) {
+	n, addr, err := c.ReadFrom(p)
+	if err != nil {
+		if c.closed {
+			return 0, io.EOF
+		}
+
+		var netErr net.Error
+		if errors.As(err, &netErr) && (netErr.Temporary() || netErr.Timeout()) {
+			return 0, nil
+		}
+
+		log.WithoutContext().Errorf("cannot read from backend: %v", err)
+
+		c.close()
+		return 0, io.EOF
+	}
+
+	c.muTargets.RLock()
+	_, exists := c.targets[addr.String()]
+	c.muTargets.RUnlock()
+
+	// Drop datagrams coming from unknown backends.
+	if !exists {
+		// FIXME empty buffer
+		return 0, nil
+	}
+
 	c.muActivity.Lock()
 	c.lastActivity = time.Now()
 	c.muActivity.Unlock()
 
-	c.muTargets.Lock()
-	c.targets[target.String()] = struct{}{}
-	c.muTargets.Unlock()
+	return n, nil
+}
 
-	return c.UDPConn.WriteTo(p, target)
+func (c *backendsConn) Write(p []byte) (n int, err error) {
+	c.muActivity.Lock()
+	c.lastActivity = time.Now()
+	c.muActivity.Unlock()
+
+	return c.WriteTo(p, c.currentTarget)
+}
+
+func (c *backendsConn) close() error {
+	c.doneOnce.Do(func() {
+		c.closed = true
+	})
+
+	return c.UDPConn.Close()
 }
 
 func (c *backendsConn) Close() error {
-	c.closed = true
+	// FIXME
 
-	return c.UDPConn.Close()
+	return nil
 }
