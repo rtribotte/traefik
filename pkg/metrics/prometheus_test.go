@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/traefik/traefik/v2/pkg/config/dynamic"
 	th "github.com/traefik/traefik/v2/pkg/testhelpers"
 	"github.com/traefik/traefik/v2/pkg/types"
@@ -514,7 +515,7 @@ func TestPrometheusMetricRemoval(t *testing.T) {
 		Add(1)
 	prometheusRegistry.
 		RouterReqsCounter().
-		With(nil, "router", "foo@providerName", "service", "bar", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http").
+		With(nil, "router", "foo@providerName", "service", "bar@providerName", "code", strconv.Itoa(http.StatusOK), "method", http.MethodGet, "protocol", "http").
 		Add(1)
 	prometheusRegistry.
 		ServiceReqsCounter().
@@ -567,6 +568,18 @@ func TestPrometheusMetricRemoveEndpointForRecoveredService(t *testing.T) {
 		ServiceServerUpGauge().
 		With("service", "service1", "url", "http://localhost:9000").
 		Add(1)
+
+	delayForTrackingCompletion()
+
+	assertMetricsExist(t, mustScrape(), serviceServerUpName)
+	assertMetricsAbsent(t, mustScrape(), serviceServerUpName)
+
+	prometheusRegistry.
+		ServiceServerUpGauge().
+		With("service", "service1", "url", "http://localhost:9000").
+		Add(1)
+
+	delayForTrackingCompletion()
 
 	assertMetricsExist(t, mustScrape(), serviceServerUpName)
 	assertMetricsAbsent(t, mustScrape(), serviceServerUpName)
@@ -625,10 +638,6 @@ func TestPrometheusRemovedMetricsReset(t *testing.T) {
 func (ps *prometheusState) reset() {
 	ps.dynamicConfig = newDynamicConfig()
 	ps.vectors = nil
-	ps.deletedEP = nil
-	ps.deletedRouters = nil
-	ps.deletedServices = nil
-	ps.deletedURLs = make(map[string][]string)
 }
 
 // Tracking and gathering the metrics happens concurrently.
@@ -778,4 +787,62 @@ func buildTimestampAssert(t *testing.T, metricName string) func(family *dto.Metr
 			t.Errorf("metric %s has wrong timestamp %v", metricName, ts)
 		}
 	}
+}
+
+func TestLabelWatcher(t *testing.T) {
+	lw := labelWatcher{
+		collectors: []*labelCollector{},
+		labelsChan: make(chan []string, 10),
+	}
+	lw.runCollect(context.Background())
+
+	collector, err := newLabelsCollector("foobar")
+	require.NoError(t, err)
+
+	lw.collectors = append(lw.collectors, collector)
+
+	lw.collect("foobar", "foo")
+	time.Sleep(10 * time.Millisecond)
+	observations := lw.observations([]string{"foobar"})
+
+	require.Equal(t, 1, len(observations))
+	assert.Equal(t, "foo", observations[0].labelValue("foobar"))
+
+	lw.collect("foobar", "bar")
+	time.Sleep(10 * time.Millisecond)
+	observations = lw.observations([]string{"foobar"})
+
+	require.Equal(t, 2, len(observations))
+
+	for _, obs := range observations {
+		lw.clearObservation(obs)
+	}
+
+	observations = lw.observations([]string{"foobar"})
+	assert.Nil(t, observations)
+
+	collector2, err := newLabelsCollector("foobar", "foobaz")
+	require.NoError(t, err)
+
+	lw.collectors = append(lw.collectors, collector2)
+
+	lw.collect("foobar", "foo", "foobaz", "bar")
+	time.Sleep(10 * time.Millisecond)
+	observations = lw.observations([]string{"foobar"})
+
+	require.Equal(t, 1, len(observations))
+	assert.Equal(t, "foo", observations[0].labelValue("foobar"))
+
+	lw.clearObservation(observations[0])
+
+	observations = lw.observations([]string{"foobar", "foobaz"})
+
+	require.Equal(t, 1, len(observations))
+	assert.Equal(t, "foo", observations[0].labelValue("foobar"))
+	assert.Equal(t, "bar", observations[0].labelValue("foobaz"))
+
+	lw.clearObservation(observations[0])
+
+	observations = lw.observations([]string{"foobar"})
+	assert.Nil(t, observations)
 }

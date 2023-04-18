@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/traefik/traefik/v2/pkg/config/dynamic"
 	"github.com/traefik/traefik/v2/pkg/log"
+	"github.com/traefik/traefik/v2/pkg/safe"
 	"github.com/traefik/traefik/v2/pkg/types"
 )
 
@@ -329,7 +331,7 @@ func OnConfigurationUpdate(conf dynamic.Configuration, entryPoints []string) {
 	}
 
 	if conf.HTTP == nil {
-		promState.SetDynamicConfig(dynCfg)
+		promState.setDynamicConfig(dynCfg)
 		return
 	}
 
@@ -346,13 +348,32 @@ func OnConfigurationUpdate(conf dynamic.Configuration, entryPoints []string) {
 		}
 	}
 
-	promState.SetDynamicConfig(dynCfg)
+	promState.setDynamicConfig(dynCfg)
 }
 
 func newPrometheusState() *prometheusState {
+	lw := labelWatcher{
+		labelsChan: make(chan []string, 100),
+		collectors: []*labelCollector{},
+	}
+
+	entrypoint, _ := newLabelsCollector("entrypoint")
+	lw.collectors = append(lw.collectors, entrypoint)
+
+	router, _ := newLabelsCollector("router")
+	lw.collectors = append(lw.collectors, router)
+
+	service, _ := newLabelsCollector("service")
+	lw.collectors = append(lw.collectors, service)
+
+	serviceAndURL, _ := newLabelsCollector("service", "url")
+	lw.collectors = append(lw.collectors, serviceAndURL)
+
+	lw.runCollect(context.Background())
+
 	return &prometheusState{
 		dynamicConfig: newDynamicConfig(),
-		deletedURLs:   make(map[string][]string),
+		labelWatcher:  &lw,
 	}
 }
 
@@ -362,45 +383,11 @@ type vector interface {
 }
 
 type prometheusState struct {
-	vectors []vector
+	vectors      []vector
+	labelWatcher *labelWatcher
 
-	mtx             sync.Mutex
+	dynamicConfigMu sync.RWMutex
 	dynamicConfig   *dynamicConfig
-	deletedEP       []string
-	deletedRouters  []string
-	deletedServices []string
-	deletedURLs     map[string][]string
-}
-
-func (ps *prometheusState) SetDynamicConfig(dynamicConfig *dynamicConfig) {
-	ps.mtx.Lock()
-	defer ps.mtx.Unlock()
-
-	for ep := range ps.dynamicConfig.entryPoints {
-		if _, ok := dynamicConfig.entryPoints[ep]; !ok {
-			ps.deletedEP = append(ps.deletedEP, ep)
-		}
-	}
-
-	for router := range ps.dynamicConfig.routers {
-		if _, ok := dynamicConfig.routers[router]; !ok {
-			ps.deletedRouters = append(ps.deletedRouters, router)
-		}
-	}
-
-	for service, serV := range ps.dynamicConfig.services {
-		actualService, ok := dynamicConfig.services[service]
-		if !ok {
-			ps.deletedServices = append(ps.deletedServices, service)
-		}
-		for url := range serV {
-			if _, ok := actualService[url]; !ok {
-				ps.deletedURLs[service] = append(ps.deletedURLs[service], url)
-			}
-		}
-	}
-
-	ps.dynamicConfig = dynamicConfig
 }
 
 // Describe implements prometheus.Collector and simply calls
@@ -421,39 +408,41 @@ func (ps *prometheusState) Collect(ch chan<- stdprometheus.Metric) {
 		v.Collect(ch)
 	}
 
-	ps.mtx.Lock()
-	defer ps.mtx.Unlock()
+	ps.dynamicConfigMu.RLock()
+	defer ps.dynamicConfigMu.RUnlock()
 
-	for _, ep := range ps.deletedEP {
+	for _, obs := range ps.labelWatcher.observations([]string{"entrypoint"}) {
+		ep := obs.labelValue("entrypoint")
 		if !ps.dynamicConfig.hasEntryPoint(ep) {
 			ps.DeletePartialMatch(map[string]string{"entrypoint": ep})
+			ps.labelWatcher.clearObservation(obs)
 		}
 	}
 
-	for _, router := range ps.deletedRouters {
+	for _, obs := range ps.labelWatcher.observations([]string{"router"}) {
+		router := obs.labelValue("router")
 		if !ps.dynamicConfig.hasRouter(router) {
 			ps.DeletePartialMatch(map[string]string{"router": router})
+			ps.labelWatcher.clearObservation(obs)
 		}
 	}
 
-	for _, service := range ps.deletedServices {
+	for _, obs := range ps.labelWatcher.observations([]string{"service"}) {
+		service := obs.labelValue("service")
 		if !ps.dynamicConfig.hasService(service) {
 			ps.DeletePartialMatch(map[string]string{"service": service})
+			ps.labelWatcher.clearObservation(obs)
 		}
 	}
 
-	for service, urls := range ps.deletedURLs {
-		for _, url := range urls {
-			if !ps.dynamicConfig.hasServerURL(service, url) {
-				ps.DeletePartialMatch(map[string]string{"service": service, "url": url})
-			}
+	for _, obs := range ps.labelWatcher.observations([]string{"service", "url"}) {
+		service := obs.labelValue("service")
+		url := obs.labelValue("url")
+		if !ps.dynamicConfig.hasServerURL(service, url) {
+			ps.DeletePartialMatch(map[string]string{"service": service, "url": url})
+			ps.labelWatcher.clearObservation(obs)
 		}
 	}
-
-	ps.deletedEP = nil
-	ps.deletedRouters = nil
-	ps.deletedServices = nil
-	ps.deletedURLs = make(map[string][]string)
 }
 
 // DeletePartialMatch deletes all metrics where the variable labels contain all of those passed in as labels.
@@ -465,6 +454,13 @@ func (ps *prometheusState) DeletePartialMatch(labels stdprometheus.Labels) int {
 		count += elem.DeletePartialMatch(labels)
 	}
 	return count
+}
+
+func (ps *prometheusState) setDynamicConfig(dynamicConfig *dynamicConfig) {
+	ps.dynamicConfigMu.Lock()
+	defer ps.dynamicConfigMu.Unlock()
+
+	ps.dynamicConfig = dynamicConfig
 }
 
 func newDynamicConfig() *dynamicConfig {
@@ -686,6 +682,8 @@ func (lvs labelNamesValues) With(labelValues ...string) labelNamesValues {
 	n := copy(labels, lvs)
 	copy(labels[n:], labelValues)
 
+	promState.labelWatcher.collect(labels...)
+
 	return labels
 }
 
@@ -697,4 +695,201 @@ func (lvs labelNamesValues) ToLabels() stdprometheus.Labels {
 		labels[lvs[i]] = lvs[i+1]
 	}
 	return labels
+}
+
+// labelWatcher holds a collection of label collectors.
+type labelWatcher struct {
+	collectors []*labelCollector
+
+	cancel     context.CancelFunc
+	labelsChan chan []string
+}
+
+// runCollect starts a routine that is taking the chan labelValues to the collect method of each held collector.
+func (l *labelWatcher) runCollect(parentCtx context.Context) {
+	if l.cancel != nil {
+		l.cancel()
+	}
+
+	ctx, cancel := context.WithCancel(parentCtx)
+	l.cancel = cancel
+
+	safe.Go(func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case labelValues := <-l.labelsChan:
+				for _, collector := range l.collectors {
+					collector.collect(labelValues...)
+				}
+			}
+		}
+	})
+}
+
+// collect passes the given labelValues to collect method of each held collector.
+func (l *labelWatcher) collect(labelValues ...string) {
+	if l == nil {
+		return
+	}
+
+	if l.labelsChan != nil {
+		l.labelsChan <- labelValues
+	}
+}
+
+// observations returns a label observation collection obtain from the collector matching the give labels.
+func (l *labelWatcher) observations(labels []string) []observation {
+	if l == nil {
+		return nil
+	}
+
+collectors:
+	for _, collector := range l.collectors {
+		if len(collector.indexes) != len(labels) {
+			continue
+		}
+
+		for _, label := range labels {
+			if _, ok := collector.indexes[label]; !ok {
+				continue collectors
+			}
+		}
+
+		return collector.observations()
+	}
+
+	return nil
+}
+
+// clearObservation removes the given observation from the collector holding this observation.
+func (l *labelWatcher) clearObservation(obs observation) {
+	if l == nil {
+		return
+	}
+
+	for _, collector := range l.collectors {
+		if !reflect.DeepEqual(collector.indexes, obs.indexes) {
+			continue
+		}
+
+		collector.clearObservation(obs)
+		return
+	}
+}
+
+// tupleMaxCardinality defines the maximum number of elements of a tuple.
+const tupleMaxCardinality = 2
+
+type tuple [tupleMaxCardinality]string
+
+// observation represents an occurrence of a tuple of values for a set of labels.
+type observation struct {
+	tuple   tuple
+	indexes map[string]int
+}
+
+// labelValue returns the value of the given label.
+func (o observation) labelValue(label string) string {
+	if index, ok := o.indexes[label]; ok {
+		return o.tuple[index]
+	}
+
+	return ""
+}
+
+// labelCollector is a label tuple collector.
+// It keeps track of each unique occurrence of configured label tuple values.
+type labelCollector struct {
+	indexes map[string]int
+
+	observedMU sync.RWMutex
+	observed   map[tuple]struct{}
+}
+
+func newLabelsCollector(labels ...string) (*labelCollector, error) {
+	if len(labels) > tupleMaxCardinality {
+		return nil, errors.New("too many labels")
+	}
+
+	indexes := map[string]int{}
+	for i, label := range labels {
+		indexes[label] = i
+	}
+
+	return &labelCollector{
+		indexes: indexes,
+	}, nil
+}
+
+// collect optionally collects a tuple from the given label values.
+func (l *labelCollector) collect(labelValues ...string) {
+	if l == nil {
+		return
+	}
+
+	if len(labelValues)%2 != 0 {
+		return
+	}
+
+	collected := map[string]string{}
+	for label, _ := range l.indexes {
+		for i := 0; i < len(labelValues); i += 2 {
+			if label == labelValues[i] {
+				collected[label] = labelValues[i+1]
+				break
+			}
+		}
+	}
+
+	if len(l.indexes) != len(collected) {
+		return
+	}
+
+	var values tuple
+	for label, index := range l.indexes {
+		values[index] = collected[label]
+	}
+
+	l.observedMU.Lock()
+	defer l.observedMU.Unlock()
+
+	if l.observed == nil {
+		l.observed = map[tuple]struct{}{}
+	}
+	l.observed[values] = struct{}{}
+}
+
+// observations returns the observation set held by the collector.
+func (l *labelCollector) observations() []observation {
+	var observations []observation
+
+	if l == nil {
+		return observations
+	}
+
+	l.observedMU.RLock()
+	defer l.observedMU.RUnlock()
+
+	for t, _ := range l.observed {
+		observations = append(observations, observation{
+			tuple:   t,
+			indexes: l.indexes,
+		})
+	}
+
+	return observations
+}
+
+// clearObservation removes the given observation from the collector.
+func (l *labelCollector) clearObservation(obs observation) {
+	if l == nil {
+		return
+	}
+
+	l.observedMU.Lock()
+	defer l.observedMU.Unlock()
+
+	delete(l.observed, obs.tuple)
 }
