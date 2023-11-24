@@ -416,13 +416,18 @@ func (c *clientWrapper) UpdateGatewayStatus(gateway *gatev1.Gateway, gatewayStat
 		return nil
 	}
 
-	g := gateway.DeepCopy()
-	g.Status = gatewayStatus
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := c.csGateway.GatewayV1().Gateways(gateway.Namespace).UpdateStatus(ctx, g, metav1.UpdateOptions{})
+	gtw, err := c.csGateway.GatewayV1().Gateways(gateway.Namespace).Get(ctx, gateway.Name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get Gateway %q/%q: %w", gateway.Namespace, gateway.Name, err)
+	}
+
+	g := gtw.DeepCopy()
+	g.Status = gatewayStatus
+
+	_, err = c.csGateway.GatewayV1().Gateways(gateway.Namespace).UpdateStatus(ctx, g, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to update Gateway %q status: %w", gateway.Name, err)
 	}

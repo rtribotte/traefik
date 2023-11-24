@@ -88,6 +88,7 @@ func Test(t *testing.T) {
 	check.Suite(&HTTPSuite{})
 	if !useVPN {
 		check.Suite(&K8sSuite{})
+		check.Suite(&GateSuite{})
 	}
 	check.Suite(&KeepAliveSuite{})
 	check.Suite(&LogRotationSuite{})

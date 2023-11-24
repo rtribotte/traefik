@@ -58,6 +58,7 @@ require (
 	github.com/prometheus/client_model v0.5.0
 	github.com/quic-go/quic-go v0.39.0
 	github.com/rs/zerolog v1.28.0
+	github.com/sacloud/api-client-go v0.2.8
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spiffe/go-spiffe/v2 v2.1.1
 	github.com/stretchr/testify v1.8.4
@@ -103,6 +104,7 @@ require (
 	k8s.io/client-go v0.28.3
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	mvdan.cc/xurls/v2 v2.5.0
+	sigs.k8s.io/controller-runtime v0.16.3
 	sigs.k8s.io/gateway-api v1.0.0
 )
 
@@ -199,6 +201,7 @@ require (
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
+	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/exoscale/egoscale v0.100.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -297,6 +300,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/buildkit v0.8.2-0.20210401015549-df49b648c8bf // indirect
 	github.com/moby/locker v1.0.1 // indirect
+	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/moby/sys/mountinfo v0.5.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
@@ -314,7 +318,7 @@ require (
 	github.com/nrdcg/nodion v0.1.0 // indirect
 	github.com/nrdcg/porkbun v0.2.0 // indirect
 	github.com/nzdjb/go-metaname v1.0.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
+	github.com/onsi/ginkgo/v2 v2.11.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
@@ -331,7 +335,6 @@ require (
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.3.4 // indirect
 	github.com/rs/cors v1.7.0 // indirect
-	github.com/sacloud/api-client-go v0.2.8 // indirect
 	github.com/sacloud/go-http v0.1.6 // indirect
 	github.com/sacloud/iaas-api-go v1.11.1 // indirect
 	github.com/sacloud/packages-go v0.0.9 // indirect
