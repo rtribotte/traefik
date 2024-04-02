@@ -15,7 +15,17 @@
 [entryPoints]
   [entryPoints.web]
     address = ":80"
+  [entryPoints.web2]
+    address = ":8180"
   [entryPoints.websecure]
     address = ":443"
+  [entryPoints.websecure2]
+    address = ":8443"
+  [entryPoints.tcp]
+    address = ":9001"
+  [entryPoints.tcp2]
+    address = ":9002"
+  [entryPoints.tcp3]
+    address = ":8193"
 
 [providers.kubernetesGateway]

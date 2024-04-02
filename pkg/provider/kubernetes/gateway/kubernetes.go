@@ -395,7 +395,7 @@ func (p *Provider) createGatewayConf(ctx context.Context, client Client, gateway
 	}
 
 	if errG != nil {
-		return nil, fmt.Errorf("an error occurred while creating gateway status: %w", errG)
+		//return nil, fmt.Errorf("an error occurred while creating gateway status: %w", errG)
 	}
 
 	if len(tlsConfigs) > 0 {

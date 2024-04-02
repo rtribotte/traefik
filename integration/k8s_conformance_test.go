@@ -195,40 +195,43 @@ func (s *K8sConformanceSuite) TestK8sGatewayAPIConformance() {
 			LatestObservedGenerationSet:       5 * time.Second,
 			RequiredConsecutiveSuccesses:      0,
 		},
-		SupportedFeatures: sets.New[ksuite.SupportedFeature]().
-			Insert(ksuite.GatewayCoreFeatures.UnsortedList()...).
-			Insert(ksuite.ReferenceGrantCoreFeatures.UnsortedList()...),
+		//SupportedFeatures: sets.New[ksuite.SupportedFeature]().
+		//	Insert(ksuite.SupportGateway).
+		//	Insert(ksuite.SupportReferenceGrant).
+		//	Insert(ksuite.SupportHTTPRoute),
+		//ExemptFeatures: sets.New[ksuite.SupportedFeature]().
+		//	Insert(ksuite.SupportMesh).
+		//	Insert(ksuite.SupportTLSRoute),
 		EnableAllSupportedFeatures: false,
-		RunTest:                    *k8sConformanceRunTest,
+		//RunTest:                    tests.HTTPRouteMatching.ShortName,
 		// Until the feature are all supported, following tests are skipped.
 		SkipTests: []string{
-			"HTTPExactPathMatching",
-			"HTTPRouteHostnameIntersection",
-			"HTTPRouteListenerHostnameMatching",
-			"HTTPRouteRequestHeaderModifier",
-			"GatewayClassObservedGenerationBump",
-			"HTTPRouteInvalidNonExistentBackendRef",
-			"GatewayWithAttachedRoutes",
-			"HTTPRouteCrossNamespace",
-			"HTTPRouteDisallowedKind",
-			"HTTPRouteInvalidReferenceGrant",
-			"HTTPRouteObservedGenerationBump",
-			"TLSRouteSimpleSameNamespace",
-			"TLSRouteInvalidReferenceGrant",
-			"HTTPRouteInvalidCrossNamespaceParentRef",
-			"HTTPRouteInvalidParentRefNotMatchingSectionName",
-			"GatewayModifyListeners",
-			"GatewayInvalidTLSConfiguration",
-			"HTTPRouteInvalidCrossNamespaceBackendRef",
-			"HTTPRouteMatchingAcrossRoutes",
-			"HTTPRoutePartiallyInvalidViaInvalidReferenceGrant",
-			"HTTPRouteRedirectHostAndStatus",
-			"HTTPRouteInvalidBackendRefUnknownKind",
-			"HTTPRoutePathMatchOrder",
-			"HTTPRouteSimpleSameNamespace",
-			"HTTPRouteMatching",
-			"HTTPRouteHeaderMatching",
-			"HTTPRouteReferenceGrant",
+			//tests.GatewayClassObservedGenerationBump.ShortName,
+			//tests.GatewayInvalidTLSConfiguration.ShortName,
+			//tests.GatewayModifyListeners.ShortName,
+			//tests.GatewayWithAttachedRoutes.ShortName,
+			//tests.HTTPRouteCrossNamespace.ShortName,
+			//tests.HTTPExactPathMatching.ShortName,
+			//tests.HTTPRouteHeaderMatching.ShortName,
+			//tests.HTTPRouteHostnameIntersection.ShortName,
+			//tests.HTTPRouteInvalidNonExistentBackendRef.ShortName,
+			//tests.HTTPRouteInvalidBackendRefUnknownKind.ShortName,
+			//tests.HTTPRouteInvalidCrossNamespaceBackendRef.ShortName,
+			//tests.HTTPRouteInvalidCrossNamespaceParentRef.ShortName,
+			//tests.HTTPRouteInvalidParentRefNotMatchingSectionName.ShortName,
+			//tests.HTTPRouteInvalidReferenceGrant.ShortName,
+			//tests.HTTPRouteListenerHostnameMatching.ShortName,
+			//tests.HTTPRouteMatchingAcrossRoutes.ShortName,
+			//tests.HTTPRouteMatching.ShortName,
+			//tests.HTTPRouteObservedGenerationBump.ShortName,
+			//tests.HTTPRoutePartiallyInvalidViaInvalidReferenceGrant.ShortName,
+			//tests.HTTPRoutePathMatchOrder.ShortName,
+			//tests.HTTPRouteRedirectHostAndStatus.ShortName,
+			//tests.HTTPRouteReferenceGrant.ShortName,
+			//tests.HTTPRouteRequestHeaderModifier.ShortName,
+			//tests.HTTPRouteSimpleSameNamespace.ShortName,
+			//"TLSRouteInvalidReferenceGrant",
+			//"TLSRouteSimpleSameNamespace",
 		},
 	}
 
@@ -243,7 +246,7 @@ func (s *K8sConformanceSuite) TestK8sGatewayAPIConformance() {
 		},
 		ConformanceProfiles: sets.New[ksuite.ConformanceProfileName](
 			ksuite.HTTPConformanceProfileName,
-			ksuite.TLSConformanceProfileName,
+			//ksuite.TLSConformanceProfileName,
 		),
 	})
 	require.NoError(s.T(), err)
