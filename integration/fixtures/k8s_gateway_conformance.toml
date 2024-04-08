@@ -3,7 +3,7 @@
   sendAnonymousUsage = false
 
 [log]
-  level = "DEBUG"
+#  level = "DEBUG"
   noColor = true
 
 [api]
@@ -29,3 +29,4 @@
     address = ":8193"
 
 [providers.kubernetesGateway]
+  experimentalChannel = true
