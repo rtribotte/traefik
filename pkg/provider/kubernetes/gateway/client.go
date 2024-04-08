@@ -435,17 +435,22 @@ func (c *clientWrapper) UpdateGatewayStatus(gateway *gatev1.Gateway, gatewayStat
 		return fmt.Errorf("cannot update Gateway status %s/%s: namespace is not within watched namespaces", gateway.Namespace, gateway.Name)
 	}
 
-	if statusEquals(gateway.Status, gatewayStatus) {
-		return nil
-	}
-
-	g := gateway.DeepCopy()
-	g.Status = gatewayStatus
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := c.csGateway.GatewayV1().Gateways(gateway.Namespace).UpdateStatus(ctx, g, metav1.UpdateOptions{})
+	gw, err := c.csGateway.GatewayV1().Gateways(gateway.Namespace).Get(ctx, gateway.Name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update Gateway %q status: %w", gateway.Name, err)
+	}
+
+	if statusEquals(gw.Status, gatewayStatus) {
+		return nil
+	}
+
+	gw = gw.DeepCopy()
+	gw.Status = gatewayStatus
+
+	_, err = c.csGateway.GatewayV1().Gateways(gateway.Namespace).UpdateStatus(ctx, gw, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to update Gateway %q status: %w", gateway.Name, err)
 	}
