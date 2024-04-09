@@ -190,7 +190,7 @@ func (s *K8sConformanceSuite) TestK8sGatewayAPIConformance() {
 			RouteMustHaveParents:              5 * time.Second,
 			ManifestFetchTimeout:              5 * time.Second,
 			MaxTimeToConsistency:              5 * time.Second,
-			NamespacesMustBeReady:             60 * time.Second, // Pod creation in k3s cluster can be long.
+			NamespacesMustBeReady:             90 * time.Second, // Pod creation in k3s cluster can be long.
 			RequestTimeout:                    5 * time.Second,
 			LatestObservedGenerationSet:       5 * time.Second,
 			RequiredConsecutiveSuccesses:      0,
