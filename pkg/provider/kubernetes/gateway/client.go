@@ -438,7 +438,7 @@ func (c *clientWrapper) UpdateGatewayStatus(gateway *gatev1.Gateway, gatewayStat
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gw, err := c.csGateway.GatewayV1().Gateways(gateway.Namespace).Get(ctx, gateway.Name, metav1.GetOptions{})
+	gw, err := c.factoriesGateway[c.lookupNamespace(gateway.Namespace)].Gateway().V1().Gateways().Lister().Gateways(gateway.Namespace).Get(gateway.Name)
 	if err != nil {
 		return fmt.Errorf("failed to update Gateway %q status: %w", gateway.Name, err)
 	}
@@ -447,7 +447,6 @@ func (c *clientWrapper) UpdateGatewayStatus(gateway *gatev1.Gateway, gatewayStat
 		return nil
 	}
 
-	gw = gw.DeepCopy()
 	gw.Status = gatewayStatus
 
 	_, err = c.csGateway.GatewayV1().Gateways(gateway.Namespace).UpdateStatus(ctx, gw, metav1.UpdateOptions{})

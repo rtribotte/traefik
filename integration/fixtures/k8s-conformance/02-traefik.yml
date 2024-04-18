@@ -44,7 +44,7 @@ spec:
           image: traefik/traefik:latest
           imagePullPolicy: Never
           args:
-            - --log.level=DEBUG
+#            - --log.level=DEBUG
             - --api.insecure
             - --entrypoints.web.address=:80
             - --entrypoints.websecure.address=:443
@@ -55,10 +55,20 @@ spec:
           ports:
             - name: web
               containerPort: 80
-            - name: admin
-              containerPort: 8080
+            - name: web2
+              containerPort: 8180
             - name: websecure
               containerPort: 443
+            - name: websecure2
+              containerPort: 8443
+            - name: tcp
+              containerPort: 9001
+            - name: tcp2
+              containerPort: 9002
+            - name: tcp3
+              containerPort: 8193
+            - name: admin
+              containerPort: 8080
 
 ---
 apiVersion: v1
@@ -74,9 +84,24 @@ spec:
     - port: 80
       name: web
       targetPort: web
+    - port: 8180
+      name: web2
+      targetPort: web2
     - port: 443
       name: websecure
       targetPort: websecure
+    - port: 8443
+      name: websecure2
+      targetPort: websecure2
+    - port: 9001
+      name: tcp
+      targetPort: tcp
+    - port: 9002
+      name: tcp2
+      targetPort: tcp2
+    - port: 8193
+      name: tcp3
+      targetPort: tcp3
     - port: 8080
       name: admin
       targetPort: admin

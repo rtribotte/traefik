@@ -203,37 +203,39 @@ func (s *K8sConformanceSuite) TestK8sGatewayAPIConformance() {
 		//	Insert(ksuite.SupportMesh).
 		//	Insert(ksuite.SupportTLSRoute),
 		EnableAllSupportedFeatures: false,
-		//RunTest:                    tests.HTTPRouteMatching.ShortName,
+		RunTest:                    tests.GatewayWithAttachedRoutes.ShortName,
 		// Until the feature are all supported, following tests are skipped.
 		SkipTests: []string{
-			//tests.GatewayClassObservedGenerationBump.ShortName,
-			//tests.GatewayInvalidTLSConfiguration.ShortName,
-			//tests.GatewayModifyListeners.ShortName,
-			//tests.GatewayWithAttachedRoutes.ShortName,
-			//tests.HTTPRouteCrossNamespace.ShortName,
-			//tests.HTTPExactPathMatching.ShortName,
-			//tests.HTTPRouteHeaderMatching.ShortName,
-			//tests.HTTPRouteHostnameIntersection.ShortName,
-			//tests.HTTPRouteInvalidNonExistentBackendRef.ShortName,
-			//tests.HTTPRouteInvalidBackendRefUnknownKind.ShortName,
-			//tests.HTTPRouteInvalidCrossNamespaceBackendRef.ShortName,
-			//tests.HTTPRouteInvalidCrossNamespaceParentRef.ShortName,
-			//tests.HTTPRouteInvalidParentRefNotMatchingSectionName.ShortName,
-			//tests.HTTPRouteInvalidReferenceGrant.ShortName,
-			//tests.HTTPRouteListenerHostnameMatching.ShortName,
-			//tests.HTTPRouteMatchingAcrossRoutes.ShortName,
-			//tests.HTTPRouteMatching.ShortName,
-			//tests.HTTPRouteObservedGenerationBump.ShortName,
-			//tests.HTTPRoutePartiallyInvalidViaInvalidReferenceGrant.ShortName,
-			//tests.HTTPRoutePathMatchOrder.ShortName,
-			//tests.HTTPRouteRedirectHostAndStatus.ShortName,
-			//tests.HTTPRouteReferenceGrant.ShortName,
-			//tests.HTTPRouteRequestHeaderModifier.ShortName,
-			//tests.HTTPRouteSimpleSameNamespace.ShortName,
+			tests.GatewayClassObservedGenerationBump.ShortName,
+			tests.GatewayModifyListeners.ShortName,
+			tests.GatewayWithAttachedRoutes.ShortName,
+			tests.GatewayInvalidTLSConfiguration.ShortName,
+			tests.HTTPRouteCrossNamespace.ShortName,
+			tests.HTTPExactPathMatching.ShortName,
+			tests.HTTPRouteHeaderMatching.ShortName,
+			tests.HTTPRouteHostnameIntersection.ShortName,
+			tests.HTTPRouteInvalidNonExistentBackendRef.ShortName,
+			tests.HTTPRouteInvalidBackendRefUnknownKind.ShortName,
+			tests.HTTPRouteInvalidCrossNamespaceBackendRef.ShortName,
+			tests.HTTPRouteInvalidCrossNamespaceParentRef.ShortName,
+			tests.HTTPRouteInvalidParentRefNotMatchingSectionName.ShortName,
+			tests.HTTPRouteInvalidReferenceGrant.ShortName,
+			tests.HTTPRouteListenerHostnameMatching.ShortName,
+			tests.HTTPRouteMatchingAcrossRoutes.ShortName,
+			tests.HTTPRouteMatching.ShortName,
+			tests.HTTPRouteObservedGenerationBump.ShortName,
+			tests.HTTPRoutePartiallyInvalidViaInvalidReferenceGrant.ShortName,
+			tests.HTTPRoutePathMatchOrder.ShortName,
+			tests.HTTPRouteRedirectHostAndStatus.ShortName,
+			tests.HTTPRouteReferenceGrant.ShortName,
+			tests.HTTPRouteRequestHeaderModifier.ShortName,
+			tests.HTTPRouteSimpleSameNamespace.ShortName,
 			//"TLSRouteInvalidReferenceGrant",
 			//"TLSRouteSimpleSameNamespace",
 		},
 	}
+
+	opts.SkipTests = nil
 
 	cSuite, err := ksuite.NewExperimentalConformanceTestSuite(ksuite.ExperimentalConformanceOptions{
 		Options: opts,
@@ -250,6 +252,9 @@ func (s *K8sConformanceSuite) TestK8sGatewayAPIConformance() {
 		),
 	})
 	require.NoError(s.T(), err)
+
+	// TODO: remove this whenever the ksuite.NewExperimentalConformanceTestSuite will copy out the RunTest property from opts to the suite.
+	cSuite.RunTest = opts.RunTest
 
 	cSuite.Setup(s.T())
 	err = cSuite.Run(s.T(), tests.ConformanceTests)
