@@ -1591,6 +1591,20 @@ spec:
                   This middleware adds the selected data from the passed client TLS certificate to a header.
                   More info: https://doc.traefik.io/traefik/v3.3/middlewares/http/passtlsclientcert/
                 properties:
+                  clientCertHeader:
+                    description: ClientCertHeader defines the header name and format
+                      to store the client certificate.
+                    properties:
+                      format:
+                        description: |-
+                          Format is the format of the client certificate to store in the header.
+                          Possible values are "pem" and "sanitized".
+                        type: string
+                      name:
+                        description: Name is the name of the header to store the client
+                          certificate.
+                        type: string
+                    type: object
                   info:
                     description: Info selects the specific client certificate details
                       you want to add to the X-Forwarded-Tls-Client-Cert-Info header.
@@ -1682,9 +1696,13 @@ spec:
                             type: boolean
                         type: object
                     type: object
+                  leaf:
+                    description: Leaf defines whether to use only the leaf certificate
+                      or the entire certificate chain.
+                    type: boolean
                   pem:
-                    description: PEM sets the X-Forwarded-Tls-Client-Cert header with
-                      the certificate.
+                    description: 'Deprecated: PEM option is deprecated, please use
+                      ClientCertHeader instead.'
                     type: boolean
                 type: object
               plugin:

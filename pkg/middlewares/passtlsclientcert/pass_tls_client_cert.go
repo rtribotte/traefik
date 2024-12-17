@@ -121,21 +121,38 @@ func newTLSClientCertificateInfo(info *dynamic.TLSClientCertificateInfo) *tlsCli
 
 // passTLSClientCert is a middleware that helps setup a few tls info features.
 type passTLSClientCert struct {
-	next http.Handler
-	name string
-	pem  bool                      // pass the sanitized pem to the backend in a specific header
-	info *tlsClientCertificateInfo // pass selected information from the client certificate
+	next             http.Handler
+	name             string
+	info             *tlsClientCertificateInfo // pass selected information from the client certificate
+	clientCertHeader *dynamic.ClientCertHeader
+	leaf             bool
 }
 
 // New constructs a new PassTLSClientCert instance from supplied frontend header struct.
 func New(ctx context.Context, next http.Handler, config dynamic.PassTLSClientCert, name string) (http.Handler, error) {
 	middlewares.GetLogger(ctx, name, typeName).Debug().Msg("Creating middleware")
 
+	if config.PEM != nil && config.ClientCertHeader != nil {
+		return nil, fmt.Errorf("cannot use both PEM and ClientCertHeader options at the same time")
+	}
+
+	var clientCertHeader *dynamic.ClientCertHeader
+	if config.PEM != nil && *config.PEM {
+		clientCertHeader = &dynamic.ClientCertHeader{}
+		clientCertHeader.SetDefaults()
+		log.Warn().Msgf("`PEM` option is deprecated, please use the `clientCertHeader` option.")
+	}
+
+	if config.ClientCertHeader != nil {
+		clientCertHeader = config.ClientCertHeader
+	}
+
 	return &passTLSClientCert{
-		next: next,
-		name: name,
-		pem:  config.PEM,
-		info: newTLSClientCertificateInfo(config.Info),
+		next:             next,
+		name:             name,
+		clientCertHeader: clientCertHeader,
+		leaf:             config.Leaf,
+		info:             newTLSClientCertificateInfo(config.Info),
 	}, nil
 }
 
@@ -147,17 +164,26 @@ func (p *passTLSClientCert) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	logger := middlewares.GetLogger(req.Context(), p.name, typeName)
 	ctx := logger.WithContext(req.Context())
 
-	if p.pem {
-		if req.TLS != nil && len(req.TLS.PeerCertificates) > 0 {
-			req.Header.Set(xForwardedTLSClientCert, getCertificates(ctx, req.TLS.PeerCertificates))
+	var certificates []*x509.Certificate
+	if req.TLS != nil {
+		certificates = req.TLS.PeerCertificates
+		if p.leaf && len(certificates) > 0 {
+			// Only keep the leaf certificate.
+			certificates = certificates[:1]
+		}
+	}
+
+	if p.clientCertHeader != nil {
+		if req.TLS != nil && len(certificates) > 0 {
+			req.Header.Set(p.clientCertHeader.Name, getCertificates(ctx, p.clientCertHeader.Format, certificates))
 		} else {
 			logger.Warn().Msg("Tried to extract a certificate on a request without mutual TLS")
 		}
 	}
 
 	if p.info != nil {
-		if req.TLS != nil && len(req.TLS.PeerCertificates) > 0 {
-			headerContent := p.getCertInfo(ctx, req.TLS.PeerCertificates)
+		if req.TLS != nil && len(certificates) > 0 {
+			headerContent := p.getCertInfo(ctx, certificates)
 			req.Header.Set(xForwardedTLSClientCertInfo, url.QueryEscape(headerContent))
 		} else {
 			logger.Warn().Msg("Tried to extract a certificate on a request without mutual TLS")
@@ -323,34 +349,43 @@ func writePart(ctx context.Context, content io.StringWriter, entry, prefix strin
 }
 
 // sanitize As we pass the raw certificates, remove the useless data and make it http request compliant.
-func sanitize(cert []byte) string {
+func sanitize(cert string) string {
 	return strings.NewReplacer(
 		"-----BEGIN CERTIFICATE-----", "",
 		"-----END CERTIFICATE-----", "",
 		"\n", "",
-	).Replace(string(cert))
+	).Replace(cert)
 }
 
 // getCertificates Build a string with the client certificates.
-func getCertificates(ctx context.Context, certs []*x509.Certificate) string {
+func getCertificates(ctx context.Context, format string, certs []*x509.Certificate) string {
 	var headerValues []string
 
 	for _, peerCert := range certs {
-		headerValues = append(headerValues, extractCertificate(ctx, peerCert))
+		cert := string(extractCertificate(ctx, peerCert))
+
+		switch format {
+		case "pem":
+			// Nothing to do
+		default:
+			cert = sanitize(cert)
+		}
+
+		headerValues = append(headerValues, cert)
 	}
 
 	return strings.Join(headerValues, certSeparator)
 }
 
 // extractCertificate extract the certificate from the request.
-func extractCertificate(ctx context.Context, cert *x509.Certificate) string {
+func extractCertificate(ctx context.Context, cert *x509.Certificate) []byte {
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	if certPEM == nil {
 		log.Ctx(ctx).Error().Msg("Cannot extract the certificate content")
-		return ""
+		return []byte{}
 	}
 
-	return sanitize(certPEM)
+	return certPEM
 }
 
 // getSANs get the Subject Alternate Name values.

@@ -512,10 +512,33 @@ type InFlightReq struct {
 // This middleware adds the selected data from the passed client TLS certificate to a header.
 // More info: https://doc.traefik.io/traefik/v3.3/middlewares/http/passtlsclientcert/
 type PassTLSClientCert struct {
-	// PEM sets the X-Forwarded-Tls-Client-Cert header with the certificate.
-	PEM bool `json:"pem,omitempty" toml:"pem,omitempty" yaml:"pem,omitempty" export:"true"`
+	// ClientCertHeader defines the header name and format to store the client certificate.
+	ClientCertHeader *ClientCertHeader `json:"clientCertHeader,omitempty" toml:"clientCertHeader,omitempty" yaml:"clientCertHeader,omitempty" export:"true"`
 	// Info selects the specific client certificate details you want to add to the X-Forwarded-Tls-Client-Cert-Info header.
 	Info *TLSClientCertificateInfo `json:"info,omitempty" toml:"info,omitempty" yaml:"info,omitempty" export:"true"`
+	// Leaf defines whether to use only the leaf certificate or the entire certificate chain.
+	Leaf bool `json:"leaf,omitempty" toml:"leaf,omitempty" yaml:"leaf,omitempty" export:"true"`
+
+	// Deprecated: PEM option is deprecated, please use ClientCertHeader instead.
+	PEM *bool `json:"pem,omitempty" toml:"pem,omitempty" yaml:"pem,omitempty" export:"true"`
+}
+
+// +k8s:deepcopy-gen=true
+
+// ClientCertHeader holds the configuration for the client cert header.
+type ClientCertHeader struct {
+	// Name is the name of the header to store the client certificate.
+	Name string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty" export:"true"`
+
+	// Format is the format of the client certificate to store in the header.
+	// Possible values are "pem" and "sanitized".
+	// TODO: https://datatracker.ietf.org/doc/rfc9440/
+	Format string `json:"format,omitempty" toml:"format,omitempty" yaml:"format,omitempty" export:"true"`
+}
+
+func (c *ClientCertHeader) SetDefaults() {
+	c.Name = "X-Forwarded-Tls-Client-Cert"
+	c.Format = "sanitized"
 }
 
 // +k8s:deepcopy-gen=true

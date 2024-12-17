@@ -123,6 +123,8 @@ THIS FILE MUST NOT BE EDITED BY HAND
 | `traefik/http/middlewares/Middleware15/inFlightReq/sourceCriterion/ipStrategy/ipv6Subnet` | `42` |
 | `traefik/http/middlewares/Middleware15/inFlightReq/sourceCriterion/requestHeaderName` | `foobar` |
 | `traefik/http/middlewares/Middleware15/inFlightReq/sourceCriterion/requestHost` | `true` |
+| `traefik/http/middlewares/Middleware16/passTLSClientCert/clientCertHeader/format` | `foobar` |
+| `traefik/http/middlewares/Middleware16/passTLSClientCert/clientCertHeader/name` | `foobar` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/issuer/commonName` | `true` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/issuer/country` | `true` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/issuer/domainComponent` | `true` |
@@ -142,6 +144,7 @@ THIS FILE MUST NOT BE EDITED BY HAND
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/subject/organizationalUnit` | `true` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/subject/province` | `true` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/info/subject/serialNumber` | `true` |
+| `traefik/http/middlewares/Middleware16/passTLSClientCert/leaf` | `true` |
 | `traefik/http/middlewares/Middleware16/passTLSClientCert/pem` | `true` |
 | `traefik/http/middlewares/Middleware17/plugin/PluginConf0/name0` | `foobar` |
 | `traefik/http/middlewares/Middleware17/plugin/PluginConf0/name1` | `foobar` |

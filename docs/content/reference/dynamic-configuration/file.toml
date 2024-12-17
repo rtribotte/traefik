@@ -262,7 +262,11 @@
             ipv6Subnet = 42
     [http.middlewares.Middleware16]
       [http.middlewares.Middleware16.passTLSClientCert]
+        leaf = true
         pem = true
+        [http.middlewares.Middleware16.passTLSClientCert.clientCertHeader]
+          name = "foobar"
+          format = "foobar"
         [http.middlewares.Middleware16.passTLSClientCert.info]
           notAfter = true
           notBefore = true

@@ -264,6 +264,8 @@ jECvgAY7Nfd9mZ1KtyNaW31is+kag7NsvjxU/kM=
 -----END CERTIFICATE-----`
 )
 
+func pointer[T any](v T) *T { return &v }
+
 var next = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("bar"))
 	if err != nil {
@@ -287,24 +289,24 @@ func TestPassTLSClientCert_PEM(t *testing.T) {
 		},
 		{
 			desc:   "No TLS, with pem option true",
-			config: dynamic.PassTLSClientCert{PEM: true},
+			config: dynamic.PassTLSClientCert{PEM: pointer(true)},
 		},
 		{
 			desc:           "TLS with simple certificate, with pem option true",
 			certContents:   []string{minimalCheeseCrt},
-			config:         dynamic.PassTLSClientCert{PEM: true},
+			config:         dynamic.PassTLSClientCert{PEM: pointer(true)},
 			expectedHeader: getCleanCertContents([]string{minimalCert}),
 		},
 		{
 			desc:           "TLS with complete certificate, with pem option true",
 			certContents:   []string{minimalCheeseCrt},
-			config:         dynamic.PassTLSClientCert{PEM: true},
+			config:         dynamic.PassTLSClientCert{PEM: pointer(true)},
 			expectedHeader: getCleanCertContents([]string{minimalCheeseCrt}),
 		},
 		{
 			desc:           "TLS with two certificate, with pem option true",
 			certContents:   []string{minimalCert, minimalCheeseCrt},
-			config:         dynamic.PassTLSClientCert{PEM: true},
+			config:         dynamic.PassTLSClientCert{PEM: pointer(true)},
 			expectedHeader: getCleanCertContents([]string{minimalCert, minimalCheeseCrt}),
 		},
 	}
@@ -390,7 +392,7 @@ func TestPassTLSClientCert_certInfo(t *testing.T) {
 		{
 			desc: "No TLS, with pem option false with empty subject info",
 			config: dynamic.PassTLSClientCert{
-				PEM: false,
+				PEM: pointer(false),
 				Info: &dynamic.TLSClientCertificateInfo{
 					Subject: &dynamic.TLSClientCertificateSubjectDNInfo{},
 				},
@@ -605,7 +607,7 @@ WqeUSNGYV//RunTeuRDAf5OxehERb1srzBXhRZ3cZdzXbgR/`,
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			content := sanitize(test.toSanitize)
+			content := sanitize(string(test.toSanitize))
 
 			expected := strings.ReplaceAll(test.expected, "\n", "")
 			assert.Equal(t, expected, content, "The sanitized certificates should be equal")
@@ -663,7 +665,7 @@ func getCleanCertContents(certContents []string) string {
 
 	var cleanedCertContent []string
 	for _, certContent := range certContents {
-		cert := sanitize([]byte(exp.FindString(certContent)))
+		cert := sanitize(exp.FindString(certContent))
 		cleanedCertContent = append(cleanedCertContent, cert)
 	}
 

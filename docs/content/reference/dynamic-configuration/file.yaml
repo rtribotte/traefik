@@ -309,7 +309,9 @@ http:
           requestHost: true
     Middleware16:
       passTLSClientCert:
-        pem: true
+        clientCertHeader:
+          name: foobar
+          format: foobar
         info:
           notAfter: true
           notBefore: true
@@ -332,6 +334,8 @@ http:
             commonName: true
             serialNumber: true
             domainComponent: true
+        leaf: true
+        pem: true
     Middleware17:
       plugin:
         PluginConf0:
