@@ -164,30 +164,28 @@ func (p *passTLSClientCert) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	logger := middlewares.GetLogger(req.Context(), p.name, typeName)
 	ctx := logger.WithContext(req.Context())
 
-	var certificates []*x509.Certificate
-	if req.TLS != nil {
-		certificates = req.TLS.PeerCertificates
-		if p.leaf && len(certificates) > 0 {
-			// Only keep the leaf certificate.
-			certificates = certificates[:1]
-		}
+	if req.TLS == nil {
+		return
+	}
+
+	if len(req.TLS.PeerCertificates) == 0 {
+		logger.Warn().Msg("Tried to extract a certificate on a request without mutual TLS")
+		return
+	}
+
+	certificates := req.TLS.PeerCertificates
+	if p.leaf && len(certificates) > 0 {
+		// Only keep the leaf certificate.
+		certificates = certificates[:1]
 	}
 
 	if p.clientCertHeader != nil {
-		if req.TLS != nil && len(certificates) > 0 {
-			req.Header.Set(p.clientCertHeader.Name, getCertificates(ctx, p.clientCertHeader.Format, certificates))
-		} else {
-			logger.Warn().Msg("Tried to extract a certificate on a request without mutual TLS")
-		}
+		req.Header.Set(p.clientCertHeader.Name, getCertificates(ctx, p.clientCertHeader.Format, certificates))
 	}
 
 	if p.info != nil {
-		if req.TLS != nil && len(certificates) > 0 {
-			headerContent := p.getCertInfo(ctx, certificates)
-			req.Header.Set(xForwardedTLSClientCertInfo, url.QueryEscape(headerContent))
-		} else {
-			logger.Warn().Msg("Tried to extract a certificate on a request without mutual TLS")
-		}
+		headerContent := p.getCertInfo(ctx, certificates)
+		req.Header.Set(xForwardedTLSClientCertInfo, url.QueryEscape(headerContent))
 	}
 
 	p.next.ServeHTTP(rw, req)
