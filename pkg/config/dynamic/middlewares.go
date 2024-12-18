@@ -531,7 +531,8 @@ type ClientCertHeader struct {
 	Name string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty" export:"true"`
 
 	// Format is the format of the client certificate to store in the header.
-	// Possible values are "pem" and "sanitized".
+	// Possible values are "pem", "sanitized", and "encoded".
+	// Default: "sanitized".
 	// TODO: https://datatracker.ietf.org/doc/rfc9440/
 	Format string `json:"format,omitempty" toml:"format,omitempty" yaml:"format,omitempty" export:"true"`
 }
