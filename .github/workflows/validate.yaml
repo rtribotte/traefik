@@ -49,7 +49,7 @@ jobs:
         run: curl -sfL https://raw.githubusercontent.com/golangci/misspell/master/install-misspell.sh | sh -s -- -b $(go env GOPATH)/bin ${MISSPELL_VERSION}
 
       - name: Avoid generating webui
-        run: touch webui/static/index.html
+        run: touch webui/dist/index.html
 
       - name: Validate
         run: make validate-files

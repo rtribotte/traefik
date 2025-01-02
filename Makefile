@@ -34,18 +34,19 @@ build-webui-image:
 .PHONY: clean-webui
 #? clean-webui: Clean WebUI static generated assets
 clean-webui:
-	rm -r webui/static
-	mkdir -p webui/static
-	printf 'For more information see `webui/readme.md`' > webui/static/DONT-EDIT-FILES-IN-THIS-DIRECTORY.md
+	rm -r webui/dist
+	mkdir -p webui/dist
+	printf 'For more information see `webui/readme.md`' > webui/dist/DONT-EDIT-FILES-IN-THIS-DIRECTORY.md
 
-webui/static/index.html:
-	$(MAKE) build-webui-image
-	docker run --rm -v "$(PWD)/webui/static":'/src/webui/static' traefik-webui npm run build:nc
-	docker run --rm -v "$(PWD)/webui/static":'/src/webui/static' traefik-webui chown -R $(shell id -u):$(shell id -g) ./static
+webui/dist/index.html:
+	#$(MAKE) build-webui-image
+	make -C ./webui build
+	docker run --rm -v "$(PWD)/webui/dist":'/src/webui/dist' traefik-webui npm run build:nc
+	docker run --rm -v "$(PWD)/webui/dist":'/src/webui/dist' traefik-webui chown -R $(shell id -u):$(shell id -g) ./static
 
 .PHONY: generate-webui
 #? generate-webui: Generate WebUI
-generate-webui: webui/static/index.html
+generate-webui: webui/dist/index.html
 
 .PHONY: generate
 #? generate: Generate code (Dynamic and Static configuration documentation reference files)
@@ -107,8 +108,8 @@ test-gateway-api-conformance: build-image-dirty
 #? test-ui-unit: Run the unit tests for the webui
 test-ui-unit:
 	$(MAKE) build-webui-image
-	docker run --rm -v "$(PWD)/webui/static":'/src/webui/static' traefik-webui yarn --cwd webui install
-	docker run --rm -v "$(PWD)/webui/static":'/src/webui/static' traefik-webui yarn --cwd webui test:unit:ci
+	docker run --rm -v "$(PWD)/webui/dist":'/src/webui/dist' traefik-webui yarn --cwd webui install
+	docker run --rm -v "$(PWD)/webui/dist":'/src/webui/dist' traefik-webui yarn --cwd webui test:unit:ci
 
 .PHONY: pull-images
 #? pull-images: Pull all Docker images to avoid timeout during integration tests
@@ -141,7 +142,6 @@ validate: lint validate-files
 .PHONY: multi-arch-image-%
 multi-arch-image-%: binary-linux-amd64 binary-linux-arm64
 	docker buildx build $(DOCKER_BUILDX_ARGS) -t traefik/traefik:$* --platform=$(DOCKER_BUILD_PLATFORMS) -f Dockerfile .
-
 
 .PHONY: build-image
 #? build-image: Clean up static directory and build a Docker Traefik image

@@ -27,7 +27,7 @@ jobs:
 
       - name: Package webui
         run: |
-          tar czvf webui.tar.gz ./webui/static/
+          tar czvf webui.tar.gz ./webui/dist/
 
       - name: Artifact webui
         uses: actions/upload-artifact@v4

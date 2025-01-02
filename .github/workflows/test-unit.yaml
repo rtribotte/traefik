@@ -29,7 +29,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Avoid generating webui
-        run: touch webui/static/index.html
+        run: touch webui/dist/index.html
 
       - name: Tests
         run: make test-unit
