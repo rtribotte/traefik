@@ -1,15 +1,15 @@
-package wrr
+package p2c
 
 import (
-	"container/heap"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
+	crand "crypto/rand"
 	"errors"
 	"hash/fnv"
+	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
@@ -17,10 +17,15 @@ import (
 
 type namedHandler struct {
 	http.Handler
-	name       string
-	hashedName string
-	weight     float64
-	deadline   float64
+	name     string
+	inflight atomic.Int64
+}
+
+// FIXME
+func (h *namedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.inflight.Add(1)
+	defer h.inflight.Add(-1)
+	h.Handler.ServeHTTP(w, req)
 }
 
 type stickyCookie struct {
@@ -56,10 +61,9 @@ type Balancer struct {
 
 	handlersMu sync.RWMutex
 	// References all the handlers by name and also by the hashed value of the name.
-	stickyMap              map[string]*namedHandler
-	compatibilityStickyMap map[string]*namedHandler
-	handlers               []*namedHandler
-	curDeadline            float64
+	handlerMap  map[string]*namedHandler
+	handlers    []*namedHandler
+	curDeadline float64
 	// status is a record of which child services of the Balancer are healthy, keyed
 	// by name of child service. A service is initially added to the map when it is
 	// created via Add, and it is later removed or added to the map as needed,
@@ -70,14 +74,29 @@ type Balancer struct {
 	updaters []func(bool)
 	// fenced is the list of terminating yet still serving child services.
 	fenced map[string]struct{}
+
+	rand rnd
 }
 
-// New creates a new load balancer.
+type rnd interface {
+	IntN(int) int
+}
+
+// New creates a new "the power-of-two-random-choices" load balancer.
+// strategyPowerOfTwoChoices implements "the power-of-two-random-choices" algorithm for load balancing.
+// The idea of this is two take two of the backends at random from the available backends, and select
+// the backend that has the fewest in-flight requests. This algorithm more effectively balances the
+// load than a round-robin approach, while also being constant time when picking: The strategy also
+// has more beneficial "herd" behaviour than the "fewest connections" algorithm, especially when the
+// load balancer doesn't have perfect knowledge about the global number of connections to the backend,
+// for example, when running in a distributed fashion.
 func New(sticky *dynamic.Sticky, wantHealthCheck bool) *Balancer {
 	balancer := &Balancer{
 		status:           make(map[string]struct{}),
 		fenced:           make(map[string]struct{}),
+		handlerMap:       make(map[string]*namedHandler),
 		wantsHealthCheck: wantHealthCheck,
+		rand:             newRand(),
 	}
 	if sticky != nil && sticky.Cookie != nil {
 		balancer.stickyCookie = &stickyCookie{
@@ -91,43 +110,23 @@ func New(sticky *dynamic.Sticky, wantHealthCheck bool) *Balancer {
 		if sticky.Cookie.Path != nil {
 			balancer.stickyCookie.path = *sticky.Cookie.Path
 		}
-
-		balancer.stickyMap = make(map[string]*namedHandler)
-		balancer.compatibilityStickyMap = make(map[string]*namedHandler)
 	}
 
 	return balancer
 }
 
-// Len implements heap.Interface/sort.Interface.
-func (b *Balancer) Len() int { return len(b.handlers) }
-
-// Less implements heap.Interface/sort.Interface.
-func (b *Balancer) Less(i, j int) bool {
-	return b.handlers[i].deadline < b.handlers[j].deadline
-}
-
-// Swap implements heap.Interface/sort.Interface.
-func (b *Balancer) Swap(i, j int) {
-	b.handlers[i], b.handlers[j] = b.handlers[j], b.handlers[i]
-}
-
-// Push implements heap.Interface for pushing an item into the heap.
-func (b *Balancer) Push(x interface{}) {
-	h, ok := x.(*namedHandler)
-	if !ok {
-		return
+func newRand() *rand.Rand {
+	var seed [16]byte
+	_, err := crand.Read(seed[:])
+	if err != nil {
+		panic(err)
 	}
-
-	b.handlers = append(b.handlers, h)
-}
-
-// Pop implements heap.Interface for popping an item from the heap.
-// It panics if b.Len() < 1.
-func (b *Balancer) Pop() interface{} {
-	h := b.handlers[len(b.handlers)-1]
-	b.handlers = b.handlers[0 : len(b.handlers)-1]
-	return h
+	var seed1, seed2 uint64
+	for i := 0; i < 16; i += 8 {
+		seed1 = seed1<<8 + uint64(seed[i])
+		seed2 = seed2<<8 + uint64(seed[i+1])
+	}
+	return rand.New(rand.NewPCG(seed1, seed2))
 }
 
 // SetStatus sets on the balancer that its given child is now of the given
@@ -185,33 +184,33 @@ func (b *Balancer) RegisterStatusUpdater(fn func(up bool)) error {
 var errNoAvailableServer = errors.New("no available server")
 
 func (b *Balancer) nextServer() (*namedHandler, error) {
-	b.handlersMu.Lock()
-	defer b.handlersMu.Unlock()
-
-	if len(b.handlers) == 0 || len(b.status) == 0 || len(b.fenced) == len(b.handlers) {
-		return nil, errNoAvailableServer
-	}
-
-	var handler *namedHandler
-	for {
-		// Pick handler with closest deadline.
-		handler = heap.Pop(b).(*namedHandler)
-
-		// curDeadline should be handler's deadline so that new added entry would have a fair competition environment with the old ones.
-		b.curDeadline = handler.deadline
-		handler.deadline += 1 / handler.weight
-
-		heap.Push(b, handler)
-		if _, ok := b.status[handler.name]; ok {
-			if _, ok := b.fenced[handler.name]; !ok {
-				// do not select a fenced handler.
-				break
-			}
+	var healthy []*namedHandler
+	for _, h := range b.handlers {
+		if _, ok := b.status[h.name]; ok {
+			healthy = append(healthy, h)
 		}
 	}
+	// If there is only one healthy server, return it.
+	if len(healthy) == 1 {
+		return healthy[0], nil
+	}
+	// In order to not get the same backend twice, we make the second call to s.rand.IntN one fewer
+	// than the length of the slice. We then have to shift over the second index if it is equal or
+	// greater than the first index, wrapping round if needed.
+	n1, n2 := b.rand.IntN(len(healthy)), b.rand.IntN(len(healthy)-1)
+	if n2 >= n1 {
+		n2 = (n2 + 1) % len(healthy)
+	}
 
-	log.Debug().Msgf("Service selected by WRR: %s", handler.name)
-	return handler, nil
+	h1, h2 := healthy[n1], healthy[n2]
+	// Ensure h1 has fewer inflight requests than h2.
+	if h2.inflight.Load() < h1.inflight.Load() {
+		log.Debug().Msgf("Service selected by P2C: %s", h1.name)
+		return h2, nil
+	}
+
+	log.Debug().Msgf("Service selected by P2C: %s", h1.name)
+	return h1, nil
 }
 
 func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -224,7 +223,7 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		if err == nil && cookie != nil {
 			b.handlersMu.RLock()
-			handler, ok := b.stickyMap[cookie.Value]
+			handler, ok := b.handlerMap[cookie.Value]
 			b.handlersMu.RUnlock()
 
 			if ok && handler != nil {
@@ -232,22 +231,6 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				_, isHealthy := b.status[handler.name]
 				b.handlersMu.RUnlock()
 				if isHealthy {
-					handler.ServeHTTP(w, req)
-					return
-				}
-			}
-
-			b.handlersMu.RLock()
-			handler, ok = b.compatibilityStickyMap[cookie.Value]
-			b.handlersMu.RUnlock()
-
-			if ok && handler != nil {
-				b.handlersMu.RLock()
-				_, isHealthy := b.status[handler.name]
-				b.handlersMu.RUnlock()
-				if isHealthy {
-					b.writeStickyCookie(w, handler)
-
 					handler.ServeHTTP(w, req)
 					return
 				}
@@ -266,86 +249,46 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if b.stickyCookie != nil {
-		b.writeStickyCookie(w, server)
+		cookie := &http.Cookie{
+			Name:     b.stickyCookie.name,
+			Value:    hash(server.name),
+			Path:     b.stickyCookie.path,
+			HttpOnly: b.stickyCookie.httpOnly,
+			Secure:   b.stickyCookie.secure,
+			SameSite: convertSameSite(b.stickyCookie.sameSite),
+			MaxAge:   b.stickyCookie.maxAge,
+		}
+		http.SetCookie(w, cookie)
 	}
 
 	server.ServeHTTP(w, req)
 }
 
-func (b *Balancer) writeStickyCookie(w http.ResponseWriter, handler *namedHandler) {
-	cookie := &http.Cookie{
-		Name:     b.stickyCookie.name,
-		Value:    handler.hashedName,
-		Path:     b.stickyCookie.path,
-		HttpOnly: b.stickyCookie.httpOnly,
-		Secure:   b.stickyCookie.secure,
-		SameSite: convertSameSite(b.stickyCookie.sameSite),
-		MaxAge:   b.stickyCookie.maxAge,
-	}
-	http.SetCookie(w, cookie)
-}
-
 // AddServer adds a handler with a server.
 func (b *Balancer) AddServer(name string, handler http.Handler, server dynamic.Server) {
-	b.Add(name, handler, server.Weight, server.Fenced)
+	b.add(name, handler, server.Fenced)
 }
 
 // Add adds a handler.
 // A handler with a non-positive weight is ignored.
-func (b *Balancer) Add(name string, handler http.Handler, weight *int, fenced bool) {
-	w := 1
-	if weight != nil {
-		w = *weight
-	}
-
-	if w <= 0 { // non-positive weight is meaningless
-		return
-	}
-
-	h := &namedHandler{Handler: handler, name: name, weight: float64(w)}
+func (b *Balancer) add(name string, handler http.Handler, fenced bool) {
+	h := &namedHandler{Handler: handler, name: name}
 
 	b.handlersMu.Lock()
-	h.deadline = b.curDeadline + 1/h.weight
-	heap.Push(b, h)
+	b.handlers = append(b.handlers, h)
 	b.status[name] = struct{}{}
 	if fenced {
 		b.fenced[name] = struct{}{}
 	}
-
-	if b.stickyCookie != nil {
-		sha256HashedName := sha256Hash(name)
-		h.hashedName = sha256HashedName
-
-		b.stickyMap[sha256HashedName] = h
-		b.compatibilityStickyMap[name] = h
-
-		hashedName := fnvHash(name)
-		b.compatibilityStickyMap[hashedName] = h
-
-		// server.URL was fnv hashed in service.Manager
-		// so we can have "double" fnv hash in already existing cookies
-		hashedName = fnvHash(hashedName)
-		b.compatibilityStickyMap[hashedName] = h
-	}
+	b.handlerMap[name] = h
+	b.handlerMap[hash(name)] = h
 	b.handlersMu.Unlock()
 }
 
-func fnvHash(input string) string {
+func hash(input string) string {
 	hasher := fnv.New64()
 	// We purposely ignore the error because the implementation always returns nil.
 	_, _ = hasher.Write([]byte(input))
 
 	return strconv.FormatUint(hasher.Sum64(), 16)
-}
-
-func sha256Hash(input string) string {
-	hash := sha256.New()
-	// We purposely ignore the error because the implementation always returns nil.
-	_, _ = hash.Write([]byte(input))
-
-	hashedInput := hex.EncodeToString(hash.Sum(nil))
-	if len(hashedInput) < 16 {
-		return hashedInput
-	}
-	return hashedInput[:16]
 }
