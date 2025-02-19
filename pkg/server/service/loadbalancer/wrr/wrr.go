@@ -3,16 +3,13 @@ package wrr
 import (
 	"container/heap"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"hash/fnv"
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
+	"github.com/traefik/traefik/v3/pkg/server/service/loadbalancer"
 )
 
 type namedHandler struct {
@@ -59,7 +56,6 @@ type Balancer struct {
 	stickyMap              map[string]*namedHandler
 	compatibilityStickyMap map[string]*namedHandler
 	handlers               []*namedHandler
-	curDeadline            float64
 	// status is a record of which child services of the Balancer are healthy, keyed
 	// by name of child service. A service is initially added to the map when it is
 	// created via Add, and it is later removed or added to the map as needed,
@@ -70,6 +66,8 @@ type Balancer struct {
 	updaters []func(bool)
 	// fenced is the list of terminating yet still serving child services.
 	fenced map[string]struct{}
+
+	curDeadline float64
 }
 
 // New creates a new load balancer.
@@ -313,39 +311,19 @@ func (b *Balancer) Add(name string, handler http.Handler, weight *int, fenced bo
 	}
 
 	if b.stickyCookie != nil {
-		sha256HashedName := sha256Hash(name)
+		sha256HashedName := loadbalancer.Sha256Hash(name)
 		h.hashedName = sha256HashedName
 
 		b.stickyMap[sha256HashedName] = h
 		b.compatibilityStickyMap[name] = h
 
-		hashedName := fnvHash(name)
+		hashedName := loadbalancer.FnvHash(name)
 		b.compatibilityStickyMap[hashedName] = h
 
 		// server.URL was fnv hashed in service.Manager
 		// so we can have "double" fnv hash in already existing cookies
-		hashedName = fnvHash(hashedName)
+		hashedName = loadbalancer.FnvHash(hashedName)
 		b.compatibilityStickyMap[hashedName] = h
 	}
 	b.handlersMu.Unlock()
-}
-
-func fnvHash(input string) string {
-	hasher := fnv.New64()
-	// We purposely ignore the error because the implementation always returns nil.
-	_, _ = hasher.Write([]byte(input))
-
-	return strconv.FormatUint(hasher.Sum64(), 16)
-}
-
-func sha256Hash(input string) string {
-	hash := sha256.New()
-	// We purposely ignore the error because the implementation always returns nil.
-	_, _ = hash.Write([]byte(input))
-
-	hashedInput := hex.EncodeToString(hash.Sum(nil))
-	if len(hashedInput) < 16 {
-		return hashedInput
-	}
-	return hashedInput[:16]
 }

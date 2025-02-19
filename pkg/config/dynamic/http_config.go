@@ -207,12 +207,10 @@ func (c *Cookie) SetDefaults() {
 	c.Path = &defaultPath
 }
 
-// +k8s:deepcopy-gen=true
-
 type BalancerStrategy string
 
 const (
-	// BalancerStrategyWRR is the weighted round robin strategy.
+	// BalancerStrategyWRR is the weighted round-robin strategy.
 	BalancerStrategyWRR BalancerStrategy = "wrr"
 	// BalancerStrategyP2C is the power of two random choice strategy.
 	BalancerStrategyP2C BalancerStrategy = "p2c"

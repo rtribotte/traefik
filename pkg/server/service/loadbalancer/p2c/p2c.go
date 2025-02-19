@@ -4,27 +4,30 @@ import (
 	"context"
 	crand "crypto/rand"
 	"errors"
-	"hash/fnv"
 	"math/rand/v2"
 	"net/http"
-	"strconv"
 	"sync"
 	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
+	"github.com/traefik/traefik/v3/pkg/server/service/loadbalancer"
 )
 
 type namedHandler struct {
 	http.Handler
-	name     string
+	name       string
+	hashedName string
+
+	// inflight is the number of inflight requests.
+	// It is used to implement the "power-of-two-random-choices" algorithm.
 	inflight atomic.Int64
 }
 
-// FIXME
 func (h *namedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.inflight.Add(1)
 	defer h.inflight.Add(-1)
+
 	h.Handler.ServeHTTP(w, req)
 }
 
@@ -61,9 +64,9 @@ type Balancer struct {
 
 	handlersMu sync.RWMutex
 	// References all the handlers by name and also by the hashed value of the name.
-	handlerMap  map[string]*namedHandler
-	handlers    []*namedHandler
-	curDeadline float64
+	stickyMap              map[string]*namedHandler
+	compatibilityStickyMap map[string]*namedHandler
+	handlers               []*namedHandler
 	// status is a record of which child services of the Balancer are healthy, keyed
 	// by name of child service. A service is initially added to the map when it is
 	// created via Add, and it is later removed or added to the map as needed,
@@ -79,7 +82,7 @@ type Balancer struct {
 }
 
 type rnd interface {
-	IntN(int) int
+	IntN(n int) int
 }
 
 // New creates a new "the power-of-two-random-choices" load balancer.
@@ -87,14 +90,13 @@ type rnd interface {
 // The idea of this is two take two of the backends at random from the available backends, and select
 // the backend that has the fewest in-flight requests. This algorithm more effectively balances the
 // load than a round-robin approach, while also being constant time when picking: The strategy also
-// has more beneficial "herd" behaviour than the "fewest connections" algorithm, especially when the
+// has more beneficial "herd" behavior than the "fewest connections" algorithm, especially when the
 // load balancer doesn't have perfect knowledge about the global number of connections to the backend,
 // for example, when running in a distributed fashion.
 func New(sticky *dynamic.Sticky, wantHealthCheck bool) *Balancer {
 	balancer := &Balancer{
 		status:           make(map[string]struct{}),
 		fenced:           make(map[string]struct{}),
-		handlerMap:       make(map[string]*namedHandler),
 		wantsHealthCheck: wantHealthCheck,
 		rand:             newRand(),
 	}
@@ -110,23 +112,12 @@ func New(sticky *dynamic.Sticky, wantHealthCheck bool) *Balancer {
 		if sticky.Cookie.Path != nil {
 			balancer.stickyCookie.path = *sticky.Cookie.Path
 		}
+
+		balancer.stickyMap = make(map[string]*namedHandler)
+		balancer.compatibilityStickyMap = make(map[string]*namedHandler)
 	}
 
 	return balancer
-}
-
-func newRand() *rand.Rand {
-	var seed [16]byte
-	_, err := crand.Read(seed[:])
-	if err != nil {
-		panic(err)
-	}
-	var seed1, seed2 uint64
-	for i := 0; i < 16; i += 8 {
-		seed1 = seed1<<8 + uint64(seed[i])
-		seed2 = seed2<<8 + uint64(seed[i+1])
-	}
-	return rand.New(rand.NewPCG(seed1, seed2))
 }
 
 // SetStatus sets on the balancer that its given child is now of the given
@@ -184,12 +175,21 @@ func (b *Balancer) RegisterStatusUpdater(fn func(up bool)) error {
 var errNoAvailableServer = errors.New("no available server")
 
 func (b *Balancer) nextServer() (*namedHandler, error) {
+	b.handlersMu.Lock()
+	defer b.handlersMu.Unlock()
+
 	var healthy []*namedHandler
 	for _, h := range b.handlers {
 		if _, ok := b.status[h.name]; ok {
-			healthy = append(healthy, h)
+			if _, fenced := b.fenced[h.name]; !fenced {
+				healthy = append(healthy, h)
+			}
 		}
 	}
+	if len(healthy) == 0 {
+		return nil, errNoAvailableServer
+	}
+
 	// If there is only one healthy server, return it.
 	if len(healthy) == 1 {
 		return healthy[0], nil
@@ -197,8 +197,8 @@ func (b *Balancer) nextServer() (*namedHandler, error) {
 	// In order to not get the same backend twice, we make the second call to s.rand.IntN one fewer
 	// than the length of the slice. We then have to shift over the second index if it is equal or
 	// greater than the first index, wrapping round if needed.
-	n1, n2 := b.rand.IntN(len(healthy)), b.rand.IntN(len(healthy)-1)
-	if n2 >= n1 {
+	n1, n2 := b.rand.IntN(len(healthy)), b.rand.IntN(len(healthy))
+	if n2 == n1 {
 		n2 = (n2 + 1) % len(healthy)
 	}
 
@@ -223,7 +223,7 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		if err == nil && cookie != nil {
 			b.handlersMu.RLock()
-			handler, ok := b.handlerMap[cookie.Value]
+			handler, ok := b.stickyMap[cookie.Value]
 			b.handlersMu.RUnlock()
 
 			if ok && handler != nil {
@@ -231,6 +231,22 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				_, isHealthy := b.status[handler.name]
 				b.handlersMu.RUnlock()
 				if isHealthy {
+					handler.ServeHTTP(w, req)
+					return
+				}
+			}
+
+			b.handlersMu.RLock()
+			handler, ok = b.compatibilityStickyMap[cookie.Value]
+			b.handlersMu.RUnlock()
+
+			if ok && handler != nil {
+				b.handlersMu.RLock()
+				_, isHealthy := b.status[handler.name]
+				b.handlersMu.RUnlock()
+				if isHealthy {
+					b.writeStickyCookie(w, handler)
+
 					handler.ServeHTTP(w, req)
 					return
 				}
@@ -249,46 +265,64 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if b.stickyCookie != nil {
-		cookie := &http.Cookie{
-			Name:     b.stickyCookie.name,
-			Value:    hash(server.name),
-			Path:     b.stickyCookie.path,
-			HttpOnly: b.stickyCookie.httpOnly,
-			Secure:   b.stickyCookie.secure,
-			SameSite: convertSameSite(b.stickyCookie.sameSite),
-			MaxAge:   b.stickyCookie.maxAge,
-		}
-		http.SetCookie(w, cookie)
+		b.writeStickyCookie(w, server)
 	}
 
 	server.ServeHTTP(w, req)
 }
 
-// AddServer adds a handler with a server.
-func (b *Balancer) AddServer(name string, handler http.Handler, server dynamic.Server) {
-	b.add(name, handler, server.Fenced)
+func (b *Balancer) writeStickyCookie(w http.ResponseWriter, handler *namedHandler) {
+	cookie := &http.Cookie{
+		Name:     b.stickyCookie.name,
+		Value:    handler.hashedName,
+		Path:     b.stickyCookie.path,
+		HttpOnly: b.stickyCookie.httpOnly,
+		Secure:   b.stickyCookie.secure,
+		SameSite: convertSameSite(b.stickyCookie.sameSite),
+		MaxAge:   b.stickyCookie.maxAge,
+	}
+	http.SetCookie(w, cookie)
 }
 
-// Add adds a handler.
-// A handler with a non-positive weight is ignored.
-func (b *Balancer) add(name string, handler http.Handler, fenced bool) {
+// AddServer adds a handler with a server.
+func (b *Balancer) AddServer(name string, handler http.Handler, server dynamic.Server) {
 	h := &namedHandler{Handler: handler, name: name}
 
 	b.handlersMu.Lock()
 	b.handlers = append(b.handlers, h)
 	b.status[name] = struct{}{}
-	if fenced {
+	if server.Fenced {
 		b.fenced[name] = struct{}{}
 	}
-	b.handlerMap[name] = h
-	b.handlerMap[hash(name)] = h
+
+	if b.stickyCookie != nil {
+		sha256HashedName := loadbalancer.Sha256Hash(name)
+		h.hashedName = sha256HashedName
+
+		b.stickyMap[sha256HashedName] = h
+		b.compatibilityStickyMap[name] = h
+
+		hashedName := loadbalancer.FnvHash(name)
+		b.compatibilityStickyMap[hashedName] = h
+
+		// server.URL was fnv hashed in service.Manager
+		// so we can have "double" fnv hash in already existing cookies
+		hashedName = loadbalancer.FnvHash(hashedName)
+		b.compatibilityStickyMap[hashedName] = h
+	}
 	b.handlersMu.Unlock()
 }
 
-func hash(input string) string {
-	hasher := fnv.New64()
-	// We purposely ignore the error because the implementation always returns nil.
-	_, _ = hasher.Write([]byte(input))
-
-	return strconv.FormatUint(hasher.Sum64(), 16)
+func newRand() *rand.Rand {
+	var seed [16]byte
+	_, err := crand.Read(seed[:])
+	if err != nil {
+		panic(err)
+	}
+	var seed1, seed2 uint64
+	for i := 0; i < 16; i += 8 {
+		seed1 = seed1<<8 + uint64(seed[i])
+		seed2 = seed2<<8 + uint64(seed[i+1])
+	}
+	return rand.New(rand.NewPCG(seed1, seed2))
 }
