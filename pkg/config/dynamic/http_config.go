@@ -306,6 +306,7 @@ type ServerHealthCheck struct {
 	Status          int               `json:"status,omitempty" toml:"status,omitempty" yaml:"status,omitempty" export:"true"`
 	Port            int               `json:"port,omitempty" toml:"port,omitempty,omitzero" yaml:"port,omitempty" export:"true"`
 	Interval        ptypes.Duration   `json:"interval,omitempty" toml:"interval,omitempty" yaml:"interval,omitempty" export:"true"`
+	RecheckInterval ptypes.Duration   `json:"recheckInterval,omitempty" toml:"recheckInterval,omitempty" yaml:"recheckInterval,omitempty" export:"true"`
 	Timeout         ptypes.Duration   `json:"timeout,omitempty" toml:"timeout,omitempty" yaml:"timeout,omitempty" export:"true"`
 	Hostname        string            `json:"hostname,omitempty" toml:"hostname,omitempty" yaml:"hostname,omitempty"`
 	FollowRedirects *bool             `json:"followRedirects,omitempty" toml:"followRedirects,omitempty" yaml:"followRedirects,omitempty" export:"true"`
@@ -318,6 +319,7 @@ func (h *ServerHealthCheck) SetDefaults() {
 	h.FollowRedirects = &fr
 	h.Mode = "http"
 	h.Interval = DefaultHealthCheckInterval
+	h.RecheckInterval = DefaultHealthCheckInterval
 	h.Timeout = DefaultHealthCheckTimeout
 }
 
