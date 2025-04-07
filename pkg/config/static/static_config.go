@@ -74,12 +74,28 @@ type Configuration struct {
 
 	CertificatesResolvers map[string]CertificateResolver `description:"Certificates resolvers configuration." json:"certificatesResolvers,omitempty" toml:"certificatesResolvers,omitempty" yaml:"certificatesResolvers,omitempty" export:"true"`
 
+	TLS *TLS `description:"TLS configuration." json:"tls,omitempty" toml:"tls,omitempty" yaml:"tls,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+
 	Experimental *Experimental `description:"Experimental features." json:"experimental,omitempty" toml:"experimental,omitempty" yaml:"experimental,omitempty" export:"true"`
 
 	// Deprecated: Please do not use this field.
 	Core *Core `description:"Core controls." json:"core,omitempty" toml:"core,omitempty" yaml:"core,omitempty" export:"true"`
 
 	Spiffe *SpiffeClientConfig `description:"SPIFFE integration configuration." json:"spiffe,omitempty" toml:"spiffe,omitempty" yaml:"spiffe,omitempty" export:"true"`
+}
+
+type TLS struct {
+	OCSP *OCSP `description:"OCSP configuration." json:"ocsp,omitempty" toml:"ocsp,omitempty" yaml:"ocsp,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+}
+
+type OCSP struct {
+	// Enable automatic OCSP stapling; strongly discouraged unless you have a good reason.
+	// Disabling this puts clients at greater risk and reduces their privacy.
+	EnableStapling bool `description:"Enable OCSP stapling." json:"enableStapling,omitempty" toml:"enableStapling,omitempty" yaml:"enableStapling,omitempty" export:"true"`
+	// A map of OCSP responder domains to replacement domains for querying OCSP servers. Used for
+	// overriding the OCSP responder URL that is embedded in certificates. Mapping to an empty
+	// URL will disable OCSP from that responder.
+	ResponderOverrides map[string]string `description:"OCSP responders overrides." json:"responderOverrides,omitempty" toml:"responderOverrides,omitempty" yaml:"responderOverrides,omitempty" export:"true"`
 }
 
 // Core configures Traefik core behavior.

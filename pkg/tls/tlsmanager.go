@@ -6,9 +6,12 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/challenge/tlsalpn01"
@@ -43,6 +46,14 @@ func getCipherSuites() []string {
 	return ciphers
 }
 
+type OCSPCache interface {
+	Get(key string) ([]byte, bool)
+	Set(key string, leaf, issuer *x509.Certificate)
+	SetAllItemsTTL(ttl time.Duration)
+	SetNoTTL(key string)
+	Run(ctx context.Context)
+}
+
 // Manager is the TLS option/store/configuration factory.
 type Manager struct {
 	lock         sync.RWMutex
@@ -50,15 +61,17 @@ type Manager struct {
 	stores       map[string]*CertificateStore
 	configs      map[string]Options
 	certs        []*CertAndStores
+	ocspCache    OCSPCache
 }
 
 // NewManager creates a new Manager.
-func NewManager() *Manager {
+func NewManager(cache OCSPCache) *Manager {
 	return &Manager{
 		stores: map[string]*CertificateStore{},
 		configs: map[string]Options{
 			"default": DefaultTLSOptions,
 		},
+		ocspCache: cache,
 	}
 }
 
@@ -92,6 +105,15 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 	}
 
 	storesCertificates := make(map[string]map[string]*CertificateData)
+
+	// Define the TTL for all the inMemoryOCSPCache cache entries with no TTL.
+	// This will discard entries that are not used anymore.
+	if m.ocspCache != nil {
+		m.ocspCache.SetAllItemsTTL(24 * time.Hour)
+	}
+
+	//FIXME: retrieve cache keys, and put a TTL on key that are not used anymore
+
 	for _, conf := range certs {
 		if len(conf.Stores) == 0 {
 			log.Ctx(ctx).Debug().MsgFunc(func() string {
@@ -101,24 +123,57 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 			conf.Stores = []string{DefaultTLSStoreName}
 		}
 
-		for _, store := range conf.Stores {
-			logger := log.Ctx(ctx).With().Str(logs.TLSStoreName, store).Logger()
+		cert, SANs, err := parseCertificate(&conf.Certificate)
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse certificate %s", conf.Certificate.GetTruncatedCertificateName())
+			continue
+		}
 
+		var certKey string
+		if m.ocspCache != nil {
+			// compute a hash certKey of the certificate
+			hasher := fnv.New64()
+			// purposely ignoring the error, as no error can be returned from the implementation.
+			_, _ = hasher.Write(cert.Leaf.Raw)
+			certKey = strconv.FormatUint(hasher.Sum64(), 16)
+
+			if _, ok := m.ocspCache.Get(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
+				issuer := cert.Leaf
+				if len(cert.Certificate) > 1 {
+					issuer, err = x509.ParseCertificate(cert.Certificate[1])
+					if err != nil {
+						log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse issuer certificate %s", conf.Certificate.GetTruncatedCertificateName())
+						continue
+					}
+				}
+
+				m.ocspCache.Set(certKey, cert.Leaf, issuer)
+			} else {
+				// Even when we don't store the cert in the inMemoryOCSPCache cache,
+				// we remove the TTL for the cert.
+				// A cert is given a TTL in the cache only if it is not provided again through the configuration.
+				m.ocspCache.SetNoTTL(certKey)
+			}
+		}
+
+		certData := &CertificateData{
+			Certificate:  &cert,
+			OCSPCacheKey: certKey,
+		}
+
+		for _, store := range conf.Stores {
 			if _, ok := m.storesConfig[store]; !ok {
 				m.storesConfig[store] = Store{}
 			}
 
-			cert := CertificateData{config: &conf.Certificate}
-			if err := cert.AppendCertificate(storesCertificates, store); err != nil {
-				logger.Error().Err(err).Msgf("Unable to append certificate %s to store", conf.Certificate.GetTruncatedCertificateName())
-			}
+			appendCertificate(storesCertificates, SANs, store, certData)
 		}
 	}
 
 	m.stores = make(map[string]*CertificateStore)
 
 	for storeName, storeConfig := range m.storesConfig {
-		st := NewCertificateStore()
+		st := NewCertificateStore(m.ocspCache)
 		m.stores[storeName] = st
 
 		if certs, ok := storesCertificates[storeName]; ok {
@@ -133,7 +188,7 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 		logger := log.Ctx(ctx).With().Str(logs.TLSStoreName, storeName).Logger()
 		ctxStore := logger.WithContext(ctx)
 
-		certificate, err := getDefaultCertificate(ctxStore, storeConfig, st)
+		certificate, err := m.getDefaultCertificate(ctxStore, storeConfig, st)
 		if err != nil {
 			logger.Error().Err(err).Msg("Error while creating certificate store")
 		}
@@ -204,25 +259,13 @@ func (m *Manager) Get(storeName, configName string) (*tls.Config, error) {
 				return nil, nil
 			}
 
-			return certificate.Certificate, nil
+			return certificate, nil
 		}
 
 		bestCertificate := store.GetBestCertificate(clientHello)
 		if bestCertificate != nil {
-			doStaple := func() {
-				err := bestCertificate.ocsp.Staple()
-				if err != nil {
-					log.Warn().Err(err).Msg("ocsp - error during staple")
-				}
-			}
 
-			if bestCertificate.ocsp.MustStaple {
-				doStaple()
-			} else {
-				go doStaple()
-			}
-
-			return bestCertificate.Certificate, nil
+			return bestCertificate, nil
 		}
 
 		if sniStrict {
@@ -302,9 +345,9 @@ func (m *Manager) GetStore(storeName string) *CertificateStore {
 	return m.getStore(storeName)
 }
 
-func getDefaultCertificate(ctx context.Context, tlsStore Store, st *CertificateStore) (*CertificateData, error) {
+func (m *Manager) getDefaultCertificate(ctx context.Context, tlsStore Store, st *CertificateStore) (*CertificateData, error) {
 	if tlsStore.DefaultCertificate != nil {
-		cert, err := buildDefaultCertificate(tlsStore.DefaultCertificate)
+		cert, err := m.buildDefaultCertificate(ctx, tlsStore.DefaultCertificate)
 		if err != nil {
 			return nil, err
 		}
@@ -337,6 +380,55 @@ func getDefaultCertificate(ctx context.Context, tlsStore Store, st *CertificateS
 
 	log.Ctx(ctx).Debug().Msg("No default certificate, fallback to the internal generated certificate")
 	return defaultCertificate, nil
+}
+
+func (m *Manager) buildDefaultCertificate(ctx context.Context, defaultCertificate *Certificate) (*CertificateData, error) {
+	certFile, err := defaultCertificate.CertFile.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cert file content: %w", err)
+	}
+
+	keyFile, err := defaultCertificate.KeyFile.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get key file content: %w", err)
+	}
+
+	cert, err := tls.X509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load X509 key pair: %w", err)
+	}
+
+	var certKey string
+	if m.ocspCache != nil {
+		// compute a hash certKey of the certificate
+		hasher := fnv.New64()
+		// purposely ignoring the error, as no error can be returned from the implementation.
+		_, _ = hasher.Write(cert.Leaf.Raw)
+		certKey = strconv.FormatUint(hasher.Sum64(), 16)
+
+		if _, ok := m.ocspCache.Get(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
+			issuer := cert.Leaf
+			if len(cert.Certificate) > 1 {
+				issuer, err = x509.ParseCertificate(cert.Certificate[1])
+				if err != nil {
+					log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse issuer certificate %s", defaultCertificate.GetTruncatedCertificateName())
+					return nil, err
+				}
+			}
+
+			m.ocspCache.Set(certKey, cert.Leaf, issuer)
+		} else {
+			// Even when we don't store the cert in the inMemoryOCSPCache cache,
+			// we remove the TTL for the cert.
+			// A cert is given a TTL in the cache only if it is not provided again through the configuration.
+			m.ocspCache.SetNoTTL(certKey)
+		}
+	}
+
+	return &CertificateData{
+		Certificate:  &cert,
+		OCSPCacheKey: certKey,
+	}, nil
 }
 
 // creates a TLS config that allows terminating HTTPS for multiple domains using SNI.
@@ -427,24 +519,4 @@ func buildTLSConfig(tlsOption Options) (*tls.Config, error) {
 	}
 
 	return conf, nil
-}
-
-func buildDefaultCertificate(defaultCertificate *Certificate) (*CertificateData, error) {
-	certFile, err := defaultCertificate.CertFile.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cert file content: %w", err)
-	}
-
-	keyFile, err := defaultCertificate.KeyFile.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key file content: %w", err)
-	}
-
-	cert, err := tls.X509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load X509 key pair: %w", err)
-	}
-	return &CertificateData{
-		Certificate: &cert,
-	}, nil
 }

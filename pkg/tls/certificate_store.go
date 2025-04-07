@@ -3,6 +3,7 @@ package tls
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"sort"
 	"strings"
@@ -13,21 +14,29 @@ import (
 	"github.com/traefik/traefik/v3/pkg/safe"
 )
 
+// CertificateData holds runtime data for runtime TLS certificate handling.
+type CertificateData struct {
+	OCSPCacheKey string
+	Certificate  *tls.Certificate
+}
+
 // CertificateStore store for dynamic certificates.
 type CertificateStore struct {
 	DynamicCerts       *safe.Safe
 	DefaultCertificate *CertificateData
 	CertCache          *cache.Cache
+	OCSPCache          OCSPCache
 }
 
 // NewCertificateStore create a store for dynamic certificates.
-func NewCertificateStore() *CertificateStore {
+func NewCertificateStore(ocspCache OCSPCache) *CertificateStore {
 	s := &safe.Safe{}
 	s.Set(make(map[string]*CertificateData))
 
 	return &CertificateStore{
 		DynamicCerts: s,
 		CertCache:    cache.New(1*time.Hour, 10*time.Minute),
+		OCSPCache:    ocspCache,
 	}
 }
 
@@ -38,6 +47,7 @@ func (c *CertificateStore) getDefaultCertificateDomains() []string {
 		return allCerts
 	}
 
+	// FIXME: check if parsing is necessary
 	x509Cert, err := x509.ParseCertificate(c.DefaultCertificate.Certificate.Certificate[0])
 	if err != nil {
 		log.Error().Err(err).Msg("Could not parse default certificate")
@@ -72,7 +82,7 @@ func (c *CertificateStore) GetAllDomains() []string {
 }
 
 // GetBestCertificate returns the best match certificate, and caches the response.
-func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) *CertificateData {
+func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) *tls.Certificate {
 	if c == nil {
 		return nil
 	}
@@ -87,7 +97,16 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 	}
 
 	if cert, ok := c.CertCache.Get(serverName); ok {
-		return cert.(*CertificateData)
+		certificateData := cert.(*CertificateData)
+		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
+			// get staple
+			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
+				// TODO: document the choice of being "thread unsafe" here
+				certificateData.Certificate.OCSPStaple = staple
+			}
+		}
+
+		return certificateData.Certificate
 	}
 
 	matchedCerts := map[string]*CertificateData{}
@@ -110,8 +129,18 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 		sort.Strings(keys)
 
 		// cache best match
-		c.CertCache.SetDefault(serverName, matchedCerts[keys[len(keys)-1]])
-		return matchedCerts[keys[len(keys)-1]]
+		certificateData := matchedCerts[keys[len(keys)-1]]
+		c.CertCache.SetDefault(serverName, certificateData)
+
+		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
+			// get staple
+			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
+				// TODO: document the choice of being "thread unsafe" here
+				certificateData.Certificate.OCSPStaple = staple
+			}
+		}
+
+		return certificateData.Certificate
 	}
 
 	return nil
@@ -161,6 +190,70 @@ func (c *CertificateStore) ResetCache() {
 	if c.CertCache != nil {
 		c.CertCache.Flush()
 	}
+}
+
+// appendCertificate appends a Certificate to a certificates map keyed by store name.
+func appendCertificate(certs map[string]map[string]*CertificateData, SANs []string, storeName string, cert *CertificateData) {
+	// Guarantees the order to produce a unique cert key.
+	sort.Strings(SANs)
+	certKey := strings.Join(SANs, ",")
+
+	certExists := false
+	if certs[storeName] == nil {
+		certs[storeName] = make(map[string]*CertificateData)
+	} else {
+		for domains := range certs[storeName] {
+			if domains == certKey {
+				certExists = true
+				break
+			}
+		}
+	}
+	if certExists {
+		log.Debug().Msgf("Skipping addition of certificate for domain(s) %q, to TLS Store %s, as it already exists for this store.", certKey, storeName)
+	} else {
+		log.Debug().Msgf("Adding certificate for domain(s) %s", certKey)
+
+		certs[storeName][certKey] = cert
+	}
+}
+
+func parseCertificate(cert *Certificate) (tls.Certificate, []string, error) {
+	certContent, err := cert.CertFile.Read()
+	if err != nil {
+		return tls.Certificate{}, nil, fmt.Errorf("unable to read CertFile: %w", err)
+	}
+
+	keyContent, err := cert.KeyFile.Read()
+	if err != nil {
+		return tls.Certificate{}, nil, fmt.Errorf("unable to read KeyFile: %w", err)
+	}
+
+	tlsCert, err := tls.X509KeyPair(certContent, keyContent)
+	if err != nil {
+		return tls.Certificate{}, nil, fmt.Errorf("unable to generate TLS certificate: %w", err)
+	}
+
+	var SANs []string
+	if tlsCert.Leaf.Subject.CommonName != "" {
+		SANs = append(SANs, strings.ToLower(tlsCert.Leaf.Subject.CommonName))
+	}
+	if tlsCert.Leaf.DNSNames != nil {
+		for _, dnsName := range tlsCert.Leaf.DNSNames {
+			if dnsName != tlsCert.Leaf.Subject.CommonName {
+				SANs = append(SANs, strings.ToLower(dnsName))
+			}
+		}
+	}
+	if tlsCert.Leaf.IPAddresses != nil {
+		for _, ip := range tlsCert.Leaf.IPAddresses {
+			if ip.String() != tlsCert.Leaf.Subject.CommonName {
+				SANs = append(SANs, strings.ToLower(ip.String()))
+			}
+		}
+	}
+
+	return tlsCert, SANs, err
 }
 
 // matchDomain returns whether the server name matches the cert domain.

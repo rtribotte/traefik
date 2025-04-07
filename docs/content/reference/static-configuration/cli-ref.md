@@ -1269,6 +1269,18 @@ Defines the allowed SPIFFE IDs (takes precedence over the SPIFFE TrustDomain).
 `--tcpserverstransport.tls.spiffe.trustdomain`:  
 Defines the allowed SPIFFE trust domain.
 
+`--tls`:  
+TLS configuration. (Default: ```false```)
+
+`--tls.ocsp`:  
+OCSP configuration.
+
+`--tls.ocsp.enablestapling`:  
+Enable OCSP stapling. (Default: ```false```)
+
+`--tls.ocsp.responderoverrides.<name>`:  
+OCSP responders overrides.
+
 `--tracing`:  
 Tracing configuration. (Default: ```false```)
 

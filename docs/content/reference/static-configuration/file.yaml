@@ -616,6 +616,12 @@ certificatesResolvers:
         delay: 42s
       tlsChallenge: {}
     tailscale: {}
+tls:
+  ocsp:
+    enableStapling: true
+    responderOverrides:
+      name0: foobar
+      name1: foobar
 experimental:
   plugins:
     Descriptor0:

@@ -182,7 +182,15 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 	// ACME
 
-	tlsManager := traefiktls.NewManager()
+	var ocspCache traefiktls.OCSPCache
+	if staticConfiguration.TLS != nil &&
+		staticConfiguration.TLS.OCSP != nil &&
+		staticConfiguration.TLS.OCSP.EnableStapling {
+		ocspCache = traefiktls.NewInMemoryOCSPCache(staticConfiguration.TLS.OCSP.ResponderOverrides)
+		initOCSPCache(ocspCache, routinesPool)
+	}
+
+	tlsManager := traefiktls.NewManager(ocspCache)
 	httpChallengeProvider := acme.NewChallengeHTTP()
 
 	tlsChallengeProvider := acme.NewChallengeTLSALPN()
@@ -384,6 +392,12 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 	})
 
 	return server.NewServer(routinesPool, serverEntryPointsTCP, serverEntryPointsUDP, watcher, observabilityMgr), nil
+}
+
+func initOCSPCache(cache traefiktls.OCSPCache, pool *safe.Pool) {
+	pool.GoCtx(func(ctx context.Context) {
+		cache.Run(ctx)
+	})
 }
 
 func getHTTPChallengeHandler(acmeProviders []*acme.Provider, httpChallengeProvider http.Handler) http.Handler {

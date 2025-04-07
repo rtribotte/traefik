@@ -71,22 +71,22 @@ func TestStapleOCSP(t *testing.T) {
 		if err != nil {
 			t.Error("unexpected error:", err)
 		} else if cert.Certificate.OCSPStaple != nil {
-			t.Error("unexpected OCSP staple")
+			t.Error("unexpected inMemoryOCSPCache staple")
 		}
 	})
-	t.Run("no OCSP server", func(t *testing.T) {
+	t.Run("no inMemoryOCSPCache server", func(t *testing.T) {
 		cert := mustMakeCertificate(t, types.OCSPConfig{}, certWithoutOCSPServer, certKey)
 		err := cert.ocsp.Staple()
 
 		if err == nil {
 			t.Error("unexpected success")
 		}
-		if err.Error() != "no OCSP stapling for OCSP Test Certificate: no OCSP server specified in certificate" {
-			t.Error("expected \"no OCSP stapling\" in error", err)
+		if err.Error() != "no inMemoryOCSPCache stapling for inMemoryOCSPCache Test Certificate: no inMemoryOCSPCache server specified in certificate" {
+			t.Error("expected \"no inMemoryOCSPCache stapling\" in error", err)
 		}
 	})
 
-	// Start an OCSP responder test server.
+	// Start an inMemoryOCSPCache responder test server.
 	responses := make(map[string][]byte)
 	responder := startOCSPResponder(t, responses)
 	t.Cleanup(responder.Close)
@@ -111,7 +111,7 @@ func TestStapleOCSP(t *testing.T) {
 		r, err := ocsp.CreateResponse(
 			leaf, leaf, tpl, ca.Certificate.PrivateKey.(crypto.Signer))
 		if err != nil {
-			t.Fatal("couldn't create OCSP response", err)
+			t.Fatal("couldn't create inMemoryOCSPCache response", err)
 		}
 		responses[leaf.SerialNumber.String()] = r
 
@@ -119,7 +119,7 @@ func TestStapleOCSP(t *testing.T) {
 		if err != nil {
 			t.Error("unexpected error:", err)
 		} else if !bytes.Equal(cert.Certificate.OCSPStaple, r) {
-			t.Error("expected OCSP response to be stapled to certificate")
+			t.Error("expected inMemoryOCSPCache response to be stapled to certificate")
 		}
 	})
 	t.Run("revoked", func(t *testing.T) {
@@ -132,7 +132,7 @@ func TestStapleOCSP(t *testing.T) {
 		r, err := ocsp.CreateResponse(
 			leaf, leaf, tpl, ca.Certificate.PrivateKey.(crypto.Signer))
 		if err != nil {
-			t.Fatal("couldn't create OCSP response", err)
+			t.Fatal("couldn't create inMemoryOCSPCache response", err)
 		}
 		responses[leaf.SerialNumber.String()] = r
 
@@ -140,7 +140,7 @@ func TestStapleOCSP(t *testing.T) {
 		if err != nil {
 			t.Error("unexpected error:", err)
 		} else if cert.Certificate.OCSPStaple != nil {
-			t.Error("revoked OCSP response should not be stapled")
+			t.Error("revoked inMemoryOCSPCache response should not be stapled")
 		}
 	})
 	t.Run("no issuing cert", func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestStapleOCSP(t *testing.T) {
 		cert.ocsp.Server = nil
 
 		err := cert.ocsp.Staple()
-		expected := "no OCSP stapling for OCSP Test Certificate: no OCSP server specified in certificate"
+		expected := "no inMemoryOCSPCache stapling for inMemoryOCSPCache Test Certificate: no inMemoryOCSPCache server specified in certificate"
 		if err == nil || err.Error() != expected {
 			t.Errorf("expected error %q but got %q", expected, err)
 		}
@@ -162,7 +162,7 @@ func mustMakeCertificate(t *testing.T, config types.OCSPConfig, cert, key string
 		t.Fatal("couldn't make certificate:", err)
 	}
 
-	ocspClient, _ := NewOCSP(config, &tlsCert)
+	ocspClient, _ := NewInMemoryOCSPCache()
 
 	return CertificateData{
 		config: &Certificate{

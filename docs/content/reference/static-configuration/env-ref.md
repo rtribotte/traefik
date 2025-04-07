@@ -1269,6 +1269,18 @@ Defines the allowed SPIFFE IDs (takes precedence over the SPIFFE TrustDomain).
 `TRAEFIK_TCPSERVERSTRANSPORT_TLS_SPIFFE_TRUSTDOMAIN`:  
 Defines the allowed SPIFFE trust domain.
 
+`TRAEFIK_TLS`:  
+TLS configuration. (Default: ```false```)
+
+`TRAEFIK_TLS_OCSP`:  
+OCSP configuration.
+
+`TRAEFIK_TLS_OCSP_ENABLESTAPLING`:  
+Enable OCSP stapling. (Default: ```false```)
+
+`TRAEFIK_TLS_OCSP_RESPONDEROVERRIDES_<NAME>`:  
+OCSP responders overrides.
+
 `TRAEFIK_TRACING`:  
 Tracing configuration. (Default: ```false```)
 

@@ -66,15 +66,11 @@ func (c Certificates) GetCertificates() []tls.Certificate {
 	return certs
 }
 
-// +k8s:deepcopy-gen=true
-
 // Certificate holds a SSL cert/key pair
 // Certs and Key could be either a file path, or the file content itself.
 type Certificate struct {
 	CertFile types.FileOrContent `json:"certFile,omitempty" toml:"certFile,omitempty" yaml:"certFile,omitempty"`
 	KeyFile  types.FileOrContent `json:"keyFile,omitempty" toml:"keyFile,omitempty" yaml:"keyFile,omitempty" loggable:"false"`
-	OCSP     types.OCSPConfig    `json:"ocsp,omitempty" toml:"ocsp,omitempty" yaml:"ocsp,omitempty" label:"allowEmpty" file:"allowEmpty"`
-	SANs     []string            `json:"-" toml:"-" yaml:"-"`
 }
 
 // GetCertificate returns a tls.Certificate matching the configured CertFile and KeyFile.
@@ -106,6 +102,25 @@ func (c *Certificate) GetCertificateFromBytes() (tls.Certificate, error) {
 	}
 
 	return cert, nil
+}
+
+// FIXME: check if used
+// Set is the method to set the flag value, part of the flag.Value interface.
+// Set's argument is a string to be parsed to set the flag.
+// It's a comma-separated list, so we split it.
+func (c *Certificates) Set(value string) error {
+	certificates := strings.Split(value, ";")
+	for _, certificate := range certificates {
+		files := strings.Split(certificate, ",")
+		if len(files) != 2 {
+			return fmt.Errorf("bad certificates format: %s", value)
+		}
+		*c = append(*c, Certificate{
+			CertFile: types.FileOrContent(files[0]),
+			KeyFile:  types.FileOrContent(files[1]),
+		})
+	}
+	return nil
 }
 
 // GetTruncatedCertificateName truncates the certificate name.
