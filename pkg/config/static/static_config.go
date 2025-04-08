@@ -90,7 +90,6 @@ type TLS struct {
 }
 
 type OCSP struct {
-	EnableStapling bool `description:"Enables OCSP stapling. Disabling it makes the clients fetch the OCSP staples, reducing privacy." json:"enableStapling,omitempty" toml:"enableStapling,omitempty" yaml:"enableStapling,omitempty" export:"true"`
 	// FIXME: do we want to keep empty URL mapping to disable OCSP.
 	ResponderOverrides map[string]string `description:"Defines a map of OCSP responders to replace for querying OCSP servers." json:"responderOverrides,omitempty" toml:"responderOverrides,omitempty" yaml:"responderOverrides,omitempty"`
 }

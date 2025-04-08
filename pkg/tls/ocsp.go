@@ -35,19 +35,19 @@ type ocspEntry struct {
 	staple     []byte
 }
 
-// InMemoryOCSPStapler retrieves staples from OCSP responders and store them in an in-memory cache.
+// OCSPStapler retrieves staples from OCSP responders and store them in an in-memory cache.
 // It also updates the staples on a regular basis and before they expire.
-type InMemoryOCSPStapler struct {
+type OCSPStapler struct {
 	client             *http.Client // FIXME: timeout?
-	ocspEntries        cache.Cache
+	entries            cache.Cache
 	responderOverrides map[string]string
 }
 
-// NewInMemoryOCSPStapler creates a new InMemoryOCSPStapler cache.
-func NewInMemoryOCSPStapler(responderOverrides map[string]string) *InMemoryOCSPStapler {
-	return &InMemoryOCSPStapler{
+// NewOCSPStapler creates a new OCSPStapler cache.
+func NewOCSPStapler(responderOverrides map[string]string) *OCSPStapler {
+	return &OCSPStapler{
 		client:             &http.Client{},
-		ocspEntries:        *cache.New(30*time.Minute, 5*time.Minute),
+		entries:            *cache.New(30*time.Minute, 5*time.Minute),
 		responderOverrides: responderOverrides,
 	}
 }
@@ -55,7 +55,7 @@ func NewInMemoryOCSPStapler(responderOverrides map[string]string) *InMemoryOCSPS
 // FIXME: force refresh?
 
 // Run updates the OCSP staples every 5 minutes.
-func (i *InMemoryOCSPStapler) Run(ctx context.Context) {
+func (o *OCSPStapler) Run(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
@@ -64,7 +64,7 @@ func (i *InMemoryOCSPStapler) Run(ctx context.Context) {
 		return
 
 	case <-ticker.C:
-		for _, item := range i.ocspEntries.Items() {
+		for _, item := range o.entries.Items() {
 			select {
 			case <-ctx.Done():
 				return
@@ -77,7 +77,7 @@ func (i *InMemoryOCSPStapler) Run(ctx context.Context) {
 				continue
 			}
 
-			if err := i.updateStaple(ctx, entry); err != nil {
+			if err := o.updateStaple(ctx, entry); err != nil {
 				log.Error().Err(err).Msgf("Unable to retieve OCSP staple for: %s", entry.leaf.Subject.CommonName)
 				continue
 			}
@@ -86,8 +86,8 @@ func (i *InMemoryOCSPStapler) Run(ctx context.Context) {
 }
 
 // GetStaple retrieves the OCSP obtainStaple from corresponding to the given key (public certificate hash).
-func (i *InMemoryOCSPStapler) GetStaple(key string) ([]byte, bool) {
-	if item, ok := i.ocspEntries.Get(key); ok && item != nil {
+func (o *OCSPStapler) GetStaple(key string) ([]byte, bool) {
+	if item, ok := o.entries.Get(key); ok && item != nil {
 		if entry, ok := item.(*ocspEntry); ok {
 			return entry.staple, true
 		}
@@ -95,17 +95,22 @@ func (i *InMemoryOCSPStapler) GetStaple(key string) ([]byte, bool) {
 	return nil, false
 }
 
-// Insert creates a new entry for the given certificate.
-// The stapler will then be responsible from retrieving and updating the corresponding OCSP obtainStaple.
+// Upsert creates a new entry for the given certificate.
 // FIXME: should we fetch the entry there?
-func (i *InMemoryOCSPStapler) Insert(key string, leaf, issuer *x509.Certificate) error {
+// The ocspStapler will then be responsible from retrieving and updating the corresponding OCSP obtainStaple.
+func (o *OCSPStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 	if len(leaf.OCSPServer) == 0 {
 		return errors.New("leaf certificate does not contain an OCSP server")
 	}
 
+	if item, ok := o.entries.Get(key); ok {
+		o.entries.Set(key, item, cache.NoExpiration)
+		return nil
+	}
+
 	var responders []string
 	for _, url := range leaf.OCSPServer {
-		if newURL, ok := i.responderOverrides[url]; ok {
+		if newURL, ok := o.responderOverrides[url]; ok {
 			responders = append(responders, newURL)
 		}
 	}
@@ -115,30 +120,26 @@ func (i *InMemoryOCSPStapler) Insert(key string, leaf, issuer *x509.Certificate)
 		issuer:     issuer,
 		responders: responders,
 	}
-	i.ocspEntries.Set(key, entry, cache.NoExpiration)
+	o.entries.Set(key, entry, cache.NoExpiration)
 
 	return nil
 }
 
-// SetAllItemsTTL sets the expiration time for all items in the cache.
-func (i *InMemoryOCSPStapler) SetAllItemsTTL(ttl time.Duration) {
-	for _, item := range i.cache.Items() {
+// ResetTTL resets the expiration time for all items that has no expiration.
+// This allows to set a TTL to entries that do not exist in the dynamic configuration anymore.
+// For those existing, the TTL will be set to zero when the Upsert method will be called during
+// the UpdateConfigs method of the TLS manager.
+func (o *OCSPStapler) ResetTTL() {
+	for _, item := range o.entries.Items() {
 		if item.Expiration > 0 {
 			continue
 		}
-
-		item.Expiration = time.Now().Add(ttl).UnixNano()
-	}
-}
-
-func (i *InMemoryOCSPStapler) SetNoTTL(key string) {
-	if item, ok := i.cache.Get(key); ok && item != nil {
-		i.cache.Set(key, item, cache.NoExpiration)
+		item.Expiration = time.Now().Add(24 * time.Hour).UnixNano()
 	}
 }
 
 // obtainStaple obtains the OCSP stable for the given leaf certificate.
-func (i *InMemoryOCSPStapler) updateStaple(ctx context.Context, entry *ocspEntry) error {
+func (o *OCSPStapler) updateStaple(ctx context.Context, entry *ocspEntry) error {
 	// TODO: check FIPS compliance for SHA1 used as default hash, if set the hash options.
 	ocspReq, err := ocsp.CreateRequest(entry.leaf, entry.issuer, nil)
 	if err != nil {
@@ -155,7 +156,7 @@ func (i *InMemoryOCSPStapler) updateStaple(ctx context.Context, entry *ocspEntry
 
 		req.Header.Set("Content-Type", "application/ocsp-request")
 
-		res, err := i.client.Do(req)
+		res, err := o.client.Do(req)
 		if err != nil && ctx.Err() != nil {
 			return ctx.Err()
 		}

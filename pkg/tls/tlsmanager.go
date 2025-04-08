@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/challenge/tlsalpn01"
@@ -46,13 +45,9 @@ func getCipherSuites() []string {
 	return ciphers
 }
 
-// OCSPStapler is responsible for retrieving and caching OCSP staples for OCSP compatible certificates.
-type OCSPStapler interface {
-	GetStaple(key string) ([]byte, bool)
-	Insert(key string, leaf, issuer *x509.Certificate)
-
-	SetAllItemsTTL(ttl time.Duration)
-	SetNoTTL(key string)
+// OCSPConfig contains the OCSP configuration.
+type OCSPConfig struct {
+	ResponderOverrides map[string]string
 }
 
 // Manager is the TLS option/store/configuration factory.
@@ -62,18 +57,37 @@ type Manager struct {
 	stores       map[string]*CertificateStore
 	configs      map[string]Options
 	certs        []*CertAndStores
-	stapler      OCSPStapler
+
+	// As of today, the TLS manager contains and is responsible of creating/starting the OCSP ocspStapler.
+	// It would likely have been a Configuration listener but this implies that certs are re-parsed.
+	// But this would probably have impact on resource consumption.
+	ocspStapler *OCSPStapler
 }
 
 // NewManager creates a new Manager.
-func NewManager(stapler OCSPStapler) *Manager {
+func NewManager(ocspConfig *OCSPConfig) *Manager {
+	var stapler *OCSPStapler
+	if ocspConfig != nil {
+		stapler = NewOCSPStapler(ocspConfig.ResponderOverrides)
+	}
+
 	return &Manager{
-		stapler: stapler,
-		stores:  map[string]*CertificateStore{},
+		ocspStapler: stapler,
+		stores:      map[string]*CertificateStore{},
 		configs: map[string]Options{
 			"default": DefaultTLSOptions,
 		},
 	}
+}
+
+// StartOCSPStapler starts the OCSP stapler routine if enabled.
+func (m *Manager) StartOCSPStapler(ctx context.Context) {
+	// Nothing to do, OCSP stapler is disabled.
+	if m.ocspStapler == nil {
+		return
+	}
+
+	m.ocspStapler.Run(ctx)
 }
 
 // UpdateConfigs updates the TLS* configuration options.
@@ -109,11 +123,9 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 
 	// Define the TTL for all the inMemoryOCSPCache cache entries with no TTL.
 	// This will discard entries that are not used anymore.
-	if m.stapler != nil {
-		m.stapler.SetAllItemsTTL(24 * time.Hour)
+	if m.ocspStapler != nil {
+		m.ocspStapler.ResetTTL()
 	}
-
-	//FIXME: retrieve cache keys, and put a TTL on key that are not used anymore
 
 	for _, conf := range certs {
 		if len(conf.Stores) == 0 {
@@ -130,36 +142,28 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 			continue
 		}
 
-		var certKey string
-		if m.stapler != nil {
-			// compute a hash certKey of the certificate
-			hasher := fnv.New64()
-			// purposely ignoring the error, as no error can be returned from the implementation.
-			_, _ = hasher.Write(cert.Leaf.Raw)
-			certKey = strconv.FormatUint(hasher.Sum64(), 16)
+		var certHash string
+		if m.ocspStapler != nil && len(cert.Leaf.OCSPServer) > 0 {
+			certHash = hashRawCert(cert.Leaf.Raw)
 
-			if _, ok := m.stapler.GetStaple(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
-				issuer := cert.Leaf
-				if len(cert.Certificate) > 1 {
-					issuer, err = x509.ParseCertificate(cert.Certificate[1])
-					if err != nil {
-						log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse issuer certificate %s", conf.Certificate.GetTruncatedCertificateName())
-						continue
-					}
+			issuer := cert.Leaf
+			if len(cert.Certificate) > 1 {
+				issuer, err = x509.ParseCertificate(cert.Certificate[1])
+				if err != nil {
+					log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse issuer certificate %s", conf.Certificate.GetTruncatedCertificateName())
+					continue
 				}
+			}
 
-				m.stapler.Set(certKey, cert.Leaf, issuer)
-			} else {
-				// Even when we don't store the cert in the inMemoryOCSPCache cache,
-				// we remove the TTL for the cert.
-				// A cert is given a TTL in the cache only if it is not provided again through the configuration.
-				m.stapler.SetNoTTL(certKey)
+			if err := m.ocspStapler.Upsert(certHash, cert.Leaf, issuer); err != nil {
+				log.Ctx(ctx).Error().Err(err).Msgf("Unable to upsert OCSP certificate %s", conf.Certificate.GetTruncatedCertificateName())
+				continue
 			}
 		}
 
 		certData := &CertificateData{
-			Certificate:  &cert,
-			OCSPCacheKey: certKey,
+			Certificate: &cert,
+			Hash:        certHash,
 		}
 
 		for _, store := range conf.Stores {
@@ -174,7 +178,7 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 	m.stores = make(map[string]*CertificateStore)
 
 	for storeName, storeConfig := range m.storesConfig {
-		st := NewCertificateStore(m.stapler)
+		st := NewCertificateStore(m.ocspStapler)
 		m.stores[storeName] = st
 
 		if certs, ok := storesCertificates[storeName]; ok {
@@ -399,36 +403,26 @@ func (m *Manager) buildDefaultCertificate(ctx context.Context, defaultCertificat
 		return nil, fmt.Errorf("failed to load X509 key pair: %w", err)
 	}
 
-	var certKey string
-	if m.stapler != nil {
-		// compute a hash certKey of the certificate
-		hasher := fnv.New64()
-		// purposely ignoring the error, as no error can be returned from the implementation.
-		_, _ = hasher.Write(cert.Leaf.Raw)
-		certKey = strconv.FormatUint(hasher.Sum64(), 16)
+	var certHash string
+	if m.ocspStapler != nil {
+		certHash = hashRawCert(cert.Leaf.Raw)
 
-		if _, ok := m.stapler.GetStaple(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
-			issuer := cert.Leaf
-			if len(cert.Certificate) > 1 {
-				issuer, err = x509.ParseCertificate(cert.Certificate[1])
-				if err != nil {
-					log.Ctx(ctx).Error().Err(err).Msgf("Unable to parse issuer certificate %s", defaultCertificate.GetTruncatedCertificateName())
-					return nil, err
-				}
+		issuer := cert.Leaf
+		if len(cert.Certificate) > 1 {
+			issuer, err = x509.ParseCertificate(cert.Certificate[1])
+			if err != nil {
+				return nil, fmt.Errorf("parsing issuer certificate %s: %w", defaultCertificate.GetTruncatedCertificateName(), err)
 			}
+		}
 
-			m.stapler.Set(certKey, cert.Leaf, issuer)
-		} else {
-			// Even when we don't store the cert in the inMemoryOCSPCache cache,
-			// we remove the TTL for the cert.
-			// A cert is given a TTL in the cache only if it is not provided again through the configuration.
-			m.stapler.SetNoTTL(certKey)
+		if err := m.ocspStapler.Upsert(certHash, cert.Leaf, issuer); err != nil {
+			return nil, fmt.Errorf("upserting OCSP certificate %s: %w", defaultCertificate.GetTruncatedCertificateName(), err)
 		}
 	}
 
 	return &CertificateData{
-		Certificate:  &cert,
-		OCSPCacheKey: certKey,
+		Certificate: &cert,
+		Hash:        certHash,
 	}, nil
 }
 
@@ -520,4 +514,12 @@ func buildTLSConfig(tlsOption Options) (*tls.Config, error) {
 	}
 
 	return conf, nil
+}
+
+func hashRawCert(rawCert []byte) string {
+	hasher := fnv.New64()
+
+	// purposely ignoring the error, as no error can be returned from the implementation.
+	_, _ = hasher.Write(rawCert)
+	return strconv.FormatUint(hasher.Sum64(), 16)
 }

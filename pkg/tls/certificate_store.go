@@ -16,8 +16,8 @@ import (
 
 // CertificateData holds runtime data for runtime TLS certificate handling.
 type CertificateData struct {
-	OCSPCacheKey string
-	Certificate  *tls.Certificate
+	Hash        string
+	Certificate *tls.Certificate
 }
 
 // CertificateStore store for dynamic certificates.
@@ -25,18 +25,18 @@ type CertificateStore struct {
 	DynamicCerts       *safe.Safe
 	DefaultCertificate *CertificateData
 	CertCache          *cache.Cache
-	OCSPCache          OCSPStapler
+	ocspStapler        *OCSPStapler
 }
 
 // NewCertificateStore create a store for dynamic certificates.
-func NewCertificateStore(ocspCache OCSPStapler) *CertificateStore {
-	s := &safe.Safe{}
-	s.Set(make(map[string]*CertificateData))
+func NewCertificateStore(ocspStapler *OCSPStapler) *CertificateStore {
+	var dynamicCerts safe.Safe
+	dynamicCerts.Set(make(map[string]*CertificateData))
 
 	return &CertificateStore{
-		DynamicCerts: s,
+		DynamicCerts: &dynamicCerts,
 		CertCache:    cache.New(1*time.Hour, 10*time.Minute),
-		OCSPCache:    ocspCache,
+		ocspStapler:  ocspStapler,
 	}
 }
 
@@ -98,10 +98,10 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 
 	if cert, ok := c.CertCache.Get(serverName); ok {
 		certificateData := cert.(*CertificateData)
-		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
-			// get obtainStaple
-			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
-				// TODO: document the choice of being "thread unsafe" here
+		if c.ocspStapler != nil && certificateData.Hash != "" {
+			if staple, ok := c.ocspStapler.GetStaple(certificateData.Hash); ok {
+				// We are updating the OCSPStaple of the certificate without any synchronization
+				// as this should not cause any issue.
 				certificateData.Certificate.OCSPStaple = staple
 			}
 		}
@@ -132,10 +132,10 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 		certificateData := matchedCerts[keys[len(keys)-1]]
 		c.CertCache.SetDefault(serverName, certificateData)
 
-		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
-			// get obtainStaple
-			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
-				// TODO: document the choice of being "thread unsafe" here
+		if c.ocspStapler != nil && certificateData.Hash != "" {
+			if staple, ok := c.ocspStapler.GetStaple(certificateData.Hash); ok {
+				// We are updating the OCSPStaple of the certificate without any synchronization
+				// as this should not cause any issue.
 				certificateData.Certificate.OCSPStaple = staple
 			}
 		}

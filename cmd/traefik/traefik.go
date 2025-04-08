@@ -182,15 +182,19 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 	// ACME
 
-	var stapler traefiktls.OCSPStapler
-	if staticConfiguration.TLS != nil &&
-		staticConfiguration.TLS.OCSP != nil &&
-		staticConfiguration.TLS.OCSP.EnableStapling {
-		stapler = traefiktls.NewInMemoryOCSPStapler(staticConfiguration.TLS.OCSP.ResponderOverrides)
-		initOCSPCache(stapler, routinesPool)
+	var ocspConfig *traefiktls.OCSPConfig
+	if staticConfiguration.TLS != nil && staticConfiguration.TLS.OCSP != nil {
+		ocspConfig = &traefiktls.OCSPConfig{
+			ResponderOverrides: staticConfiguration.TLS.OCSP.ResponderOverrides,
+		}
+	}
+	tlsManager := traefiktls.NewManager(ocspConfig)
+	if ocspConfig != nil {
+		routinesPool.GoCtx(func(ctx context.Context) {
+			tlsManager.StartOCSPStapler(ctx)
+		})
 	}
 
-	tlsManager := traefiktls.NewManager(stapler)
 	httpChallengeProvider := acme.NewChallengeHTTP()
 
 	tlsChallengeProvider := acme.NewChallengeTLSALPN()

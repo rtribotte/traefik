@@ -162,7 +162,7 @@ func mustMakeCertificate(t *testing.T, config types.OCSPConfig, cert, key string
 		t.Fatal("couldn't make certificate:", err)
 	}
 
-	ocspClient, _ := NewInMemoryOCSPStapler()
+	ocspClient, _ := NewOCSPStapler()
 
 	return CertificateData{
 		config: &Certificate{
