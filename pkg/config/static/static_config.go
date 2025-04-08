@@ -84,18 +84,15 @@ type Configuration struct {
 	Spiffe *SpiffeClientConfig `description:"SPIFFE integration configuration." json:"spiffe,omitempty" toml:"spiffe,omitempty" yaml:"spiffe,omitempty" export:"true"`
 }
 
+// FIXME: do we want to keep the TLS node.
 type TLS struct {
 	OCSP *OCSP `description:"OCSP configuration." json:"ocsp,omitempty" toml:"ocsp,omitempty" yaml:"ocsp,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 }
 
 type OCSP struct {
-	// Enable automatic OCSP stapling; strongly discouraged unless you have a good reason.
-	// Disabling this puts clients at greater risk and reduces their privacy.
-	EnableStapling bool `description:"Enable OCSP stapling." json:"enableStapling,omitempty" toml:"enableStapling,omitempty" yaml:"enableStapling,omitempty" export:"true"`
-	// A map of OCSP responder domains to replacement domains for querying OCSP servers. Used for
-	// overriding the OCSP responder URL that is embedded in certificates. Mapping to an empty
-	// URL will disable OCSP from that responder.
-	ResponderOverrides map[string]string `description:"OCSP responders overrides." json:"responderOverrides,omitempty" toml:"responderOverrides,omitempty" yaml:"responderOverrides,omitempty" export:"true"`
+	EnableStapling bool `description:"Enables OCSP stapling. Disabling it makes the clients fetch the OCSP staples, reducing privacy." json:"enableStapling,omitempty" toml:"enableStapling,omitempty" yaml:"enableStapling,omitempty" export:"true"`
+	// FIXME: do we want to keep empty URL mapping to disable OCSP.
+	ResponderOverrides map[string]string `description:"Defines a map of OCSP responders to replace for querying OCSP servers." json:"responderOverrides,omitempty" toml:"responderOverrides,omitempty" yaml:"responderOverrides,omitempty"`
 }
 
 // Core configures Traefik core behavior.

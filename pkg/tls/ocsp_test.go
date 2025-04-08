@@ -71,7 +71,7 @@ func TestStapleOCSP(t *testing.T) {
 		if err != nil {
 			t.Error("unexpected error:", err)
 		} else if cert.Certificate.OCSPStaple != nil {
-			t.Error("unexpected inMemoryOCSPCache staple")
+			t.Error("unexpected inMemoryOCSPCache obtainStaple")
 		}
 	})
 	t.Run("no inMemoryOCSPCache server", func(t *testing.T) {
@@ -162,7 +162,7 @@ func mustMakeCertificate(t *testing.T, config types.OCSPConfig, cert, key string
 		t.Fatal("couldn't make certificate:", err)
 	}
 
-	ocspClient, _ := NewInMemoryOCSPCache()
+	ocspClient, _ := NewInMemoryOCSPStapler()
 
 	return CertificateData{
 		config: &Certificate{

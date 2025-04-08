@@ -25,11 +25,11 @@ type CertificateStore struct {
 	DynamicCerts       *safe.Safe
 	DefaultCertificate *CertificateData
 	CertCache          *cache.Cache
-	OCSPCache          OCSPCache
+	OCSPCache          OCSPStapler
 }
 
 // NewCertificateStore create a store for dynamic certificates.
-func NewCertificateStore(ocspCache OCSPCache) *CertificateStore {
+func NewCertificateStore(ocspCache OCSPStapler) *CertificateStore {
 	s := &safe.Safe{}
 	s.Set(make(map[string]*CertificateData))
 
@@ -99,7 +99,7 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 	if cert, ok := c.CertCache.Get(serverName); ok {
 		certificateData := cert.(*CertificateData)
 		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
-			// get staple
+			// get obtainStaple
 			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
 				// TODO: document the choice of being "thread unsafe" here
 				certificateData.Certificate.OCSPStaple = staple
@@ -133,7 +133,7 @@ func (c *CertificateStore) GetBestCertificate(clientHello *tls.ClientHelloInfo) 
 		c.CertCache.SetDefault(serverName, certificateData)
 
 		if c.OCSPCache != nil && certificateData.OCSPCacheKey != "" {
-			// get staple
+			// get obtainStaple
 			if staple, ok := c.OCSPCache.Get(certificateData.OCSPCacheKey); ok {
 				// TODO: document the choice of being "thread unsafe" here
 				certificateData.Certificate.OCSPStaple = staple

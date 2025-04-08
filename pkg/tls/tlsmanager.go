@@ -46,12 +46,13 @@ func getCipherSuites() []string {
 	return ciphers
 }
 
-type OCSPCache interface {
-	Get(key string) ([]byte, bool)
-	Set(key string, leaf, issuer *x509.Certificate)
+// OCSPStapler is responsible for retrieving and caching OCSP staples for OCSP compatible certificates.
+type OCSPStapler interface {
+	GetStaple(key string) ([]byte, bool)
+	Insert(key string, leaf, issuer *x509.Certificate)
+
 	SetAllItemsTTL(ttl time.Duration)
 	SetNoTTL(key string)
-	Run(ctx context.Context)
 }
 
 // Manager is the TLS option/store/configuration factory.
@@ -61,17 +62,17 @@ type Manager struct {
 	stores       map[string]*CertificateStore
 	configs      map[string]Options
 	certs        []*CertAndStores
-	ocspCache    OCSPCache
+	stapler      OCSPStapler
 }
 
 // NewManager creates a new Manager.
-func NewManager(cache OCSPCache) *Manager {
+func NewManager(stapler OCSPStapler) *Manager {
 	return &Manager{
-		stores: map[string]*CertificateStore{},
+		stapler: stapler,
+		stores:  map[string]*CertificateStore{},
 		configs: map[string]Options{
 			"default": DefaultTLSOptions,
 		},
-		ocspCache: cache,
 	}
 }
 
@@ -108,8 +109,8 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 
 	// Define the TTL for all the inMemoryOCSPCache cache entries with no TTL.
 	// This will discard entries that are not used anymore.
-	if m.ocspCache != nil {
-		m.ocspCache.SetAllItemsTTL(24 * time.Hour)
+	if m.stapler != nil {
+		m.stapler.SetAllItemsTTL(24 * time.Hour)
 	}
 
 	//FIXME: retrieve cache keys, and put a TTL on key that are not used anymore
@@ -130,14 +131,14 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 		}
 
 		var certKey string
-		if m.ocspCache != nil {
+		if m.stapler != nil {
 			// compute a hash certKey of the certificate
 			hasher := fnv.New64()
 			// purposely ignoring the error, as no error can be returned from the implementation.
 			_, _ = hasher.Write(cert.Leaf.Raw)
 			certKey = strconv.FormatUint(hasher.Sum64(), 16)
 
-			if _, ok := m.ocspCache.Get(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
+			if _, ok := m.stapler.GetStaple(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
 				issuer := cert.Leaf
 				if len(cert.Certificate) > 1 {
 					issuer, err = x509.ParseCertificate(cert.Certificate[1])
@@ -147,12 +148,12 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 					}
 				}
 
-				m.ocspCache.Set(certKey, cert.Leaf, issuer)
+				m.stapler.Set(certKey, cert.Leaf, issuer)
 			} else {
 				// Even when we don't store the cert in the inMemoryOCSPCache cache,
 				// we remove the TTL for the cert.
 				// A cert is given a TTL in the cache only if it is not provided again through the configuration.
-				m.ocspCache.SetNoTTL(certKey)
+				m.stapler.SetNoTTL(certKey)
 			}
 		}
 
@@ -173,7 +174,7 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 	m.stores = make(map[string]*CertificateStore)
 
 	for storeName, storeConfig := range m.storesConfig {
-		st := NewCertificateStore(m.ocspCache)
+		st := NewCertificateStore(m.stapler)
 		m.stores[storeName] = st
 
 		if certs, ok := storesCertificates[storeName]; ok {
@@ -399,14 +400,14 @@ func (m *Manager) buildDefaultCertificate(ctx context.Context, defaultCertificat
 	}
 
 	var certKey string
-	if m.ocspCache != nil {
+	if m.stapler != nil {
 		// compute a hash certKey of the certificate
 		hasher := fnv.New64()
 		// purposely ignoring the error, as no error can be returned from the implementation.
 		_, _ = hasher.Write(cert.Leaf.Raw)
 		certKey = strconv.FormatUint(hasher.Sum64(), 16)
 
-		if _, ok := m.ocspCache.Get(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
+		if _, ok := m.stapler.GetStaple(certKey); !ok && len(cert.Leaf.OCSPServer) > 0 {
 			issuer := cert.Leaf
 			if len(cert.Certificate) > 1 {
 				issuer, err = x509.ParseCertificate(cert.Certificate[1])
@@ -416,12 +417,12 @@ func (m *Manager) buildDefaultCertificate(ctx context.Context, defaultCertificat
 				}
 			}
 
-			m.ocspCache.Set(certKey, cert.Leaf, issuer)
+			m.stapler.Set(certKey, cert.Leaf, issuer)
 		} else {
 			// Even when we don't store the cert in the inMemoryOCSPCache cache,
 			// we remove the TTL for the cert.
 			// A cert is given a TTL in the cache only if it is not provided again through the configuration.
-			m.ocspCache.SetNoTTL(certKey)
+			m.stapler.SetNoTTL(certKey)
 		}
 	}
 
