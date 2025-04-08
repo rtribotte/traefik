@@ -85,6 +85,8 @@ func (o *OCSPStapler) Run(ctx context.Context) {
 	}
 }
 
+// FIXME: revocation
+
 // GetStaple retrieves the OCSP obtainStaple from corresponding to the given key (public certificate hash).
 func (o *OCSPStapler) GetStaple(key string) ([]byte, bool) {
 	if item, ok := o.entries.Get(key); ok && item != nil {
