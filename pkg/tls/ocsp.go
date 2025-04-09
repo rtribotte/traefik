@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/asn1"
 	"errors"
 	"fmt"
 	"io"
@@ -17,16 +15,6 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
-// Constants for PKIX MustStaple extension.
-var (
-	tlsFeatureExtensionOID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 24}
-	ocspMustStapleFeature  = []byte{0x30, 0x03, 0x02, 0x01, 0x05}
-	mustStapleExtension    = pkix.Extension{
-		Id:    tlsFeatureExtensionOID,
-		Value: ocspMustStapleFeature,
-	}
-)
-
 type ocspEntry struct {
 	leaf       *x509.Certificate
 	issuer     *x509.Certificate
@@ -35,60 +23,52 @@ type ocspEntry struct {
 	staple     []byte
 }
 
-// OCSPStapler retrieves staples from OCSP responders and store them in an in-memory cache.
+// ocspStapler retrieves staples from OCSP responders and store them in an in-memory cache.
 // It also updates the staples on a regular basis and before they expire.
-type OCSPStapler struct {
-	client             *http.Client // FIXME: timeout?
+type ocspStapler struct {
+	client             *http.Client
 	entries            cache.Cache
+	forceStapleUpdates chan struct{}
 	responderOverrides map[string]string
 }
 
-// NewOCSPStapler creates a new OCSPStapler cache.
-func NewOCSPStapler(responderOverrides map[string]string) *OCSPStapler {
-	return &OCSPStapler{
-		client:             &http.Client{},
+// newOCSPStapler creates a new ocspStapler cache.
+func newOCSPStapler(responderOverrides map[string]string) *ocspStapler {
+	return &ocspStapler{
+		client:             &http.Client{Timeout: 10 * time.Second},
 		entries:            *cache.New(30*time.Minute, 5*time.Minute),
+		forceStapleUpdates: make(chan struct{}, 1),
 		responderOverrides: responderOverrides,
 	}
 }
 
-// FIXME: force refresh?
-
 // Run updates the OCSP staples every 5 minutes.
-func (o *OCSPStapler) Run(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Minute)
+func (o *ocspStapler) Run(ctx context.Context) {
+	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
 
 	select {
 	case <-ctx.Done():
 		return
 
+	case <-o.forceStapleUpdates:
+		o.updateStaples(ctx)
+
 	case <-ticker.C:
-		for _, item := range o.entries.Items() {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
-
-			entry := item.Object.(*ocspEntry)
-
-			if entry.staple != nil && time.Now().Before(entry.nextUpdate) {
-				continue
-			}
-
-			if err := o.updateStaple(ctx, entry); err != nil {
-				log.Error().Err(err).Msgf("Unable to retieve OCSP staple for: %s", entry.leaf.Subject.CommonName)
-				continue
-			}
-		}
+		o.updateStaples(ctx)
 	}
 }
 
-// FIXME: revocation
+// ForceStapleUpdates triggers staple updates in the background instead of waiting for the Run routine to update them.
+func (o *ocspStapler) ForceStapleUpdates() {
+	select {
+	case o.forceStapleUpdates <- struct{}{}:
+	default:
+	}
+}
 
-// GetStaple retrieves the OCSP obtainStaple from corresponding to the given key (public certificate hash).
-func (o *OCSPStapler) GetStaple(key string) ([]byte, bool) {
+// GetStaple retrieves the OCSP staple for the corresponding to the given key (public certificate hash).
+func (o *ocspStapler) GetStaple(key string) ([]byte, bool) {
 	if item, ok := o.entries.Get(key); ok && item != nil {
 		if entry, ok := item.(*ocspEntry); ok {
 			return entry.staple, true
@@ -98,9 +78,8 @@ func (o *OCSPStapler) GetStaple(key string) ([]byte, bool) {
 }
 
 // Upsert creates a new entry for the given certificate.
-// FIXME: should we fetch the entry there?
 // The ocspStapler will then be responsible from retrieving and updating the corresponding OCSP obtainStaple.
-func (o *OCSPStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
+func (o *ocspStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 	if len(leaf.OCSPServer) == 0 {
 		return errors.New("leaf certificate does not contain an OCSP server")
 	}
@@ -112,9 +91,12 @@ func (o *OCSPStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 
 	var responders []string
 	for _, url := range leaf.OCSPServer {
-		if newURL, ok := o.responderOverrides[url]; ok {
-			responders = append(responders, newURL)
+		if len(o.responderOverrides) > 0 {
+			if newURL, ok := o.responderOverrides[url]; ok {
+				url = newURL
+			}
 		}
+		responders = append(responders, url)
 	}
 
 	entry := &ocspEntry{
@@ -131,7 +113,7 @@ func (o *OCSPStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 // This allows to set a TTL to entries that do not exist in the dynamic configuration anymore.
 // For those existing, the TTL will be set to zero when the Upsert method will be called during
 // the UpdateConfigs method of the TLS manager.
-func (o *OCSPStapler) ResetTTL() {
+func (o *ocspStapler) ResetTTL() {
 	for _, item := range o.entries.Items() {
 		if item.Expiration > 0 {
 			continue
@@ -140,8 +122,29 @@ func (o *OCSPStapler) ResetTTL() {
 	}
 }
 
+func (o *ocspStapler) updateStaples(ctx context.Context) {
+	for _, item := range o.entries.Items() {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		entry := item.Object.(*ocspEntry)
+
+		if entry.staple != nil && time.Now().Before(entry.nextUpdate) {
+			continue
+		}
+
+		if err := o.updateStaple(ctx, entry); err != nil {
+			log.Error().Err(err).Msgf("Unable to retieve OCSP staple for: %s", entry.leaf.Subject.CommonName)
+			continue
+		}
+	}
+}
+
 // obtainStaple obtains the OCSP stable for the given leaf certificate.
-func (o *OCSPStapler) updateStaple(ctx context.Context, entry *ocspEntry) error {
+func (o *ocspStapler) updateStaple(ctx context.Context, entry *ocspEntry) error {
 	// TODO: check FIPS compliance for SHA1 used as default hash, if set the hash options.
 	ocspReq, err := ocsp.CreateRequest(entry.leaf, entry.issuer, nil)
 	if err != nil {

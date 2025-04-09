@@ -2,7 +2,6 @@ package tls
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"sort"
@@ -25,11 +24,12 @@ type CertificateStore struct {
 	DynamicCerts       *safe.Safe
 	DefaultCertificate *CertificateData
 	CertCache          *cache.Cache
-	ocspStapler        *OCSPStapler
+
+	ocspStapler *ocspStapler
 }
 
 // NewCertificateStore create a store for dynamic certificates.
-func NewCertificateStore(ocspStapler *OCSPStapler) *CertificateStore {
+func NewCertificateStore(ocspStapler *ocspStapler) *CertificateStore {
 	var dynamicCerts safe.Safe
 	dynamicCerts.Set(make(map[string]*CertificateData))
 
@@ -41,26 +41,20 @@ func NewCertificateStore(ocspStapler *OCSPStapler) *CertificateStore {
 }
 
 func (c *CertificateStore) getDefaultCertificateDomains() []string {
-	var allCerts []string
-
 	if c.DefaultCertificate == nil {
-		return allCerts
+		return nil
 	}
 
-	// FIXME: check if parsing is necessary
-	x509Cert, err := x509.ParseCertificate(c.DefaultCertificate.Certificate.Certificate[0])
-	if err != nil {
-		log.Error().Err(err).Msg("Could not parse default certificate")
-		return allCerts
+	defaultCert := c.DefaultCertificate.Certificate.Leaf
+
+	var allCerts []string
+	if len(defaultCert.Subject.CommonName) > 0 {
+		allCerts = append(allCerts, defaultCert.Subject.CommonName)
 	}
 
-	if len(x509Cert.Subject.CommonName) > 0 {
-		allCerts = append(allCerts, x509Cert.Subject.CommonName)
-	}
+	allCerts = append(allCerts, defaultCert.DNSNames...)
 
-	allCerts = append(allCerts, x509Cert.DNSNames...)
-
-	for _, ipSan := range x509Cert.IPAddresses {
+	for _, ipSan := range defaultCert.IPAddresses {
 		allCerts = append(allCerts, ipSan.String())
 	}
 

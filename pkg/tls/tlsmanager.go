@@ -58,17 +58,17 @@ type Manager struct {
 	configs      map[string]Options
 	certs        []*CertAndStores
 
-	// As of today, the TLS manager contains and is responsible of creating/starting the OCSP ocspStapler.
+	// As of today, the TLS manager contains and is responsible for creating/starting the OCSP ocspStapler.
 	// It would likely have been a Configuration listener but this implies that certs are re-parsed.
 	// But this would probably have impact on resource consumption.
-	ocspStapler *OCSPStapler
+	ocspStapler *ocspStapler
 }
 
 // NewManager creates a new Manager.
 func NewManager(ocspConfig *OCSPConfig) *Manager {
-	var stapler *OCSPStapler
+	var stapler *ocspStapler
 	if ocspConfig != nil {
-		stapler = NewOCSPStapler(ocspConfig.ResponderOverrides)
+		stapler = newOCSPStapler(ocspConfig.ResponderOverrides)
 	}
 
 	return &Manager{
@@ -199,6 +199,10 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 		}
 
 		st.DefaultCertificate = certificate
+	}
+
+	if m.ocspStapler != nil {
+		m.ocspStapler.ForceStapleUpdates()
 	}
 }
 
@@ -352,7 +356,7 @@ func (m *Manager) GetStore(storeName string) *CertificateStore {
 
 func (m *Manager) getDefaultCertificate(ctx context.Context, tlsStore Store, st *CertificateStore) (*CertificateData, error) {
 	if tlsStore.DefaultCertificate != nil {
-		cert, err := m.buildDefaultCertificate(ctx, tlsStore.DefaultCertificate)
+		cert, err := m.buildDefaultCertificate(tlsStore.DefaultCertificate)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +391,7 @@ func (m *Manager) getDefaultCertificate(ctx context.Context, tlsStore Store, st 
 	return defaultCertificate, nil
 }
 
-func (m *Manager) buildDefaultCertificate(ctx context.Context, defaultCertificate *Certificate) (*CertificateData, error) {
+func (m *Manager) buildDefaultCertificate(defaultCertificate *Certificate) (*CertificateData, error) {
 	certFile, err := defaultCertificate.CertFile.Read()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cert file content: %w", err)

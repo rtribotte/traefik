@@ -104,25 +104,6 @@ func (c *Certificate) GetCertificateFromBytes() (tls.Certificate, error) {
 	return cert, nil
 }
 
-// FIXME: check if used
-// Set is the method to set the flag value, part of the flag.Value interface.
-// Set's argument is a string to be parsed to set the flag.
-// It's a comma-separated list, so we split it.
-func (c *Certificates) Set(value string) error {
-	certificates := strings.Split(value, ";")
-	for _, certificate := range certificates {
-		files := strings.Split(certificate, ",")
-		if len(files) != 2 {
-			return fmt.Errorf("bad certificates format: %s", value)
-		}
-		*c = append(*c, Certificate{
-			CertFile: types.FileOrContent(files[0]),
-			KeyFile:  types.FileOrContent(files[1]),
-		})
-	}
-	return nil
-}
-
 // GetTruncatedCertificateName truncates the certificate name.
 func (c *Certificate) GetTruncatedCertificateName() string {
 	certName := c.CertFile.String()
