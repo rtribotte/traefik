@@ -27,7 +27,7 @@ type ocspEntry struct {
 // It also updates the staples on a regular basis and before they expire.
 type ocspStapler struct {
 	client             *http.Client
-	entries            cache.Cache
+	cache              cache.Cache
 	forceStapleUpdates chan struct{}
 	responderOverrides map[string]string
 }
@@ -36,13 +36,13 @@ type ocspStapler struct {
 func newOCSPStapler(responderOverrides map[string]string) *ocspStapler {
 	return &ocspStapler{
 		client:             &http.Client{Timeout: 10 * time.Second},
-		entries:            *cache.New(30*time.Minute, 5*time.Minute),
+		cache:              *cache.New(24*time.Hour, 5*time.Minute),
 		forceStapleUpdates: make(chan struct{}, 1),
 		responderOverrides: responderOverrides,
 	}
 }
 
-// Run updates the OCSP staples every 5 minutes.
+// Run updates the OCSP staples every hours.
 func (o *ocspStapler) Run(ctx context.Context) {
 	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
@@ -69,7 +69,7 @@ func (o *ocspStapler) ForceStapleUpdates() {
 
 // GetStaple retrieves the OCSP staple for the corresponding to the given key (public certificate hash).
 func (o *ocspStapler) GetStaple(key string) ([]byte, bool) {
-	if item, ok := o.entries.Get(key); ok && item != nil {
+	if item, ok := o.cache.Get(key); ok && item != nil {
 		if entry, ok := item.(*ocspEntry); ok {
 			return entry.staple, true
 		}
@@ -84,8 +84,8 @@ func (o *ocspStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 		return errors.New("leaf certificate does not contain an OCSP server")
 	}
 
-	if item, ok := o.entries.Get(key); ok {
-		o.entries.Set(key, item, cache.NoExpiration)
+	if item, ok := o.cache.Get(key); ok {
+		o.cache.Set(key, item, cache.NoExpiration)
 		return nil
 	}
 
@@ -99,31 +99,31 @@ func (o *ocspStapler) Upsert(key string, leaf, issuer *x509.Certificate) error {
 		responders = append(responders, url)
 	}
 
-	entry := &ocspEntry{
+	o.cache.Set(key, &ocspEntry{
 		leaf:       leaf,
 		issuer:     issuer,
 		responders: responders,
-	}
-	o.entries.Set(key, entry, cache.NoExpiration)
+	}, cache.NoExpiration)
 
 	return nil
 }
 
 // ResetTTL resets the expiration time for all items that has no expiration.
-// This allows to set a TTL to entries that do not exist in the dynamic configuration anymore.
+// This allows to set a TTL to cache that do not exist in the dynamic configuration anymore.
 // For those existing, the TTL will be set to zero when the Upsert method will be called during
 // the UpdateConfigs method of the TLS manager.
 func (o *ocspStapler) ResetTTL() {
-	for _, item := range o.entries.Items() {
+	for key, item := range o.cache.Items() {
 		if item.Expiration > 0 {
 			continue
 		}
-		item.Expiration = time.Now().Add(24 * time.Hour).UnixNano()
+
+		o.cache.Set(key, item.Object, cache.DefaultExpiration)
 	}
 }
 
 func (o *ocspStapler) updateStaples(ctx context.Context) {
-	for _, item := range o.entries.Items() {
+	for _, item := range o.cache.Items() {
 		select {
 		case <-ctx.Done():
 			return

@@ -121,8 +121,8 @@ func (m *Manager) UpdateConfigs(ctx context.Context, stores map[string]Store, co
 
 	storesCertificates := make(map[string]map[string]*CertificateData)
 
-	// Define the TTL for all the inMemoryOCSPCache cache entries with no TTL.
-	// This will discard entries that are not used anymore.
+	// Define the TTL for all the inMemoryOCSPCache cache cache with no TTL.
+	// This will discard cache that are not used anymore.
 	if m.ocspStapler != nil {
 		m.ocspStapler.ResetTTL()
 	}

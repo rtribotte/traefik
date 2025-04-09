@@ -77,7 +77,7 @@ func TestTLSInStore(t *testing.T) {
 		},
 	}}
 
-	tlsManager := NewManager()
+	tlsManager := NewManager(nil)
 	tlsManager.UpdateConfigs(context.Background(), nil, nil, dynamicConfigs)
 
 	certs := tlsManager.GetStore("default").DynamicCerts.Get().(map[string]*CertificateData)
@@ -94,7 +94,7 @@ func TestTLSInvalidStore(t *testing.T) {
 		},
 	}}
 
-	tlsManager := NewManager()
+	tlsManager := NewManager(nil)
 	tlsManager.UpdateConfigs(context.Background(),
 		map[string]Store{
 			"default": {
@@ -158,7 +158,7 @@ func TestManager_Get(t *testing.T) {
 		},
 	}
 
-	tlsManager := NewManager()
+	tlsManager := NewManager(nil)
 	tlsManager.UpdateConfigs(context.Background(), nil, tlsConfigs, dynamicConfigs)
 
 	for _, test := range testCases {
@@ -297,7 +297,7 @@ func TestClientAuth(t *testing.T) {
 		},
 	}
 
-	tlsManager := NewManager()
+	tlsManager := NewManager(nil)
 	tlsManager.UpdateConfigs(context.Background(), nil, tlsConfigs, nil)
 
 	for _, test := range testCases {
@@ -325,7 +325,7 @@ func TestClientAuth(t *testing.T) {
 }
 
 func TestManager_Get_DefaultValues(t *testing.T) {
-	tlsManager := NewManager()
+	tlsManager := NewManager(nil)
 
 	// Ensures we won't break things for Traefik users when updating Go
 	config, _ := tlsManager.Get("default", "default")
