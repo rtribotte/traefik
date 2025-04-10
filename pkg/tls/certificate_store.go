@@ -187,10 +187,10 @@ func (c *CertificateStore) ResetCache() {
 }
 
 // appendCertificate appends a Certificate to a certificates map keyed by store name.
-func appendCertificate(certs map[string]map[string]*CertificateData, SANs []string, storeName string, cert *CertificateData) {
+func appendCertificate(certs map[string]map[string]*CertificateData, subjectAltNames []string, storeName string, cert *CertificateData) {
 	// Guarantees the order to produce a unique cert key.
-	sort.Strings(SANs)
-	certKey := strings.Join(SANs, ",")
+	sort.Strings(subjectAltNames)
+	certKey := strings.Join(subjectAltNames, ",")
 
 	certExists := false
 	if certs[storeName] == nil {

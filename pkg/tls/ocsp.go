@@ -15,6 +15,8 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
+const defaultCacheDuration = 24 * time.Hour
+
 type ocspEntry struct {
 	leaf       *x509.Certificate
 	issuer     *x509.Certificate
@@ -36,7 +38,7 @@ type ocspStapler struct {
 func newOCSPStapler(responderOverrides map[string]string) *ocspStapler {
 	return &ocspStapler{
 		client:             &http.Client{Timeout: 10 * time.Second},
-		cache:              *cache.New(24*time.Hour, 5*time.Minute),
+		cache:              *cache.New(defaultCacheDuration, 5*time.Minute),
 		forceStapleUpdates: make(chan struct{}, 1),
 		responderOverrides: responderOverrides,
 	}

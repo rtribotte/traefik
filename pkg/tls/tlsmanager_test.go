@@ -2,14 +2,21 @@ package tls
 
 import (
 	"context"
+	"crypto"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/traefik/v3/pkg/types"
+	"golang.org/x/crypto/ocsp"
 )
 
 // LocalhostCert is a PEM-encoded TLS cert with SAN IPs
@@ -322,6 +329,105 @@ func TestClientAuth(t *testing.T) {
 			assert.Equal(t, test.expectedClientAuth, config.ClientAuth)
 		})
 	}
+}
+
+func TestManager_UpdateConfigs_OCSPConfig(t *testing.T) {
+	leafCert, err := tls.X509KeyPair([]byte(certWithOCSPServer), []byte(certKey))
+	require.NoError(t, err)
+
+	issuerCert, err := tls.X509KeyPair([]byte(caCert), []byte(caKey))
+	require.NoError(t, err)
+
+	thisUpdate, err := time.Parse("2006-01-02", "2025-01-01")
+	require.NoError(t, err)
+	nextUpdate, err := time.Parse("2006-01-02", "2025-01-02")
+	require.NoError(t, err)
+
+	ocspResponseTmpl := ocsp.Response{
+		SerialNumber:    leafCert.Leaf.SerialNumber,
+		TBSResponseData: []byte("foo"),
+		ThisUpdate:      thisUpdate,
+		NextUpdate:      nextUpdate,
+	}
+
+	ocspResponse, err := ocsp.CreateResponse(leafCert.Leaf, leafCert.Leaf, ocspResponseTmpl, issuerCert.PrivateKey.(crypto.Signer))
+	require.NoError(t, err)
+
+	responderCall := make(chan struct{})
+
+	handler := func(rw http.ResponseWriter, req *http.Request) {
+		ct := req.Header.Get("Content-Type")
+		assert.Equal(t, "application/ocsp-request", ct)
+
+		reqBytes, err := io.ReadAll(req.Body)
+		require.NoError(t, err)
+
+		_, err = ocsp.ParseRequest(reqBytes)
+		require.NoError(t, err)
+
+		rw.Header().Set("Content-Type", "application/ocsp-response")
+
+		_, err = rw.Write(ocspResponse)
+		require.NoError(t, err)
+
+		responderCall <- struct{}{}
+	}
+
+	responder := httptest.NewServer(http.HandlerFunc(handler))
+	t.Cleanup(responder.Close)
+
+	tlsManager := NewManager(&OCSPConfig{
+		ResponderOverrides: map[string]string{
+			"ocsp.example.com": responder.URL,
+		},
+	})
+
+	tlsManager.ocspStapler.cache.Set("existing", &ocspEntry{
+		leaf:       leafCert.Leaf,
+		issuer:     issuerCert.Leaf,
+		staple:     []byte("foo"),
+		nextUpdate: time.Now().Add(time.Hour),
+	}, cache.NoExpiration)
+	tlsManager.ocspStapler.cache.Set("existingWithTTL", &ocspEntry{
+		leaf:       leafCert.Leaf,
+		issuer:     issuerCert.Leaf,
+		staple:     []byte("foo"),
+		nextUpdate: time.Now().Add(time.Hour),
+	}, 2*defaultCacheDuration)
+
+	testContext, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go tlsManager.StartOCSPStapler(testContext)
+
+	tlsManager.UpdateConfigs(testContext, nil, nil, []*CertAndStores{
+		{
+			Certificate: Certificate{
+				CertFile: certWithOCSPServer,
+				KeyFile:  certKey,
+			},
+		},
+	})
+
+	// Asserting that UpdateConfigs resets the expiration for existing entries.
+	_, expiration, ok := tlsManager.ocspStapler.cache.GetWithExpiration("existing")
+	require.True(t, ok)
+	assert.Greater(t, expiration, time.Now())
+	// But not for entries with TTL already set.
+	_, expiration, ok = tlsManager.ocspStapler.cache.GetWithExpiration("existingWithTTL")
+	require.True(t, ok)
+	assert.Greater(t, expiration, time.Now().Add(defaultCacheDuration))
+
+	select {
+	case <-responderCall:
+	case <-time.After(3 * time.Second):
+		t.Fatal("Timeout waiting for OCSP responder call")
+	}
+
+	assert.Len(t, tlsManager.ocspStapler.cache.Items(), 3)
+
+	certHash := hashRawCert(leafCert.Leaf.Raw)
+	_, ok = tlsManager.ocspStapler.cache.Get(certHash)
+	require.True(t, ok)
 }
 
 func TestManager_Get_DefaultValues(t *testing.T) {

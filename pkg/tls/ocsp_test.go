@@ -1,6 +1,8 @@
 package tls
 
 import (
+	"context"
+	"crypto"
 	"crypto/tls"
 	"io"
 	"net/http"
@@ -177,7 +179,7 @@ func TestOCSPStapler_ResetTTL(t *testing.T) {
 	e, ok := item.Object.(*ocspEntry)
 	require.True(t, ok)
 
-	assert.True(t, item.Expiration > 0)
+	assert.Positive(t, item.Expiration)
 	assert.Equal(t, leafCert.Leaf, e.leaf)
 	assert.Equal(t, issuerCert.Leaf, e.issuer)
 	assert.Equal(t, []byte("foo"), e.staple)
@@ -216,12 +218,32 @@ func TestOCSPStapler_GetStaple(t *testing.T) {
 	assert.Equal(t, []byte("foo"), staple)
 }
 
-func startOCSPResponder(t *testing.T, ocspResponse []byte) *httptest.Server {
-	t.Helper()
+func TestOCSPStapler_updateStaple(t *testing.T) {
+	leafCert, err := tls.X509KeyPair([]byte(certWithOCSPServer), []byte(certKey))
+	require.NoError(t, err)
+
+	issuerCert, err := tls.X509KeyPair([]byte(caCert), []byte(caKey))
+	require.NoError(t, err)
+
+	thisUpdate, err := time.Parse("2006-01-02", "2025-01-01")
+	require.NoError(t, err)
+	nextUpdate, err := time.Parse("2006-01-02", "2025-01-02")
+	require.NoError(t, err)
+	stapleUpdate := thisUpdate.Add(nextUpdate.Sub(thisUpdate) / 2)
+
+	ocspResponseTmpl := ocsp.Response{
+		SerialNumber:    leafCert.Leaf.SerialNumber,
+		TBSResponseData: []byte("foo"),
+		ThisUpdate:      thisUpdate,
+		NextUpdate:      nextUpdate,
+	}
+
+	ocspResponse, err := ocsp.CreateResponse(leafCert.Leaf, leafCert.Leaf, ocspResponseTmpl, issuerCert.PrivateKey.(crypto.Signer))
+	require.NoError(t, err)
 
 	handler := func(rw http.ResponseWriter, req *http.Request) {
 		ct := req.Header.Get("Content-Type")
-		assert.Equal(t, ct, "application/ocsp-request")
+		assert.Equal(t, "application/ocsp-request", ct)
 
 		reqBytes, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
@@ -234,5 +256,172 @@ func startOCSPResponder(t *testing.T, ocspResponse []byte) *httptest.Server {
 		_, err = rw.Write(ocspResponse)
 		require.NoError(t, err)
 	}
-	return httptest.NewServer(http.HandlerFunc(handler))
+
+	responder := httptest.NewServer(http.HandlerFunc(handler))
+	t.Cleanup(responder.Close)
+
+	responderStatusNotOK := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(responderStatusNotOK.Close)
+
+	testCases := []struct {
+		desc        string
+		entry       *ocspEntry
+		expectError bool
+	}{
+		{
+			desc: "no responder",
+			entry: &ocspEntry{
+				leaf:   leafCert.Leaf,
+				issuer: issuerCert.Leaf,
+			},
+			expectError: true,
+		},
+		{
+			desc: "wrong responder",
+			entry: &ocspEntry{
+				leaf:       leafCert.Leaf,
+				issuer:     issuerCert.Leaf,
+				responders: []string{"http://foo.bar"},
+			},
+			expectError: true,
+		},
+		{
+			desc: "not ok status responder",
+			entry: &ocspEntry{
+				leaf:       leafCert.Leaf,
+				issuer:     issuerCert.Leaf,
+				responders: []string{responderStatusNotOK.URL},
+			},
+			expectError: true,
+		},
+		{
+			desc: "one wrong responder, one ok",
+			entry: &ocspEntry{
+				leaf:       leafCert.Leaf,
+				issuer:     issuerCert.Leaf,
+				responders: []string{"http://foo.bar", responder.URL},
+			},
+		},
+		{
+			desc: "ok responder",
+			entry: &ocspEntry{
+				leaf:       leafCert.Leaf,
+				issuer:     issuerCert.Leaf,
+				responders: []string{responder.URL},
+			},
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			ocspStapler := newOCSPStapler(nil)
+			ocspStapler.client = &http.Client{Timeout: time.Second}
+
+			err = ocspStapler.updateStaple(context.Background(), test.entry)
+			if test.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			assert.Equal(t, ocspResponse, test.entry.staple)
+			assert.Equal(t, stapleUpdate.UTC(), test.entry.nextUpdate)
+		})
+	}
+}
+
+func TestOCSPStapler_updateStaples(t *testing.T) {
+	leafCert, err := tls.X509KeyPair([]byte(certWithOCSPServer), []byte(certKey))
+	require.NoError(t, err)
+
+	issuerCert, err := tls.X509KeyPair([]byte(caCert), []byte(caKey))
+	require.NoError(t, err)
+
+	thisUpdate, err := time.Parse("2006-01-02", "2025-01-01")
+	require.NoError(t, err)
+	nextUpdate, err := time.Parse("2006-01-02", "2025-01-02")
+	require.NoError(t, err)
+	stapleUpdate := thisUpdate.Add(nextUpdate.Sub(thisUpdate) / 2)
+
+	ocspResponseTmpl := ocsp.Response{
+		SerialNumber:    leafCert.Leaf.SerialNumber,
+		TBSResponseData: []byte("foo"),
+		ThisUpdate:      thisUpdate,
+		NextUpdate:      nextUpdate,
+	}
+
+	ocspResponse, err := ocsp.CreateResponse(leafCert.Leaf, leafCert.Leaf, ocspResponseTmpl, issuerCert.PrivateKey.(crypto.Signer))
+	require.NoError(t, err)
+
+	handler := func(rw http.ResponseWriter, req *http.Request) {
+		ct := req.Header.Get("Content-Type")
+		assert.Equal(t, "application/ocsp-request", ct)
+
+		reqBytes, err := io.ReadAll(req.Body)
+		require.NoError(t, err)
+
+		_, err = ocsp.ParseRequest(reqBytes)
+		require.NoError(t, err)
+
+		rw.Header().Set("Content-Type", "application/ocsp-response")
+
+		_, err = rw.Write(ocspResponse)
+		require.NoError(t, err)
+	}
+
+	responder := httptest.NewServer(http.HandlerFunc(handler))
+	t.Cleanup(responder.Close)
+
+	ocspStapler := newOCSPStapler(nil)
+	ocspStapler.client = &http.Client{Timeout: time.Second}
+
+	// nil staple entry
+	ocspStapler.cache.Set("nilStaple", &ocspEntry{
+		leaf:       leafCert.Leaf,
+		issuer:     issuerCert.Leaf,
+		responders: []string{responder.URL},
+		nextUpdate: time.Now().Add(-time.Hour),
+	}, cache.NoExpiration)
+	// staple entry with nextUpdate in the past
+	ocspStapler.cache.Set("toUpdate", &ocspEntry{
+		leaf:       leafCert.Leaf,
+		issuer:     issuerCert.Leaf,
+		responders: []string{responder.URL},
+		staple:     []byte("foo"),
+		nextUpdate: time.Now().Add(-time.Hour),
+	}, cache.NoExpiration)
+	// staple entry with nextUpdate in the future
+	inOneHour := time.Now().Add(time.Hour)
+	ocspStapler.cache.Set("noUpdate", &ocspEntry{
+		leaf:       leafCert.Leaf,
+		issuer:     issuerCert.Leaf,
+		responders: []string{responder.URL},
+		staple:     []byte("foo"),
+		nextUpdate: inOneHour,
+	}, cache.NoExpiration)
+
+	ocspStapler.updateStaples(context.Background())
+
+	nilStaple, ok := ocspStapler.cache.Get("nilStaple")
+	require.True(t, ok)
+
+	assert.Equal(t, ocspResponse, nilStaple.(*ocspEntry).staple)
+	assert.Equal(t, stapleUpdate.UTC(), nilStaple.(*ocspEntry).nextUpdate)
+
+	toUpdate, ok := ocspStapler.cache.Get("toUpdate")
+	require.True(t, ok)
+
+	assert.Equal(t, ocspResponse, toUpdate.(*ocspEntry).staple)
+	assert.Equal(t, stapleUpdate.UTC(), nilStaple.(*ocspEntry).nextUpdate)
+
+	noUpdate, ok := ocspStapler.cache.Get("noUpdate")
+	require.True(t, ok)
+
+	assert.Equal(t, []byte("foo"), noUpdate.(*ocspEntry).staple)
+	assert.Equal(t, inOneHour, noUpdate.(*ocspEntry).nextUpdate)
 }
