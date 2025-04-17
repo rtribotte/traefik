@@ -1602,67 +1602,28 @@ func (s *SimpleSuite) TestMaxHeaderBytes() {
 }
 
 func (s *SimpleSuite) TestSimpleOCSP() {
-	var certWithOCSPServer = `-----BEGIN CERTIFICATE-----
-MIIBgjCCASegAwIBAgICIAAwCgYIKoZIzj0EAwIwEjEQMA4GA1UEAxMHVGVzdCBD
-QTAeFw0yMzAxMDExMjAwMDBaFw0yMzAyMDExMjAwMDBaMCAxHjAcBgNVBAMTFU9D
-U1AgVGVzdCBDZXJ0aWZpY2F0ZTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIoe
-I/bjo34qony8LdRJD+Jhuk8/S8YHXRHl6rH9t5VFCFtX8lIPN/Ll1zCrQ2KB3Wlb
-fxSgiQyLrCpZyrdhVPSjXzBdMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU+Eo3
-5sST4LRrwS4dueIdGBZ5d7IwLAYIKwYBBQUHAQEEIDAeMBwGCCsGAQUFBzABhhBv
-Y3NwLmV4YW1wbGUuY29tMAoGCCqGSM49BAMCA0kAMEYCIQDg94xY/+/VepESdvTT
-ykCwiWOS2aCpjyryrKpwMKkR0AIhAPc/+ZEz4W10OENxC1t+NUTvS8JbEGOwulkZ
-z9yfaLuD
------END CERTIFICATE-----`
-
-	// certKey is the private key for both certWithOCSPServer and certWithoutOCSPServer.
-	var certKey = `-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEINnVcgrSNh4HlThWlZpegq14M8G/p9NVDtdVjZrseUGLoAoGCCqGSM49
-AwEHoUQDQgAEih4j9uOjfiqifLwt1EkP4mG6Tz9LxgddEeXqsf23lUUIW1fyUg83
-8uXXMKtDYoHdaVt/FKCJDIusKlnKt2FU9A==
------END EC PRIVATE KEY-----`
-
-	// caCert is the issuing certificate for certWithOCSPServer and certWithoutOCSPServer.
-	var caCert = `-----BEGIN CERTIFICATE-----
-MIIBazCCARGgAwIBAgICEAAwCgYIKoZIzj0EAwIwEjEQMA4GA1UEAxMHVGVzdCBD
-QTAeFw0yMzAxMDExMjAwMDBaFw0yMzAyMDExMjAwMDBaMBIxEDAOBgNVBAMTB1Rl
-c3QgQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASdKexSor/aeazDM57UHhAX
-rCkJxUeF2BWf0lZYCRxc3f0GdrEsVvjJW8+/E06eAzDCGSdM/08Nvun1nb6AmAlt
-o1cwVTAOBgNVHQ8BAf8EBAMCAQYwEwYDVR0lBAwwCgYIKwYBBQUHAwkwDwYDVR0T
-AQH/BAUwAwEB/zAdBgNVHQ4EFgQU+Eo35sST4LRrwS4dueIdGBZ5d7IwCgYIKoZI
-zj0EAwIDSAAwRQIgGbA39+kETTB/YMLBFoC2fpZe1cDWfFB7TUdfINUqdH4CIQCR
-ByUFC8A+hRNkK5YNH78bgjnKk/88zUQF5ONy4oPGdQ==
------END CERTIFICATE-----`
-
-	var caKey = `-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEIDJ59ptjq3MzILH4zn5IKoH1sYn+zrUeq2kD8+DD2x+OoAoGCCqGSM49
-AwEHoUQDQgAEnSnsUqK/2nmswzOe1B4QF6wpCcVHhdgVn9JWWAkcXN39BnaxLFb4
-yVvPvxNOngMwwhknTP9PDb7p9Z2+gJgJbQ==
------END EC PRIVATE KEY-----`
-
-	leafCert, err := tls.X509KeyPair([]byte(certWithOCSPServer), []byte(certKey))
+	leafCert, err := tls.LoadX509KeyPair("fixtures/ocsp/server.crt", "fixtures/ocsp/server.key")
 	require.NoError(s.T(), err)
 
-	issuerCert, err := tls.X509KeyPair([]byte(caCert), []byte(caKey))
+	issuerCert, err := tls.LoadX509KeyPair("fixtures/ocsp/ca.crt", "fixtures/ocsp/ca.key")
 	require.NoError(s.T(), err)
 
 	thisUpdate, err := time.Parse("2006-01-02", "2025-01-01")
 	require.NoError(s.T(), err)
+
 	nextUpdate, err := time.Parse("2006-01-02", "2025-01-02")
 	require.NoError(s.T(), err)
 
 	ocspResponseTmpl := ocsp.Response{
-		SerialNumber:    leafCert.Leaf.SerialNumber,
-		TBSResponseData: []byte("foo"),
-		ThisUpdate:      thisUpdate,
-		NextUpdate:      nextUpdate,
+		SerialNumber: leafCert.Leaf.SerialNumber,
+		ThisUpdate:   thisUpdate,
+		NextUpdate:   nextUpdate,
 	}
-
 	ocspResponse, err := ocsp.CreateResponse(leafCert.Leaf, leafCert.Leaf, ocspResponseTmpl, issuerCert.PrivateKey.(crypto.Signer))
 	require.NoError(s.T(), err)
 
 	responderCalled := make(chan struct{})
-
-	handler := func(rw http.ResponseWriter, req *http.Request) {
+	responder := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ct := req.Header.Get("Content-Type")
 		assert.Equal(s.T(), "application/ocsp-request", ct)
 
@@ -1678,13 +1639,10 @@ yVvPvxNOngMwwhknTP9PDb7p9Z2+gJgJbQ==
 		require.NoError(s.T(), err)
 
 		responderCalled <- struct{}{}
-	}
-
-	responder := httptest.NewServer(http.HandlerFunc(handler))
+	}))
 	s.T().Cleanup(responder.Close)
 
-	// The test server and traefik config file both specify a max request header size of 1.25 MB.
-	file := s.adaptFile("fixtures/simple_ocsp.toml", struct {
+	file := s.adaptFile("fixtures/ocsp/simple.toml", struct {
 		ResponderURL string
 	}{responder.URL})
 
@@ -1698,42 +1656,28 @@ yVvPvxNOngMwwhknTP9PDb7p9Z2+gJgJbQ==
 
 	// Check that the response is stapled.
 
-	// Create a TLS client configuration that checks for OCSP stapling
+	// Create a TLS client configuration that checks for OCSP stapling.
+	var verifyCallCount int
 	clientConfig := &tls.Config{
 		InsecureSkipVerify: true,
 		VerifyConnection: func(state tls.ConnectionState) error {
 			s.T().Helper()
 
-			require.NotEmpty(s.T(), state.OCSPResponse)
-
-			resp, err := ocsp.ParseResponse(state.OCSPResponse, nil)
-			require.NoError(s.T(), err)
-
-			// Verify it's the response we expected
-			assert.Equal(s.T(), thisUpdate, resp.ThisUpdate)
-			assert.Equal(s.T(), nextUpdate, resp.NextUpdate)
-
+			verifyCallCount++
+			assert.Equal(s.T(), ocspResponse, state.OCSPResponse)
 			return nil
 		},
 	}
 
-	// Connect to the server and verify OCSP stapling
-	dialer := &net.Dialer{Timeout: 5 * time.Second}
-	conn, err := tls.DialWithDialer(dialer, "tcp", "127.0.0.1:8000", clientConfig)
+	// Connect to the server and verify OCSP stapling.
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second}, "tcp", "127.0.0.1:8000", clientConfig)
 	require.NoError(s.T(), err)
-	defer conn.Close()
 
-	//// Optional: Make an HTTP request over the TLS connection to fully test the setup
-	//client := http.Client{
-	//	Transport: &http.Transport{
-	//		DialTLS: func(network, addr string) (net.Conn, error) {
-	//			return tls.DialWithDialer(dialer, network, addr, clientConfig)
-	//		},
-	//	},
-	//}
-	//resp, err := client.Get("https://127.0.0.1:8000/")
-	//require.NoError(s.T(), err)
-	//defer resp.Body.Close()
+	s.T().Cleanup(func() {
+		_ = conn.Close()
+	})
+
+	assert.Equal(s.T(), 1, verifyCallCount)
 }
 
 func (s *SimpleSuite) TestSanitizePath() {
