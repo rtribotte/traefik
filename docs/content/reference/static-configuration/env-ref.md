@@ -630,6 +630,12 @@ Prefix to use for metrics collection. (Default: ```traefik```)
 `TRAEFIK_METRICS_STATSD_PUSHINTERVAL`:  
 StatsD push interval. (Default: ```10```)
 
+`TRAEFIK_OCSP`:  
+OCSP configuration. (Default: ```false```)
+
+`TRAEFIK_OCSP_RESPONDEROVERRIDES_<NAME>`:  
+Defines a map of OCSP responders to replace for querying OCSP servers.
+
 `TRAEFIK_PING`:  
 Enable ping. (Default: ```false```)
 
@@ -1268,18 +1274,6 @@ Defines the allowed SPIFFE IDs (takes precedence over the SPIFFE TrustDomain).
 
 `TRAEFIK_TCPSERVERSTRANSPORT_TLS_SPIFFE_TRUSTDOMAIN`:  
 Defines the allowed SPIFFE trust domain.
-
-`TRAEFIK_TLS`:  
-TLS configuration. (Default: ```false```)
-
-`TRAEFIK_TLS_OCSP`:  
-OCSP configuration.
-
-`TRAEFIK_TLS_OCSP_ENABLESTAPLING`:  
-Enable OCSP stapling. (Default: ```false```)
-
-`TRAEFIK_TLS_OCSP_RESPONDEROVERRIDES_<NAME>`:  
-OCSP responders overrides.
 
 `TRAEFIK_TRACING`:  
 Tracing configuration. (Default: ```false```)

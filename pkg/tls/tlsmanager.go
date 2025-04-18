@@ -290,7 +290,8 @@ func (m *Manager) Get(storeName, configName string) (*tls.Config, error) {
 		}
 
 		log.Debug().Msgf("Serving default certificate for request: %q", domainToCheck)
-		return store.DefaultCertificate.Certificate, nil
+
+		return store.GetDefaultCertificate(), nil
 	}
 
 	return tlsConfig, err

@@ -72,22 +72,15 @@ type Configuration struct {
 
 	HostResolver *types.HostResolverConfig `description:"Enable CNAME Flattening." json:"hostResolver,omitempty" toml:"hostResolver,omitempty" yaml:"hostResolver,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 
-	// FIXME: deprecate?
 	CertificatesResolvers map[string]CertificateResolver `description:"Certificates resolvers configuration." json:"certificatesResolvers,omitempty" toml:"certificatesResolvers,omitempty" yaml:"certificatesResolvers,omitempty" export:"true"`
-
-	TLS *TLS `description:"TLS configuration." json:"tls,omitempty" toml:"tls,omitempty" yaml:"tls,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 
 	Experimental *Experimental `description:"Experimental features." json:"experimental,omitempty" toml:"experimental,omitempty" yaml:"experimental,omitempty" export:"true"`
 
 	// Deprecated: Please do not use this field.
 	Core *Core `description:"Core controls." json:"core,omitempty" toml:"core,omitempty" yaml:"core,omitempty" export:"true"`
 
-	// FIXME: deprecate?
 	Spiffe *SpiffeClientConfig `description:"SPIFFE integration configuration." json:"spiffe,omitempty" toml:"spiffe,omitempty" yaml:"spiffe,omitempty" export:"true"`
-}
 
-// TLS contains the TLS configuration.
-type TLS struct {
 	OCSP *OCSP `description:"OCSP configuration." json:"ocsp,omitempty" toml:"ocsp,omitempty" yaml:"ocsp,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 }
 
@@ -438,8 +431,8 @@ func (c *Configuration) ValidateConfiguration() error {
 		return errors.New("API basePath must be a valid absolute path")
 	}
 
-	if c.TLS != nil && c.TLS.OCSP != nil {
-		for responderURL, url := range c.TLS.OCSP.ResponderOverrides {
+	if c.OCSP != nil {
+		for responderURL, url := range c.OCSP.ResponderOverrides {
 			if url == "" {
 				return fmt.Errorf("OCSP responder override value for %s cannot be empty", responderURL)
 			}

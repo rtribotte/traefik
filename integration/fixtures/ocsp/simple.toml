@@ -9,12 +9,15 @@
 [providers.file]
   filename = "{{ .SelfFilename }}"
 
-[tls.ocsp]
-  [tls.ocsp.responderOverrides]
-    "ocsp.example.com" = "{{ .ResponderURL }}"
+[ocsp.responderOverrides]
+  ocsp.example.com = "{{ .ResponderURL }}"
+
+[log]
+  level="debug"
 
 ## dynamic configuration ##
 
-[[tls.certificates]]
-  certFile = "fixtures/ocsp/server.crt"
-  keyFile = "fixtures/ocsp/server.key"
+[tls.stores]
+  [tls.stores.default.defaultCertificate]
+    certFile = "fixtures/ocsp/server.crt"
+    keyFile = "fixtures/ocsp/server.key"

@@ -616,12 +616,6 @@ certificatesResolvers:
         delay: 42s
       tlsChallenge: {}
     tailscale: {}
-tls:
-  ocsp:
-    enableStapling: true
-    responderOverrides:
-      name0: foobar
-      name1: foobar
 experimental:
   plugins:
     Descriptor0:
@@ -672,3 +666,7 @@ core:
   defaultRuleSyntax: foobar
 spiffe:
   workloadAPIAddr: foobar
+ocsp:
+  responderOverrides:
+    name0: foobar
+    name1: foobar

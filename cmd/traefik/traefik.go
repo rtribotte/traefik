@@ -183,9 +183,9 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 	// ACME
 
 	var ocspConfig *traefiktls.OCSPConfig
-	if staticConfiguration.TLS != nil && staticConfiguration.TLS.OCSP != nil {
+	if staticConfiguration.OCSP != nil {
 		ocspConfig = &traefiktls.OCSPConfig{
-			ResponderOverrides: staticConfiguration.TLS.OCSP.ResponderOverrides,
+			ResponderOverrides: staticConfiguration.OCSP.ResponderOverrides,
 		}
 	}
 	tlsManager := traefiktls.NewManager(ocspConfig)

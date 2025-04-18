@@ -564,13 +564,6 @@
       [certificatesResolvers.CertificateResolver1.acme.tlsChallenge]
     [certificatesResolvers.CertificateResolver1.tailscale]
 
-[tls]
-  [tls.ocsp]
-    enableStapling = true
-    [tls.ocsp.responderOverrides]
-      name0 = "foobar"
-      name1 = "foobar"
-
 [experimental]
   abortOnPluginFailure = true
   otlplogs = true
@@ -607,3 +600,8 @@
 
 [spiffe]
   workloadAPIAddr = "foobar"
+
+[ocsp]
+  [ocsp.responderOverrides]
+    name0 = "foobar"
+    name1 = "foobar"

@@ -40,27 +40,6 @@ func NewCertificateStore(ocspStapler *ocspStapler) *CertificateStore {
 	}
 }
 
-func (c *CertificateStore) getDefaultCertificateDomains() []string {
-	if c.DefaultCertificate == nil {
-		return nil
-	}
-
-	defaultCert := c.DefaultCertificate.Certificate.Leaf
-
-	var allCerts []string
-	if len(defaultCert.Subject.CommonName) > 0 {
-		allCerts = append(allCerts, defaultCert.Subject.CommonName)
-	}
-
-	allCerts = append(allCerts, defaultCert.DNSNames...)
-
-	for _, ipSan := range defaultCert.IPAddresses {
-		allCerts = append(allCerts, ipSan.String())
-	}
-
-	return allCerts
-}
-
 // GetAllDomains return a slice with all the certificate domain.
 func (c *CertificateStore) GetAllDomains() []string {
 	allDomains := c.getDefaultCertificateDomains()
@@ -73,6 +52,23 @@ func (c *CertificateStore) GetAllDomains() []string {
 	}
 
 	return allDomains
+}
+
+// GetDefaultCertificate returns the default certificate.
+func (c *CertificateStore) GetDefaultCertificate() *tls.Certificate {
+	if c == nil {
+		return nil
+	}
+
+	if c.ocspStapler != nil && c.DefaultCertificate.Hash != "" {
+		if staple, ok := c.ocspStapler.GetStaple(c.DefaultCertificate.Hash); ok {
+			// We are updating the OCSPStaple of the certificate without any synchronization
+			// as this should not cause any issue.
+			c.DefaultCertificate.Certificate.OCSPStaple = staple
+		}
+	}
+
+	return c.DefaultCertificate.Certificate
 }
 
 // GetBestCertificate returns the best match certificate, and caches the response.
@@ -184,6 +180,27 @@ func (c *CertificateStore) ResetCache() {
 	if c.CertCache != nil {
 		c.CertCache.Flush()
 	}
+}
+
+func (c *CertificateStore) getDefaultCertificateDomains() []string {
+	if c.DefaultCertificate == nil {
+		return nil
+	}
+
+	defaultCert := c.DefaultCertificate.Certificate.Leaf
+
+	var allCerts []string
+	if len(defaultCert.Subject.CommonName) > 0 {
+		allCerts = append(allCerts, defaultCert.Subject.CommonName)
+	}
+
+	allCerts = append(allCerts, defaultCert.DNSNames...)
+
+	for _, ipSan := range defaultCert.IPAddresses {
+		allCerts = append(allCerts, ipSan.String())
+	}
+
+	return allCerts
 }
 
 // appendCertificate appends a Certificate to a certificates map keyed by store name.
