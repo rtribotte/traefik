@@ -77,6 +77,7 @@ func makeHTTPClient() *http.Client {
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
+		DualStack: true,
 	}
 
 	transport := &http.Transport{

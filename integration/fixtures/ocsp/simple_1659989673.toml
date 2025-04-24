@@ -7,10 +7,10 @@
     address = ":8000"
 
 [providers.file]
-  filename = "{{ .SelfFilename }}"
+  filename = "fixtures/ocsp/simple_1659989673.toml"
 
 [ocsp.responderOverrides]
-  ocsp.example.com = "{{ .ResponderURL }}"
+  ocsp.example.com = "http://127.0.0.1:57089"
 
 [log]
   level="debug"

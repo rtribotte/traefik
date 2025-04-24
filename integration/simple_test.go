@@ -1602,24 +1602,28 @@ func (s *SimpleSuite) TestMaxHeaderBytes() {
 }
 
 func (s *SimpleSuite) TestSimpleOCSP() {
-	leafCert, err := tls.LoadX509KeyPair("fixtures/ocsp/server.crt", "fixtures/ocsp/server.key")
+	defaultCert, err := tls.LoadX509KeyPair("fixtures/ocsp/default.crt", "fixtures/ocsp/default.key")
 	require.NoError(s.T(), err)
 
-	issuerCert, err := tls.LoadX509KeyPair("fixtures/ocsp/ca.crt", "fixtures/ocsp/ca.key")
+	serverCert, err := tls.LoadX509KeyPair("fixtures/ocsp/server.crt", "fixtures/ocsp/server.key")
 	require.NoError(s.T(), err)
 
-	thisUpdate, err := time.Parse("2006-01-02", "2025-01-01")
-	require.NoError(s.T(), err)
-
-	nextUpdate, err := time.Parse("2006-01-02", "2025-01-02")
-	require.NoError(s.T(), err)
-
-	ocspResponseTmpl := ocsp.Response{
-		SerialNumber: leafCert.Leaf.SerialNumber,
-		ThisUpdate:   thisUpdate,
-		NextUpdate:   nextUpdate,
+	defaultOCSPResponseTmpl := ocsp.Response{
+		SerialNumber: defaultCert.Leaf.SerialNumber,
+		Status:       ocsp.Good,
+		ThisUpdate:   defaultCert.Leaf.NotBefore,
+		NextUpdate:   defaultCert.Leaf.NotAfter,
 	}
-	ocspResponse, err := ocsp.CreateResponse(leafCert.Leaf, leafCert.Leaf, ocspResponseTmpl, issuerCert.PrivateKey.(crypto.Signer))
+	defaultOCSPResponse, err := ocsp.CreateResponse(defaultCert.Leaf, defaultCert.Leaf, defaultOCSPResponseTmpl, defaultCert.PrivateKey.(crypto.Signer))
+	require.NoError(s.T(), err)
+
+	serverOCSPResponseTmpl := ocsp.Response{
+		SerialNumber: serverCert.Leaf.SerialNumber,
+		Status:       ocsp.Good,
+		ThisUpdate:   serverCert.Leaf.NotBefore,
+		NextUpdate:   serverCert.Leaf.NotAfter,
+	}
+	serverOCSPResponse, err := ocsp.CreateResponse(serverCert.Leaf, serverCert.Leaf, serverOCSPResponseTmpl, serverCert.PrivateKey.(crypto.Signer))
 	require.NoError(s.T(), err)
 
 	responderCalled := make(chan struct{})
@@ -1630,8 +1634,18 @@ func (s *SimpleSuite) TestSimpleOCSP() {
 		reqBytes, err := io.ReadAll(req.Body)
 		require.NoError(s.T(), err)
 
-		_, err = ocsp.ParseRequest(reqBytes)
+		ocspReq, err := ocsp.ParseRequest(reqBytes)
 		require.NoError(s.T(), err)
+
+		var ocspResponse []byte
+		switch ocspReq.SerialNumber.String() {
+		case defaultCert.Leaf.SerialNumber.String():
+			ocspResponse = defaultOCSPResponse
+		case serverCert.Leaf.SerialNumber.String():
+			ocspResponse = serverOCSPResponse
+		default:
+			s.T().Fatalf("Unexpected OCSP request for serial number: %s", ocspReq.SerialNumber)
+		}
 
 		rw.Header().Set("Content-Type", "application/ocsp-response")
 
@@ -1654,23 +1668,56 @@ func (s *SimpleSuite) TestSimpleOCSP() {
 		s.T().Fatal("OCSP responder was not called")
 	}
 
+	select {
+	case <-responderCalled:
+	case <-time.After(5 * time.Second):
+		s.T().Fatal("OCSP responder was not called")
+	}
+
 	// Check that the response is stapled.
 
-	// Create a TLS client configuration that checks for OCSP stapling.
+	// Create a TLS client configuration that checks for OCSP stapling for the default cert.
 	var verifyCallCount int
 	clientConfig := &tls.Config{
 		InsecureSkipVerify: true,
+		ServerName:         "unknown",
 		VerifyConnection: func(state tls.ConnectionState) error {
 			s.T().Helper()
 
 			verifyCallCount++
-			assert.Equal(s.T(), ocspResponse, state.OCSPResponse)
+			assert.Equal(s.T(), "default.local", state.PeerCertificates[0].Subject.CommonName)
+			assert.Equal(s.T(), defaultOCSPResponse, state.OCSPResponse)
 			return nil
 		},
 	}
 
 	// Connect to the server and verify OCSP stapling.
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second}, "tcp", "127.0.0.1:8000", clientConfig)
+	require.NoError(s.T(), err)
+
+	s.T().Cleanup(func() {
+		_ = conn.Close()
+	})
+
+	assert.Equal(s.T(), 1, verifyCallCount)
+
+	// Create a TLS client configuration that checks for OCSP stapling for a cert in the store.
+	verifyCallCount = 0
+	clientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         "server.local",
+		VerifyConnection: func(state tls.ConnectionState) error {
+			s.T().Helper()
+
+			verifyCallCount++
+			assert.Equal(s.T(), "server.local", state.PeerCertificates[0].Subject.CommonName)
+			assert.Equal(s.T(), serverOCSPResponse, state.OCSPResponse)
+			return nil
+		},
+	}
+
+	// Connect to the server and verify OCSP stapling.
+	conn, err = tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second}, "tcp", "127.0.0.1:8000", clientConfig)
 	require.NoError(s.T(), err)
 
 	s.T().Cleanup(func() {
