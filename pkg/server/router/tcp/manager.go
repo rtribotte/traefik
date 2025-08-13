@@ -273,6 +273,7 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 				logger.Error().Err(err).Send()
 				continue
 			}
+			handler = m.observabilityMgr.BuildTCP(ctxRouter, handler)
 		}
 
 		if routerConfig.TLS == nil {
@@ -350,7 +351,7 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 		}
 
 		handler = &tcp.TLSHandler{
-			Next:           handler,
+			Next:           m.observabilityMgr.BuildTCP(ctxRouter, handler),
 			Config:         tlsConf,
 			TLSOptionsName: tlsOptionsName,
 		}

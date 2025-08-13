@@ -10,6 +10,7 @@ import (
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/config/static"
 	"github.com/traefik/traefik/v3/pkg/middlewares/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/accesslogtcp"
 	"github.com/traefik/traefik/v3/pkg/middlewares/capture"
 	mmetrics "github.com/traefik/traefik/v3/pkg/middlewares/metrics"
 	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
@@ -17,27 +18,30 @@ import (
 	"github.com/traefik/traefik/v3/pkg/observability/metrics"
 	"github.com/traefik/traefik/v3/pkg/observability/tracing"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
+	"github.com/traefik/traefik/v3/pkg/tcp"
 )
 
 // ObservabilityMgr is a manager for observability (AccessLogs, Metrics and Tracing) enablement.
 type ObservabilityMgr struct {
-	config                 static.Configuration
-	accessLoggerMiddleware *accesslog.Handler
-	metricsRegistry        metrics.Registry
-	semConvMetricRegistry  *metrics.SemConvMetricsRegistry
-	tracer                 *tracing.Tracer
-	tracerCloser           io.Closer
+	config                    static.Configuration
+	accessLoggerMiddleware    *accesslog.Handler
+	tcpAccessLoggerMiddleware *accesslogtcp.Handler
+	metricsRegistry           metrics.Registry
+	semConvMetricRegistry     *metrics.SemConvMetricsRegistry
+	tracer                    *tracing.Tracer
+	tracerCloser              io.Closer
 }
 
 // NewObservabilityMgr creates a new ObservabilityMgr.
-func NewObservabilityMgr(config static.Configuration, metricsRegistry metrics.Registry, semConvMetricRegistry *metrics.SemConvMetricsRegistry, accessLoggerMiddleware *accesslog.Handler, tracer *tracing.Tracer, tracerCloser io.Closer) *ObservabilityMgr {
+func NewObservabilityMgr(config static.Configuration, metricsRegistry metrics.Registry, semConvMetricRegistry *metrics.SemConvMetricsRegistry, accessLoggerMiddleware *accesslog.Handler, tcpAccessLoggerMiddleware *accesslogtcp.Handler, tracer *tracing.Tracer, tracerCloser io.Closer) *ObservabilityMgr {
 	return &ObservabilityMgr{
-		config:                 config,
-		metricsRegistry:        metricsRegistry,
-		semConvMetricRegistry:  semConvMetricRegistry,
-		accessLoggerMiddleware: accessLoggerMiddleware,
-		tracer:                 tracer,
-		tracerCloser:           tracerCloser,
+		config:                    config,
+		metricsRegistry:           metricsRegistry,
+		semConvMetricRegistry:     semConvMetricRegistry,
+		accessLoggerMiddleware:    accessLoggerMiddleware,
+		tcpAccessLoggerMiddleware: tcpAccessLoggerMiddleware,
+		tracer:                    tracer,
+		tracerCloser:              tracerCloser,
 	}
 }
 
@@ -107,6 +111,24 @@ func (o *ObservabilityMgr) SemConvMetricsRegistry() *metrics.SemConvMetricsRegis
 	return o.semConvMetricRegistry
 }
 
+// BuildTCP builds a TCP observability middleware.
+func (o *ObservabilityMgr) BuildTCP(ctx context.Context, handler tcp.Handler) tcp.Handler {
+	if o.tcpAccessLoggerMiddleware == nil {
+		return handler
+	}
+
+	// TODO: add metrics and tracing
+	log.Ctx(ctx).Debug().Msg("Adding TCP access log middleware")
+	constructor := tcp.NewAccessLogMiddleware(o.tcpAccessLoggerMiddleware)
+	newHandler, err := constructor(handler)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msg("Could not create TCP access log middleware")
+		return handler
+	}
+
+	return newHandler
+}
+
 // Close closes the accessLogger and tracer.
 func (o *ObservabilityMgr) Close() {
 	if o == nil {
@@ -117,6 +139,10 @@ func (o *ObservabilityMgr) Close() {
 		if err := o.accessLoggerMiddleware.Close(); err != nil {
 			log.Error().Err(err).Msg("Could not close the access log file")
 		}
+	}
+
+	if o.tcpAccessLoggerMiddleware != nil {
+		// Since the access log file is shared, we don't need to close it twice.
 	}
 
 	if o.tracerCloser != nil {

@@ -405,6 +405,24 @@ Below the fields displayed with the generic CLF format:
 | <a id="opt-KubernetesServiceName" href="#opt-KubernetesServiceName" title="#opt-KubernetesServiceName">`KubernetesServiceName`</a> | The name of the Kubernetes Service that handled the request. See `KubernetesServiceNamespace` for the per-request semantics. |
 | <a id="opt-KubernetesServicePort" href="#opt-KubernetesServicePort" title="#opt-KubernetesServicePort">`KubernetesServicePort`</a> | The port of the Kubernetes Service that handled the request. See `KubernetesServiceNamespace` for the per-request semantics. |
 
+### TCP Access Logs
+
+When using TCP routers, Traefik can also generate access logs for TCP connections.
+The format of TCP access logs is always JSON, and it contains the following fields:
+
+| Field             | Description                                                                                             |
+|-------------------|---------------------------------------------------------------------------------------------------------|
+| `event`           | The event type, either `connection_start` or `connection_end`.                                          |
+| `client_addr`     | The remote address of the client.                                                                       |
+| `server_addr`     | The local address of the server.                                                                        |
+| `timestamp`       | The timestamp of the event.                                                                             |
+| `bytes_in`        | The number of bytes received from the client (only for `connection_end` events).                        |
+| `bytes_out`       | The number of bytes sent to the client (only for `connection_end` events).                              |
+| `duration_ms`     | The duration of the connection in milliseconds (only for `connection_end` events).                      |
+| `status`          | The status of the connection, either `success` or `error` (only for `connection_end` events).           |
+| `error`           | The error message if the connection status is `error` (only for `connection_end` events).               |
+| `client_cert_pem` | The PEM-encoded client certificate, if mTLS is used and a client certificate is provided.               |
+
 ### Log Rotation
 
 Traefik does not rotate the access log file.
