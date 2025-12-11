@@ -20,6 +20,18 @@ type matcherBuilderFunc func(*matchersTree, ...string) error
 
 type MatcherFunc func(*http.Request) bool
 
+func ContainsPathMatcher(tree *rules.Tree) bool {
+	if tree == nil {
+		return false
+	}
+
+	if tree.Matcher == pathMatcher || tree.Matcher == pathPrefixMatcher {
+		return true
+	}
+
+	return ContainsPathMatcher(tree.RuleLeft) || ContainsPathMatcher(tree.RuleRight)
+}
+
 // Muxer handles routing with rules.
 type Muxer struct {
 	routes         routes
@@ -69,11 +81,10 @@ func GetRulePriority(rule string) int {
 	return len(rule)
 }
 
-// AddRoute add a new route to the router.
-func (m *Muxer) AddRoute(rule string, syntax string, priority int, handler http.Handler) error {
+func (m *Muxer) Parse(rule string, syntax string) (*rules.Tree, error) {
 	matchers, err := m.parser.parse(syntax, rule)
 	if err != nil {
-		return fmt.Errorf("error while parsing rule %s: %w", rule, err)
+		return nil, fmt.Errorf("error while parsing rule %s: %w", rule, err)
 	}
 
 	m.routes = append(m.routes, &route{

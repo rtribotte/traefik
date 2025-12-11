@@ -46,10 +46,11 @@ type Manager struct {
 	conf               *runtime.Configuration
 	tlsManager         *tls.Manager
 	parser             httpmuxer.SyntaxParser
+	deniedPathEncodedCharacters map[string]map[string]struct{}
 }
 
 // NewManager creates a new Manager.
-func NewManager(conf *runtime.Configuration, serviceManager serviceManager, middlewaresBuilder middlewareBuilder, observabilityMgr *middleware.ObservabilityMgr, tlsManager *tls.Manager, parser httpmuxer.SyntaxParser) *Manager {
+func NewManager(conf *runtime.Configuration, serviceManager serviceManager, middlewaresBuilder middlewareBuilder, observabilityMgr *middleware.ObservabilityMgr, tlsManager *tls.Manager, parser httpmuxer.SyntaxParser, deniedPathEncodedCharacters map[string]map[string]struct{}) *Manager {
 	return &Manager{
 		routerHandlers:     make(map[string]http.Handler),
 		serviceManager:     serviceManager,
@@ -58,6 +59,7 @@ func NewManager(conf *runtime.Configuration, serviceManager serviceManager, midd
 		conf:               conf,
 		tlsManager:         tlsManager,
 		parser:             parser,
+		deniedPathEncodedCharacters: deniedPathEncodedCharacters,
 	}
 }
 
@@ -144,8 +146,8 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 			routerConfig.Priority = httpmuxer.GetRulePriority(routerConfig.Rule)
 		}
 
-		if routerConfig.Priority > maxUserPriority && !strings.HasSuffix(routerName, "@internal") {
-			err = fmt.Errorf("the router priority %d exceeds the max user-defined priority %d", routerConfig.Priority, maxUserPriority)
+		ruleTree, err := muxer.Parse(routerConfig.Rule)
+		if err != nil {
 			routerConfig.AddError(err, true)
 			logger.Error().Err(err).Send()
 			continue
@@ -157,7 +159,14 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 			continue
 		}
 
-		handler, err := m.buildRouterHandler(ctxRouter, routerName, routerConfig)
+		var deniedPathEncodedCharacters map[string]struct{}
+		// If the router's rule contains request path matchers,
+		// we retrieve the rejected encoded characters configured on the entryPoint
+		if httpmuxer.ContainsPathMatcher(ruleTree) {
+			deniedPathEncodedCharacters = m.deniedPathEncodedCharacters[routerName]
+		}
+
+		handler, err := m.buildRouterHandler(ctxRouter, routerName, routerConfig, deniedPathEncodedCharacters)
 		if err != nil {
 			routerConfig.AddError(err, true)
 			logger.Error().Err(err).Send()
@@ -191,9 +200,13 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 	return chain.Then(muxer)
 }
 
-func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, routerConfig *runtime.RouterInfo) (http.Handler, error) {
+func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, routerConfig *runtime.RouterInfo, deniedPathEncodedCharacters map[string]struct{}) (http.Handler, error) {
 	if handler, ok := m.routerHandlers[routerName]; ok {
 		return handler, nil
+	}
+
+	if routerConfig.Priority > maxUserPriority && !strings.HasSuffix(routerName, "@internal") {
+		return nil, fmt.Errorf("the router priority %d exceeds the max user-defined priority %d", routerConfig.Priority, maxUserPriority)
 	}
 
 	if routerConfig.TLS != nil {
@@ -211,6 +224,19 @@ func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, rou
 	if err != nil {
 		return nil, err
 	}
+
+	//// Before adding the router handler to the muxer,
+	//// wrap it with encoded path characters denial handler.
+	//handler = denyPathEncodedCharacters(deniedPathEncodedCharacters, handler)
+	//
+	//// And with the fragment denial handler.
+	//handler = denyFragment(handler)
+	//
+	//handler = accesslog.NewFieldHandler(handler, accesslog.RouterName, routerName, nil)
+	//
+	//m.routerHandlers[routerName] = handler
+	//
+	//return handler, nil
 
 	m.routerHandlers[routerName] = handler
 	return m.routerHandlers[routerName], nil
@@ -491,4 +517,56 @@ func (m *Manager) buildChildRoutersMuxer(ctx context.Context, childRefs []string
 	}
 
 	return childMuxer, nil
+}
+
+// When go receives an HTTP request, it assumes the absence of fragment URL.
+// However, it is still possible to send a fragment in the request.
+// In this case, Traefik will encode the '#' character, altering the request's intended meaning.
+// To avoid this behavior, the following function rejects requests that include a fragment in the URL.
+func denyFragment(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if strings.Contains(req.URL.RawPath, "#") {
+			log.WithoutContext().Debugf("Rejecting request because it contains a fragment in the URL path: %s", req.URL.RawPath)
+			rw.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		h.ServeHTTP(rw, req)
+	})
+}
+
+// denyPathEncodedCharacters reject the request if the escaped path contains encoded characters.
+func denyPathEncodedCharacters(encodedCharacters map[string]struct{}, h http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if len(encodedCharacters) == 0 {
+			h.ServeHTTP(rw, req)
+			return
+		}
+
+		escapedPath := req.URL.EscapedPath()
+
+		for i := 0; i < len(escapedPath); i++ {
+			if escapedPath[i] != '%' {
+				continue
+			}
+
+			// This should never happen as the standard library will reject requests containing invalid percent-encodings.
+			// This discards URLs with a percent character at the end.
+			if i+2 >= len(escapedPath) {
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// This rejects a request with a path containing the given encoded characters.
+			if _, exists := encodedCharacters[escapedPath[i:i+3]]; exists {
+				log.FromContext(req.Context()).Debugf("Rejecting request because it contains encoded character %s in the URL path: %s", escapedPath[i:i+3], escapedPath)
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			i += 2
+		}
+
+		h.ServeHTTP(rw, req)
+	})
 }

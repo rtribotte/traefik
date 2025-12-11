@@ -23,9 +23,10 @@ import (
 
 // RouterFactory the factory of TCP/UDP routers.
 type RouterFactory struct {
-	entryPointsTCP  []string
-	entryPointsUDP  []string
-	allowACMEByPass map[string]bool
+	entryPointsTCP              []string
+	entryPointsUDP              []string
+	allowACMEByPass             map[string]bool
+	deniedPathEncodedCharacters map[string]map[string]struct{}
 
 	managerFactory *service.ManagerFactory
 
@@ -76,6 +77,11 @@ func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *
 		return nil, fmt.Errorf("creating parser: %w", err)
 	}
 
+	deniedPathEncodedCharacters := map[string]map[string]struct{}{}
+	for name, ep := range staticConfiguration.EntryPoints {
+		deniedPathEncodedCharacters[name] = ep.HTTP.EncodedCharacters.Map()
+	}
+
 	return &RouterFactory{
 		entryPointsTCP:   entryPointsTCP,
 		entryPointsUDP:   entryPointsUDP,
@@ -86,6 +92,7 @@ func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *
 		dialerManager:    dialerManager,
 		allowACMEByPass:  allowACMEByPass,
 		parser:           parser,
+		deniedPathEncodedCharacters: deniedPathEncodedCharacters,
 	}, nil
 }
 
