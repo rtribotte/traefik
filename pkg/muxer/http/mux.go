@@ -16,21 +16,9 @@ import (
 
 type matcherBuilderFuncs map[string]matcherBuilderFunc
 
-type matcherBuilderFunc func(*matchersTree, ...string) error
+type matcherBuilderFunc func(*MatchersTree, ...string) error
 
 type MatcherFunc func(*http.Request) bool
-
-func ContainsPathMatcher(tree *rules.Tree) bool {
-	if tree == nil {
-		return false
-	}
-
-	if tree.Matcher == pathMatcher || tree.Matcher == pathPrefixMatcher {
-		return true
-	}
-
-	return ContainsPathMatcher(tree.RuleLeft) || ContainsPathMatcher(tree.RuleRight)
-}
 
 // Muxer handles routing with rules.
 type Muxer struct {
@@ -81,12 +69,8 @@ func GetRulePriority(rule string) int {
 	return len(rule)
 }
 
-func (m *Muxer) Parse(rule string, syntax string) (*rules.Tree, error) {
-	matchers, err := m.parser.parse(syntax, rule)
-	if err != nil {
-		return nil, fmt.Errorf("error while parsing rule %s: %w", rule, err)
-	}
-
+// AddRoute add a new route to the router.
+func (m *Muxer) AddRoute(matchers MatchersTree, priority int, handler http.Handler) error {
 	m.routes = append(m.routes, &route{
 		handler:  handler,
 		matchers: matchers,
@@ -222,7 +206,7 @@ func (r routes) Less(i, j int) bool { return r[i].priority > r[j].priority }
 // and the handler that will serve the request.
 type route struct {
 	// matchers tree structure reflecting the rule.
-	matchers matchersTree
+	matchers MatchersTree
 	// handler responsible for handling the route.
 	handler http.Handler
 	// priority is used to disambiguate between two (or more) rules that would all match for a given request.
@@ -230,8 +214,8 @@ type route struct {
 	priority int
 }
 
-// matchersTree represents the matchers tree structure.
-type matchersTree struct {
+// MatchersTree represents the matchers tree structure.
+type MatchersTree struct {
 	// matcher is a matcher func used to match HTTP request properties.
 	// If matcher is not nil, it means that this matcherTree is a leaf of the tree.
 	// It is therefore mutually exclusive with left and right.
@@ -239,11 +223,11 @@ type matchersTree struct {
 	// operator to combine the evaluation of left and right leaves.
 	operator string
 	// Mutually exclusive with matcher.
-	left  *matchersTree
-	right *matchersTree
+	left  *MatchersTree
+	right *MatchersTree
 }
 
-func (m *matchersTree) match(req *http.Request) bool {
+func (m *MatchersTree) match(req *http.Request) bool {
 	if m == nil {
 		// This should never happen as it should have been detected during parsing.
 		log.Warn().Msg("Rule matcher is nil")
@@ -266,17 +250,17 @@ func (m *matchersTree) match(req *http.Request) bool {
 	}
 }
 
-func (m *matchersTree) addRule(rule *rules.Tree, funcs matcherBuilderFuncs) error {
+func (m *MatchersTree) addRule(rule *rules.Tree, funcs matcherBuilderFuncs) error {
 	switch rule.Matcher {
 	case "and", "or":
 		m.operator = rule.Matcher
-		m.left = &matchersTree{}
+		m.left = &MatchersTree{}
 		err := m.left.addRule(rule.RuleLeft, funcs)
 		if err != nil {
 			return fmt.Errorf("error while adding rule %s: %w", rule.Matcher, err)
 		}
 
-		m.right = &matchersTree{}
+		m.right = &MatchersTree{}
 		return m.right.addRule(rule.RuleRight, funcs)
 	default:
 		err := rules.CheckRule(rule)

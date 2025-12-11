@@ -11,6 +11,18 @@ import (
 	"github.com/vulcand/predicate"
 )
 
+func ContainsPathMatcher(syntax string, tree *rules.Tree) bool {
+	if tree == nil {
+		return false
+	}
+
+	if tree.Matcher == "Path" || tree.Matcher == "PathPrefix" || syntax == "v3" && tree.Matcher == "PathRegexp" {
+		return true
+	}
+
+	return ContainsPathMatcher(syntax, tree.RuleLeft) || ContainsPathMatcher(syntax, tree.RuleRight)
+}
+
 type SyntaxParser struct {
 	parsers map[string]*parser
 }
@@ -21,7 +33,7 @@ func WithMatcher(syntax, matcherName string, builderFunc func(params ...string) 
 	return func(syntaxFuncs map[string]matcherBuilderFuncs) {
 		syntax = strings.ToLower(syntax)
 
-		syntaxFuncs[syntax][matcherName] = func(tree *matchersTree, s ...string) error {
+		syntaxFuncs[syntax][matcherName] = func(tree *MatchersTree, s ...string) error {
 			matcher, err := builderFunc(s...)
 			if err != nil {
 				return fmt.Errorf("building matcher: %w", err)
@@ -57,7 +69,7 @@ func NewSyntaxParser(opts ...Options) (SyntaxParser, error) {
 	}, nil
 }
 
-func (s SyntaxParser) parse(syntax string, rule string) (matchersTree, error) {
+func (s SyntaxParser) Parse(syntax string, rule string) (*rules.Tree, MatchersTree, error) {
 	parser, ok := s.parsers[syntax]
 	if !ok {
 		parser = s.parsers["v3"]
@@ -83,21 +95,22 @@ type parser struct {
 	matcherFuncs matcherBuilderFuncs
 }
 
-func (p *parser) parse(rule string) (matchersTree, error) {
+func (p *parser) parse(rule string) (*rules.Tree, MatchersTree, error) {
 	parse, err := p.parser.Parse(rule)
 	if err != nil {
-		return matchersTree{}, fmt.Errorf("parsing rule %s: %w", rule, err)
+		return nil, MatchersTree{}, fmt.Errorf("parsing rule %s: %w", rule, err)
 	}
 	buildTree, ok := parse.(rules.TreeBuilder)
 	if !ok {
-		return matchersTree{}, errors.New("obtaining build tree")
+		return nil, MatchersTree{}, errors.New("obtaining build tree")
 	}
 
-	var matchers matchersTree
-	err = matchers.addRule(buildTree(), p.matcherFuncs)
+	tree := buildTree()
+	var matchers MatchersTree
+	err = matchers.addRule(tree, p.matcherFuncs)
 	if err != nil {
-		return matchersTree{}, fmt.Errorf("adding rule %s: %w", rule, err)
+		return nil, MatchersTree{}, fmt.Errorf("adding rule %s: %w", rule, err)
 	}
 
-	return matchers, nil
+	return tree, matchers, nil
 }

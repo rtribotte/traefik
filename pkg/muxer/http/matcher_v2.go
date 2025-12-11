@@ -24,7 +24,7 @@ var httpFuncsV2 = matcherBuilderFuncs{
 	"Query":         queryV2,
 }
 
-func pathV2(tree *matchersTree, paths ...string) error {
+func pathV2(tree *MatchersTree, paths ...string) error {
 	var routes []*mux.Route
 
 	for _, path := range paths {
@@ -50,7 +50,7 @@ func pathV2(tree *matchersTree, paths ...string) error {
 	return nil
 }
 
-func pathPrefixV2(tree *matchersTree, paths ...string) error {
+func pathPrefixV2(tree *MatchersTree, paths ...string) error {
 	var routes []*mux.Route
 
 	for _, path := range paths {
@@ -76,7 +76,7 @@ func pathPrefixV2(tree *matchersTree, paths ...string) error {
 	return nil
 }
 
-func hostV2(tree *matchersTree, hosts ...string) error {
+func hostV2(tree *MatchersTree, hosts ...string) error {
 	for i, host := range hosts {
 		if !IsASCII(host) {
 			return fmt.Errorf("invalid value %q for \"Host\" matcher, non-ASCII characters are not allowed", host)
@@ -134,7 +134,7 @@ func hostV2(tree *matchersTree, hosts ...string) error {
 	return nil
 }
 
-func clientIPV2(tree *matchersTree, clientIPs ...string) error {
+func clientIPV2(tree *MatchersTree, clientIPs ...string) error {
 	checker, err := ip.NewChecker(clientIPs)
 	if err != nil {
 		return fmt.Errorf("could not initialize IP Checker for \"ClientIP\" matcher: %w", err)
@@ -155,7 +155,7 @@ func clientIPV2(tree *matchersTree, clientIPs ...string) error {
 	return nil
 }
 
-func methodsV2(tree *matchersTree, methods ...string) error {
+func methodsV2(tree *MatchersTree, methods ...string) error {
 	route := mux.NewRouter().NewRoute()
 	route.Methods(methods...)
 	if err := route.GetError(); err != nil {
@@ -169,7 +169,7 @@ func methodsV2(tree *matchersTree, methods ...string) error {
 	return nil
 }
 
-func headersV2(tree *matchersTree, headers ...string) error {
+func headersV2(tree *MatchersTree, headers ...string) error {
 	route := mux.NewRouter().NewRoute()
 	route.Headers(headers...)
 	if err := route.GetError(); err != nil {
@@ -183,7 +183,7 @@ func headersV2(tree *matchersTree, headers ...string) error {
 	return nil
 }
 
-func queryV2(tree *matchersTree, query ...string) error {
+func queryV2(tree *MatchersTree, query ...string) error {
 	var queries []string
 	for _, elem := range query {
 		queries = append(queries, strings.SplitN(elem, "=", 2)...)
@@ -202,7 +202,7 @@ func queryV2(tree *matchersTree, query ...string) error {
 	return nil
 }
 
-func hostRegexpV2(tree *matchersTree, hosts ...string) error {
+func hostRegexpV2(tree *MatchersTree, hosts ...string) error {
 	router := mux.NewRouter()
 
 	for _, host := range hosts {
@@ -223,7 +223,7 @@ func hostRegexpV2(tree *matchersTree, hosts ...string) error {
 	return nil
 }
 
-func headersRegexpV2(tree *matchersTree, headers ...string) error {
+func headersRegexpV2(tree *MatchersTree, headers ...string) error {
 	route := mux.NewRouter().NewRoute()
 	route.HeadersRegexp(headers...)
 	if err := route.GetError(); err != nil {

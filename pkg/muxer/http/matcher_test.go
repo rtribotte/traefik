@@ -11,6 +11,98 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/requestdecorator"
 )
 
+func TestContainsPathMatcherWithTree(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		rule        string
+		expected    bool
+		shouldError bool
+	}{
+		{
+			desc:     "Rule with Path matcher",
+			rule:     "Path(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule with PathPrefix matcher",
+			rule:     "PathPrefix(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule with Host and Path matchers",
+			rule:     "Host(`example.com`) && Path(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule with Host and PathPrefix matchers",
+			rule:     "Host(`example.com`) && PathPrefix(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule with both Path and PathPrefix matchers",
+			rule:     "Path(`/api`) || PathPrefix(`/v1`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule without path matchers",
+			rule:     "Host(`example.com`) && Method(`GET`)",
+			expected: false,
+		},
+		{
+			desc:     "Rule with only Host matcher",
+			rule:     "Host(`example.com`)",
+			expected: false,
+		},
+		{
+			desc:     "Rule with only Method matcher",
+			rule:     "Method(`GET`)",
+			expected: false,
+		},
+		{
+			desc:     "Complex rule with Path matcher in OR condition",
+			rule:     "Host(`example.com`) && (Path(`/api/v1`) || Method(`GET`))",
+			expected: true,
+		},
+		{
+			desc:     "Complex rule with PathPrefix matcher in nested condition",
+			rule:     "(Host(`example.com`) || Host(`api.example.com`)) && PathPrefix(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Rule with Path in NOT condition",
+			rule:     "Host(`example.com`) && !Path(`/api`)",
+			expected: true,
+		},
+		{
+			desc:     "Nested rules with Path deep in tree",
+			rule:     "Host(`example.com`) && (Method(`GET`) || (Headers(`Content-Type`, `application/json`) && Path(`/api`)))",
+			expected: true,
+		},
+	}
+
+	muxer, err := NewMuxer()
+	require.NoError(t, err)
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			tree, err := muxer.Parse(test.rule)
+			if test.shouldError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			result := ContainsPathMatcher(tree)
+			assert.Equal(t, test.expected, result)
+		})
+	}
+}
+
+func TestContainsPathMatcherNilTree(t *testing.T) {
+	result := ContainsPathMatcher(nil)
+	assert.False(t, result)
+}
+
 func TestClientIPMatcher(t *testing.T) {
 	testCases := []struct {
 		desc          string

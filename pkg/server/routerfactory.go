@@ -83,15 +83,15 @@ func NewRouterFactory(staticConfiguration static.Configuration, managerFactory *
 	}
 
 	return &RouterFactory{
-		entryPointsTCP:   entryPointsTCP,
-		entryPointsUDP:   entryPointsUDP,
-		managerFactory:   managerFactory,
-		observabilityMgr: observabilityMgr,
-		tlsManager:       tlsManager,
-		pluginBuilder:    pluginBuilder,
-		dialerManager:    dialerManager,
-		allowACMEByPass:  allowACMEByPass,
-		parser:           parser,
+		entryPointsTCP:              entryPointsTCP,
+		entryPointsUDP:              entryPointsUDP,
+		managerFactory:              managerFactory,
+		observabilityMgr:            observabilityMgr,
+		tlsManager:                  tlsManager,
+		pluginBuilder:               pluginBuilder,
+		dialerManager:               dialerManager,
+		allowACMEByPass:             allowACMEByPass,
+		parser:                      parser,
 		deniedPathEncodedCharacters: deniedPathEncodedCharacters,
 	}, nil
 }
@@ -110,8 +110,9 @@ func (f *RouterFactory) CreateRouters(rtConf *runtime.Configuration) (map[string
 
 	middlewaresBuilder := middleware.NewBuilder(rtConf.Middlewares, serviceManager, f.pluginBuilder)
 
-	routerManager := router.NewManager(rtConf, serviceManager, middlewaresBuilder, f.observabilityMgr, f.tlsManager, f.parser)
+	routerManager := router.NewManager(rtConf, serviceManager, middlewaresBuilder, f.observabilityMgr, f.tlsManager, f.parser, f.deniedPathEncodedCharacters)
 
+	// Multilayer routing.
 	routerManager.ParseRouterTree()
 
 	handlersNonTLS := routerManager.BuildHandlers(ctx, f.entryPointsTCP, false)

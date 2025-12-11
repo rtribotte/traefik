@@ -21,6 +21,7 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/recovery"
 	httpmuxer "github.com/traefik/traefik/v3/pkg/muxer/http"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
+	"github.com/traefik/traefik/v3/pkg/rules"
 	"github.com/traefik/traefik/v3/pkg/server/middleware"
 	"github.com/traefik/traefik/v3/pkg/server/provider"
 	"github.com/traefik/traefik/v3/pkg/tls"
@@ -39,26 +40,26 @@ type serviceManager interface {
 
 // Manager A route/router manager.
 type Manager struct {
-	routerHandlers     map[string]http.Handler
-	serviceManager     serviceManager
-	observabilityMgr   *middleware.ObservabilityMgr
-	middlewaresBuilder middlewareBuilder
-	conf               *runtime.Configuration
-	tlsManager         *tls.Manager
-	parser             httpmuxer.SyntaxParser
+	routerHandlers              map[string]http.Handler
+	serviceManager              serviceManager
+	observabilityMgr            *middleware.ObservabilityMgr
+	middlewaresBuilder          middlewareBuilder
+	conf                        *runtime.Configuration
+	tlsManager                  *tls.Manager
+	parser                      httpmuxer.SyntaxParser
 	deniedPathEncodedCharacters map[string]map[string]struct{}
 }
 
 // NewManager creates a new Manager.
 func NewManager(conf *runtime.Configuration, serviceManager serviceManager, middlewaresBuilder middlewareBuilder, observabilityMgr *middleware.ObservabilityMgr, tlsManager *tls.Manager, parser httpmuxer.SyntaxParser, deniedPathEncodedCharacters map[string]map[string]struct{}) *Manager {
 	return &Manager{
-		routerHandlers:     make(map[string]http.Handler),
-		serviceManager:     serviceManager,
-		observabilityMgr:   observabilityMgr,
-		middlewaresBuilder: middlewaresBuilder,
-		conf:               conf,
-		tlsManager:         tlsManager,
-		parser:             parser,
+		routerHandlers:              make(map[string]http.Handler),
+		serviceManager:              serviceManager,
+		observabilityMgr:            observabilityMgr,
+		middlewaresBuilder:          middlewaresBuilder,
+		conf:                        conf,
+		tlsManager:                  tlsManager,
+		parser:                      parser,
 		deniedPathEncodedCharacters: deniedPathEncodedCharacters,
 	}
 }
@@ -159,6 +160,13 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 			continue
 		}
 
+		ruleTree, matchers, err := m.parser.Parse(routerConfig.RuleSyntax, routerConfig.Rule)
+		if err != nil {
+			routerConfig.AddError(fmt.Errorf("parsing rule %s: %w", routerConfig.Rule, err), true)
+			logger.Error().Err(err).Send()
+			continue
+		}
+
 		var deniedPathEncodedCharacters map[string]struct{}
 		// If the router's rule contains request path matchers,
 		// we retrieve the rejected encoded characters configured on the entryPoint
@@ -185,7 +193,7 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 			continue
 		}
 
-		if err = muxer.AddRoute(routerConfig.Rule, routerConfig.RuleSyntax, routerConfig.Priority, handler); err != nil {
+		if err = muxer.AddRoute(matchers, routerConfig.Priority, handler); err != nil {
 			routerConfig.AddError(err, true)
 			logger.Error().Err(err).Send()
 			continue
@@ -494,15 +502,23 @@ func (m *Manager) buildChildRoutersMuxer(ctx context.Context, childRefs []string
 		}
 
 		// Build the child router handler.
-		childHandler, err := m.buildRouterHandler(ctxChild, childName, childRouter)
+		childHandler, err := m.buildRouterHandler(ctxChild, childName, childRouter, m.deniedPathEncodedCharacters)
 		if err != nil {
 			childRouter.AddError(err, true)
 			logger.Error().Err(err).Send()
 			continue
 		}
 
+		// FIXME add deny
+		_, matchers, err := m.parser.Parse(childRouter.RuleSyntax, childRouter.Rule)
+		if err != nil {
+			childRouter.AddError(fmt.Errorf("parsing rule %s: %w", childRouter.Rule, err), true)
+			logger.Error().Err(err).Send()
+			continue
+		}
+
 		// Add the child router to the muxer.
-		if err = childMuxer.AddRoute(childRouter.Rule, childRouter.RuleSyntax, childRouter.Priority, childHandler); err != nil {
+		if err = childMuxer.AddRoute(matchers, childRouter.Priority, childHandler); err != nil {
 			childRouter.AddError(err, true)
 			logger.Error().Err(err).Send()
 			continue

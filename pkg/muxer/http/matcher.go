@@ -27,8 +27,8 @@ var httpFuncs = matcherBuilderFuncs{
 	"QueryRegexp":  expectNParameters(queryRegexp, 1, 2),
 }
 
-func expectNParameters(fn func(*matchersTree, ...string) error, n ...int) func(*matchersTree, ...string) error {
-	return func(tree *matchersTree, s ...string) error {
+func expectNParameters(fn func(*MatchersTree, ...string) error, n ...int) func(*MatchersTree, ...string) error {
+	return func(tree *MatchersTree, s ...string) error {
 		if !slices.Contains(n, len(s)) {
 			return fmt.Errorf("unexpected number of parameters; got %d, expected one of %v", len(s), n)
 		}
@@ -37,7 +37,7 @@ func expectNParameters(fn func(*matchersTree, ...string) error, n ...int) func(*
 	}
 }
 
-func clientIP(tree *matchersTree, clientIP ...string) error {
+func clientIP(tree *MatchersTree, clientIP ...string) error {
 	checker, err := ip.NewChecker(clientIP)
 	if err != nil {
 		return fmt.Errorf("initializing IP checker for ClientIP matcher: %w", err)
@@ -58,7 +58,7 @@ func clientIP(tree *matchersTree, clientIP ...string) error {
 	return nil
 }
 
-func method(tree *matchersTree, methods ...string) error {
+func method(tree *MatchersTree, methods ...string) error {
 	method := strings.ToUpper(methods[0])
 
 	tree.matcher = func(req *http.Request) bool {
@@ -68,7 +68,7 @@ func method(tree *matchersTree, methods ...string) error {
 	return nil
 }
 
-func host(tree *matchersTree, hosts ...string) error {
+func host(tree *MatchersTree, hosts ...string) error {
 	host := hosts[0]
 
 	if !IsASCII(host) {
@@ -114,7 +114,7 @@ func host(tree *matchersTree, hosts ...string) error {
 	return nil
 }
 
-func hostRegexp(tree *matchersTree, hosts ...string) error {
+func hostRegexp(tree *MatchersTree, hosts ...string) error {
 	host := hosts[0]
 
 	if !IsASCII(host) {
@@ -134,7 +134,7 @@ func hostRegexp(tree *matchersTree, hosts ...string) error {
 	return nil
 }
 
-func path(tree *matchersTree, paths ...string) error {
+func path(tree *MatchersTree, paths ...string) error {
 	path := paths[0]
 
 	if !strings.HasPrefix(path, "/") {
@@ -149,7 +149,7 @@ func path(tree *matchersTree, paths ...string) error {
 	return nil
 }
 
-func pathRegexp(tree *matchersTree, paths ...string) error {
+func pathRegexp(tree *MatchersTree, paths ...string) error {
 	path := paths[0]
 
 	re, err := regexp.Compile(path)
@@ -165,7 +165,7 @@ func pathRegexp(tree *matchersTree, paths ...string) error {
 	return nil
 }
 
-func pathPrefix(tree *matchersTree, paths ...string) error {
+func pathPrefix(tree *MatchersTree, paths ...string) error {
 	path := paths[0]
 
 	if !strings.HasPrefix(path, "/") {
@@ -180,7 +180,7 @@ func pathPrefix(tree *matchersTree, paths ...string) error {
 	return nil
 }
 
-func header(tree *matchersTree, headers ...string) error {
+func header(tree *MatchersTree, headers ...string) error {
 	key, value := http.CanonicalHeaderKey(headers[0]), headers[1]
 
 	tree.matcher = func(req *http.Request) bool {
@@ -196,7 +196,7 @@ func header(tree *matchersTree, headers ...string) error {
 	return nil
 }
 
-func headerRegexp(tree *matchersTree, headers ...string) error {
+func headerRegexp(tree *MatchersTree, headers ...string) error {
 	key, value := http.CanonicalHeaderKey(headers[0]), headers[1]
 
 	re, err := regexp.Compile(value)
@@ -217,7 +217,7 @@ func headerRegexp(tree *matchersTree, headers ...string) error {
 	return nil
 }
 
-func query(tree *matchersTree, queries ...string) error {
+func query(tree *MatchersTree, queries ...string) error {
 	key := queries[0]
 
 	var value string
@@ -237,7 +237,7 @@ func query(tree *matchersTree, queries ...string) error {
 	return nil
 }
 
-func queryRegexp(tree *matchersTree, queries ...string) error {
+func queryRegexp(tree *MatchersTree, queries ...string) error {
 	if len(queries) == 1 {
 		return query(tree, queries...)
 	}
