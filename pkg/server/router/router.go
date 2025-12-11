@@ -21,7 +21,6 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/recovery"
 	httpmuxer "github.com/traefik/traefik/v3/pkg/muxer/http"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
-	"github.com/traefik/traefik/v3/pkg/rules"
 	"github.com/traefik/traefik/v3/pkg/server/middleware"
 	"github.com/traefik/traefik/v3/pkg/server/provider"
 	"github.com/traefik/traefik/v3/pkg/tls"
@@ -147,8 +146,8 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 			routerConfig.Priority = httpmuxer.GetRulePriority(routerConfig.Rule)
 		}
 
-		ruleTree, err := muxer.Parse(routerConfig.Rule)
-		if err != nil {
+		if routerConfig.Priority > maxUserPriority && !strings.HasSuffix(routerName, "@internal") {
+			err = fmt.Errorf("the router priority %d exceeds the max user-defined priority %d", routerConfig.Priority, maxUserPriority)
 			routerConfig.AddError(err, true)
 			logger.Error().Err(err).Send()
 			continue
@@ -170,7 +169,7 @@ func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName str
 		var deniedPathEncodedCharacters map[string]struct{}
 		// If the router's rule contains request path matchers,
 		// we retrieve the rejected encoded characters configured on the entryPoint
-		if httpmuxer.ContainsPathMatcher(ruleTree) {
+		if httpmuxer.ContainsPathMatcher(routerConfig.RuleSyntax, ruleTree) {
 			deniedPathEncodedCharacters = m.deniedPathEncodedCharacters[routerName]
 		}
 
@@ -233,21 +232,18 @@ func (m *Manager) buildRouterHandler(ctx context.Context, routerName string, rou
 		return nil, err
 	}
 
-	//// Before adding the router handler to the muxer,
-	//// wrap it with encoded path characters denial handler.
-	//handler = denyPathEncodedCharacters(deniedPathEncodedCharacters, handler)
-	//
-	//// And with the fragment denial handler.
-	//handler = denyFragment(handler)
-	//
+	// Before adding the router handler to the muxer,
+	// wrap it with encoded path characters denial handler.
+	handler = denyPathEncodedCharacters(deniedPathEncodedCharacters, handler)
+
+	// And with the fragment denial handler.
+	handler = denyFragment(handler)
+
+	// FIXME
 	//handler = accesslog.NewFieldHandler(handler, accesslog.RouterName, routerName, nil)
-	//
-	//m.routerHandlers[routerName] = handler
-	//
-	//return handler, nil
 
 	m.routerHandlers[routerName] = handler
-	return m.routerHandlers[routerName], nil
+	return handler, nil
 }
 
 func (m *Manager) buildHTTPHandler(ctx context.Context, router *runtime.RouterInfo, routerName string) (http.Handler, error) {
