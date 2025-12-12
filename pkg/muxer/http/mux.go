@@ -16,7 +16,7 @@ import (
 
 type matcherBuilderFuncs map[string]matcherBuilderFunc
 
-type matcherBuilderFunc func(*MatchersTree, ...string) error
+type matcherBuilderFunc func(*matchersTree, ...string) error
 
 type MatcherFunc func(*http.Request) bool
 
@@ -70,7 +70,12 @@ func GetRulePriority(rule string) int {
 }
 
 // AddRoute add a new route to the router.
-func (m *Muxer) AddRoute(matchers MatchersTree, priority int, handler http.Handler) error {
+func (m *Muxer) AddRoute(rule string, syntax string, priority int, handler http.Handler) error {
+	matchers, err := m.parser.parse(syntax, rule)
+	if err != nil {
+		return fmt.Errorf("error while parsing rule %s: %w", rule, err)
+	}
+
 	m.routes = append(m.routes, &route{
 		handler:  handler,
 		matchers: matchers,
@@ -206,7 +211,7 @@ func (r routes) Less(i, j int) bool { return r[i].priority > r[j].priority }
 // and the handler that will serve the request.
 type route struct {
 	// matchers tree structure reflecting the rule.
-	matchers MatchersTree
+	matchers matchersTree
 	// handler responsible for handling the route.
 	handler http.Handler
 	// priority is used to disambiguate between two (or more) rules that would all match for a given request.
@@ -214,8 +219,8 @@ type route struct {
 	priority int
 }
 
-// MatchersTree represents the matchers tree structure.
-type MatchersTree struct {
+// matchersTree represents the matchers tree structure.
+type matchersTree struct {
 	// matcher is a matcher func used to match HTTP request properties.
 	// If matcher is not nil, it means that this matcherTree is a leaf of the tree.
 	// It is therefore mutually exclusive with left and right.
@@ -223,11 +228,11 @@ type MatchersTree struct {
 	// operator to combine the evaluation of left and right leaves.
 	operator string
 	// Mutually exclusive with matcher.
-	left  *MatchersTree
-	right *MatchersTree
+	left  *matchersTree
+	right *matchersTree
 }
 
-func (m *MatchersTree) match(req *http.Request) bool {
+func (m *matchersTree) match(req *http.Request) bool {
 	if m == nil {
 		// This should never happen as it should have been detected during parsing.
 		log.Warn().Msg("Rule matcher is nil")
@@ -250,17 +255,17 @@ func (m *MatchersTree) match(req *http.Request) bool {
 	}
 }
 
-func (m *MatchersTree) addRule(rule *rules.Tree, funcs matcherBuilderFuncs) error {
+func (m *matchersTree) addRule(rule *rules.Tree, funcs matcherBuilderFuncs) error {
 	switch rule.Matcher {
 	case "and", "or":
 		m.operator = rule.Matcher
-		m.left = &MatchersTree{}
+		m.left = &matchersTree{}
 		err := m.left.addRule(rule.RuleLeft, funcs)
 		if err != nil {
 			return fmt.Errorf("error while adding rule %s: %w", rule.Matcher, err)
 		}
 
-		m.right = &MatchersTree{}
+		m.right = &matchersTree{}
 		return m.right.addRule(rule.RuleRight, funcs)
 	default:
 		err := rules.CheckRule(rule)

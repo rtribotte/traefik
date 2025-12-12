@@ -332,7 +332,7 @@ func TestRouterManager_Get(t *testing.T) {
 			parser, err := httpmuxer.NewSyntaxParser()
 			require.NoError(t, err)
 
-			routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser)
+			routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser, nil)
 
 			handlers := routerManager.BuildHandlers(t.Context(), test.entryPoints, false)
 
@@ -720,7 +720,7 @@ func TestRuntimeConfiguration(t *testing.T) {
 			parser, err := httpmuxer.NewSyntaxParser()
 			require.NoError(t, err)
 
-			routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser)
+			routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser, nil)
 
 			_ = routerManager.BuildHandlers(t.Context(), entryPoints, false)
 			_ = routerManager.BuildHandlers(t.Context(), entryPoints, true)
@@ -801,7 +801,7 @@ func TestProviderOnMiddlewares(t *testing.T) {
 	parser, err := httpmuxer.NewSyntaxParser()
 	require.NoError(t, err)
 
-	routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser)
+	routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser, nil)
 
 	_ = routerManager.BuildHandlers(t.Context(), entryPoints, false)
 
@@ -880,7 +880,7 @@ func BenchmarkRouterServe(b *testing.B) {
 	parser, err := httpmuxer.NewSyntaxParser()
 	require.NoError(b, err)
 
-	routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser)
+	routerManager := NewManager(rtConf, serviceManager, middlewaresBuilder, nil, tlsManager, parser, nil)
 
 	handlers := routerManager.BuildHandlers(b.Context(), entryPoints, false)
 
@@ -1473,7 +1473,7 @@ func TestManager_buildChildRoutersMuxer(t *testing.T) {
 			parser, err := httpmuxer.NewSyntaxParser()
 			require.NoError(t, err)
 
-			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser)
+			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser, nil)
 
 			// Compute multi-layer routing to populate ChildRefs
 			manager.ParseRouterTree()
@@ -1573,7 +1573,7 @@ func TestDenyEncodedCharacters(t *testing.T) {
 			name: "Handles empty path",
 			encoded: map[string]struct{}{
 				"%0A": {},
-			}
+			},
 			url:        "http://example.com/",
 			wantStatus: http.StatusOK,
 		},
@@ -1753,7 +1753,7 @@ func TestManager_buildHTTPHandler_WithChildRouters(t *testing.T) {
 			parser, err := httpmuxer.NewSyntaxParser()
 			require.NoError(t, err)
 
-			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser)
+			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser, nil)
 
 			// Run ParseRouterTree to validate configuration and populate ChildRefs/errors
 			manager.ParseRouterTree()
@@ -1906,7 +1906,7 @@ func TestManager_BuildHandlers_WithChildRouters(t *testing.T) {
 			parser, err := httpmuxer.NewSyntaxParser()
 			require.NoError(t, err)
 
-			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser)
+			manager := NewManager(conf, serviceManager, middlewareBuilder, nil, nil, parser, nil)
 
 			// Compute multi-layer routing to set up parent-child relationships
 			manager.ParseRouterTree()
