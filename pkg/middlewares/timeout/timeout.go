@@ -21,7 +21,7 @@ type timeout struct {
 	next http.Handler
 }
 
-// New creates a timeout middleware.
+// New creates timeout middleware.
 func New(ctx context.Context, next http.Handler) (http.Handler, error) {
 	middlewares.GetLogger(ctx, middlewareName, typeName).Debug().Msg("Creating middleware")
 
@@ -59,7 +59,7 @@ type timeoutReader struct {
 	timeout time.Duration
 }
 
-// Read reads data from the connection, and resets the read deadline on success.
+// Read reads data from the connection and resets the read deadline on success.
 func (tr *timeoutReader) Read(b []byte) (int, error) {
 	read, err := tr.ReadCloser.Read(b)
 	if err != nil {
@@ -79,7 +79,7 @@ type timeoutWriter struct {
 	headersSent bool
 }
 
-// Write writes data to the connection, and resets the write deadline on success.
+// Write writes data to the connection and resets the write deadline on success.
 func (tw *timeoutWriter) Write(b []byte) (int, error) {
 	written, err := tw.ResponseWriter.Write(b)
 	if err != nil {

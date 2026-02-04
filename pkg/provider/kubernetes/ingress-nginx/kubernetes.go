@@ -42,6 +42,8 @@ const (
 	defaultBackendName    = "default-backend"
 	defaultBackendTLSName = "default-backend-tls"
 
+	defaultProxyReadTimeout    = 60
+	defaultProxySendTimeout    = 60
 	defaultProxyConnectTimeout = 60
 )
 
@@ -82,6 +84,8 @@ type Provider struct {
 	DefaultBackendService  string `description:"Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form 'namespace/name'." json:"defaultBackendService,omitempty" toml:"defaultBackendService,omitempty" yaml:"defaultBackendService,omitempty" export:"true"`
 	DisableSvcExternalName bool   `description:"Disable support for Services of type ExternalName." json:"disableSvcExternalName,omitempty" toml:"disableSvcExternalName,omitempty" yaml:"disableSvcExternalName,omitempty" export:"true"`
 
+	ProxyReadTimeout    int `description:"Timeout for transmitting a request to the proxied server. The timeout is set only between two successive write operations. Timeout value is unitless and in seconds." json:"proxyReadTimeout,omitempty" toml:"proxyReadTimeout,omitempty" yaml:"proxyReadTimeout,omitempty" export:"true"`
+	ProxySendTimeout    int `description:"Timeout for reading a response from the proxied server. The timeout is set only between two successive read operations. Timeout value is unitless and in seconds." json:"proxySendTimeout,omitempty" toml:"proxySendTimeout,omitempty" yaml:"proxySendTimeout,omitempty" export:"true"`
 	ProxyConnectTimeout int `description:"Amount of time to wait until a connection to a server can be established. Timeout value is unitless and in seconds." json:"proxyConnectTimeout,omitempty" toml:"proxyConnectTimeout,omitempty" yaml:"proxyConnectTimeout,omitempty" export:"true"`
 
 	// NonTLSEntryPoints contains the names of entrypoints that are configured without TLS.
@@ -97,6 +101,8 @@ type Provider struct {
 func (p *Provider) SetDefaults() {
 	p.IngressClass = defaultAnnotationValue
 	p.ControllerClass = defaultControllerName
+	p.ProxyReadTimeout = defaultProxyReadTimeout
+	p.ProxySendTimeout = defaultProxySendTimeout
 	p.ProxyConnectTimeout = defaultProxyConnectTimeout
 }
 
@@ -844,6 +850,8 @@ func (p *Provider) loadCertificates(ctx context.Context, ingress *netv1.Ingress,
 }
 
 func (p *Provider) applyMiddlewares(namespace, routerKey, rulePath, ruleHost string, hosts map[string]bool, ingressConfig ingressConfig, hasTLS bool, rt *dynamic.Router, conf *dynamic.Configuration) error {
+	p.applyTimeoutConfiguration(routerKey, ingressConfig, rt, conf)
+
 	applyAppRootConfiguration(routerKey, ingressConfig, rt, conf)
 	applyFromToWwwRedirect(hosts, ruleHost, routerKey, ingressConfig, rt, conf)
 	applyRedirect(routerKey, ingressConfig, rt, conf)
@@ -873,6 +881,20 @@ func (p *Provider) applyMiddlewares(namespace, routerKey, rulePath, ruleHost str
 	}
 
 	return nil
+}
+
+func (p *Provider) applyTimeoutConfiguration(routerName string, ingressConfig ingressConfig, rt *dynamic.Router, conf *dynamic.Configuration) {
+	readTimeout := ptr.Deref(ingressConfig.ProxyReadTimeout, p.ProxyReadTimeout)
+	writeTimeout := ptr.Deref(ingressConfig.ProxySendTimeout, p.ProxySendTimeout)
+
+	timeoutMiddlewareName := routerName + "-timeout"
+	conf.HTTP.Middlewares[timeoutMiddlewareName] = &dynamic.Middleware{
+		Timeout: &dynamic.Timeout{
+			ReadTimeout:  ptypes.Duration(time.Duration(readTimeout) * time.Second),
+			WriteTimeout: ptypes.Duration(time.Duration(writeTimeout) * time.Second),
+		},
+	}
+	rt.Middlewares = append(rt.Middlewares, timeoutMiddlewareName)
 }
 
 func applyRedirect(routerName string, ingressConfig ingressConfig, rt *dynamic.Router, conf *dynamic.Configuration) {
