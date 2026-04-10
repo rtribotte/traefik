@@ -31,13 +31,13 @@ func GetSourceExtractor(ctx context.Context, sourceMatcher *dynamic.SourceCriter
 		sourceMatcher.IPStrategy == nil &&
 			sourceMatcher.RequestHeaderName == "" && !sourceMatcher.RequestHost {
 		sourceMatcher = &dynamic.SourceCriterion{
-			IPStrategy: &clie.IPStrategy{},
+			IPStrategy: &dynamic.IPStrategy{},
 		}
 	}
 
 	logger := log.Ctx(ctx)
 	if sourceMatcher.IPStrategy != nil {
-		strategy, err := sourceMatcher.IPStrategy.Get()
+		strategy, err := sourceMatcher.IPStrategy.Build()
 		if err != nil {
 			return nil, err
 		}

@@ -91,7 +91,7 @@ spec:
       extensionRef: # IP AllowList Middleware Definition
         group: traefik.io
         kind: Middleware
-        name: clientip-allowlist
+        name: ip-allowlist
     backendRefs:
     - name: whoami-api
       port: 80
@@ -109,7 +109,7 @@ spec:
       extensionRef: # IP AllowList Middleware Definition
         group: traefik.io
         kind: Middleware
-        name: clientip-allowlist
+        name: ip-allowlist
     backendRefs:
     - name: whoami
       port: 80
@@ -141,7 +141,7 @@ spec:
     kind: Rule
     middlewares: # Middleware Definition
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami-api
       port: 80
@@ -149,7 +149,7 @@ spec:
     kind: Rule
     middlewares: # Middleware Definition
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami
       port: 80
@@ -226,7 +226,7 @@ spec:
     kind: Rule
     middlewares:
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami-api
       port: 80
@@ -234,7 +234,7 @@ spec:
     kind: Rule
     middlewares:
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami
       port: 80
@@ -420,7 +420,7 @@ spec:
       extensionRef: # IP AllowList Middleware Definition
         group: traefik.io
         kind: Middleware
-        name: clientip-allowlist
+        name: ip-allowlist
     backendRefs:
     - name: whoami-api
       port: 80
@@ -442,7 +442,7 @@ spec:
       extensionRef: # IP AllowList Middleware Definition
         group: traefik.io
         kind: Middleware
-        name: clientip-allowlist
+        name: ip-allowlist
     backendRefs:
     - name: whoami
       port: 80
@@ -498,7 +498,7 @@ spec:
     kind: Rule
     middlewares: # Middleware Definition
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami-api
       port: 80
@@ -506,7 +506,7 @@ spec:
     kind: Rule
     middlewares: # Middleware Definition
     - name: secure-headers
-    - name: clientip-allowlist
+    - name: ip-allowlist
     services:
     - name: whoami-sticky  # Changed from whoami to whoami-sticky
       kind: TraefikService  # Added kind: TraefikService

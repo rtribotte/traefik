@@ -213,8 +213,8 @@ Get Traefik's LoadBalancer IP and use `--resolve` to test without changing DNS:
 
 ```bash
 # Get LoadBalancer IPs
-NGINX_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.clientip }}{{ $ing.clientip }}{{ else }}{{ $ing.hostname }}{{ end }}')
-TRAEFIK_IP=$(kubectl get svc -n traefik traefik -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.clientip }}{{ $ing.clientip }}{{ else }}{{ $ing.hostname }}{{ end }}')
+NGINX_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.ip }}{{ $ing.ip }}{{ else }}{{ $ing.hostname }}{{ end }}')
+TRAEFIK_IP=$(kubectl get svc -n traefik traefik -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.ip }}{{ $ing.ip }}{{ else }}{{ $ing.hostname }}{{ end }}')
 echo -e "Nginx IP: $NGINX_IP\nTraefik IP: $TRAEFIK_IP"
 
 # Test HTTP for both

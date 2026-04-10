@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
-	"github.com/traefik/traefik/v3/pkg/ip"
 	"github.com/traefik/traefik/v3/pkg/middlewares"
 	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
 )
@@ -39,7 +39,7 @@ func New(ctx context.Context, next http.Handler, config dynamic.IPWhiteList, nam
 		return nil, fmt.Errorf("cannot parse CIDR whitelist %s: %w", config.SourceRange, err)
 	}
 
-	strategy, err := config.IPStrategy.Get()
+	strategy, err := config.IPStrategy.Build()
 	if err != nil {
 		return nil, err
 	}

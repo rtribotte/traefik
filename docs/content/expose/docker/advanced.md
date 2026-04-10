@@ -34,17 +34,17 @@ labels:
   - "traefik.http.middlewares.secure-headers.headers.stsSeconds=31536000"
 
   # IP Allowlist Middleware
-  - "traefik.http.middlewares.clientip-allowlist.ipallowlist.sourceRange=127.0.0.1/32,192.168.0.0/16,10.0.0.0/8"
+  - "traefik.http.middlewares.ip-allowlist.ipallowlist.sourceRange=127.0.0.1/32,192.168.0.0/16,10.0.0.0/8"
 
   # Apply middlewares to whoami router
-  - "traefik.http.routers.whoami.middlewares=secure-headers,clientip-allowlist"
+  - "traefik.http.routers.whoami.middlewares=secure-headers,ip-allowlist"
 ```
 
 Add the same middleware to your whoami-api service:
 
 ```yaml
 labels:
-  - "traefik.http.routers.whoami-api.middlewares=secure-headers,clientip-allowlist"
+  - "traefik.http.routers.whoami-api.middlewares=secure-headers,ip-allowlist"
 ```
 
 Apply the changes:

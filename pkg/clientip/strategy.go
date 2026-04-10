@@ -1,7 +1,6 @@
 package clientip
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"net/netip"
@@ -15,46 +14,6 @@ const (
 // Strategy a strategy for IP selection.
 type Strategy interface {
 	GetIP(req *http.Request) string
-}
-
-// Get an IP selection strategy.
-// If nil it returns a strategy that honors the client IP resolved at the
-// entrypoint (see ip.ResolvedAddrStrategy) and falls back to the remote
-// address; otherwise it returns a strategy based on the configuration using
-// the X-Forwarded-For Header. Depth override the ExcludedIPs.
-func (s *IPStrategy) Get() (Strategy, error) {
-	if s == nil {
-		return &ResolvedAddrStrategy{}, nil
-	}
-
-	if s.Depth > 0 {
-		if s.IPv6Subnet != nil && (*s.IPv6Subnet <= 0 || *s.IPv6Subnet > 128) {
-			return nil, fmt.Errorf("invalid IPv6 subnet %d value, should be greater to 0 and lower or equal to 128", *s.IPv6Subnet)
-		}
-
-		return &DepthStrategy{
-			Depth:      s.Depth,
-			IPv6Subnet: s.IPv6Subnet,
-		}, nil
-	}
-
-	if len(s.ExcludedIPs) > 0 {
-		checker, err := NewChecker(s.ExcludedIPs)
-		if err != nil {
-			return nil, err
-		}
-		return &PoolStrategy{
-			Checker: checker,
-		}, nil
-	}
-
-	if s.IPv6Subnet != nil && (*s.IPv6Subnet <= 0 || *s.IPv6Subnet > 128) {
-		return nil, fmt.Errorf("invalid IPv6 subnet %d value, should be greater to 0 and lower or equal to 128", *s.IPv6Subnet)
-	}
-
-	return &ResolvedAddrStrategy{
-		IPv6Subnet: s.IPv6Subnet,
-	}, nil
 }
 
 // RemoteAddrStrategy a strategy that always return the remote address.
@@ -94,7 +53,7 @@ type ResolvedAddrStrategy struct {
 
 // GetIP returns the selected IP.
 func (s *ResolvedAddrStrategy) GetIP(req *http.Request) string {
-	addr, ok := FromContext(req.Context())
+	addr, ok := fromContext(req.Context())
 	if !ok {
 		ip, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {

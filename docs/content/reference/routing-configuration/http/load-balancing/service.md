@@ -78,7 +78,7 @@ http:
 ```yaml tab="Labels"
 labels:
   - "traefik.http.services.my-service.loadBalancer.strategy=wrr"
-  - "traefik.http.services.my-service.loadBalancer.servers[0].url=http://private-clientip-server-1/"
+  - "traefik.http.services.my-service.loadBalancer.servers[0].url=http://private-ip-server-1/"
   - "traefik.http.services.my-service.loadBalancer.servers[0].weight=2"
   - "traefik.http.services.my-service.loadBalancer.servers[0].preservePath=true"
   - "traefik.http.services.my-service.loadBalancer.sticky.cookie.name=sticky-cookie"
@@ -96,7 +96,7 @@ labels:
 {
   "Tags": [
     "traefik.http.services.my-service.loadBalancer.strategy=wrr",
-    "traefik.http.services.my-service.loadBalancer.servers[0].url=http://private-clientip-server-1/",
+    "traefik.http.services.my-service.loadBalancer.servers[0].url=http://private-ip-server-1/",
     "traefik.http.services.my-service.loadBalancer.servers[0].weight=2",
     "traefik.http.services.my-service.loadBalancer.servers[0].preservePath=true",
     "traefik.http.services.my-service.loadBalancer.sticky.cookie.name=sticky-cookie",
@@ -789,7 +789,7 @@ http:
     appv2:
       loadBalancer:
         servers:
-        - url: "http://private-clientip-server-2/
+        - url: "http://private-ip-server-2/
 ```
 
 ```toml tab="Structured (TOML)"

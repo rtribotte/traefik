@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 )
 
 // This the list of supported NGINX variables for interpolation.

@@ -15,7 +15,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"golang.org/x/net/http/httpguts"
 )

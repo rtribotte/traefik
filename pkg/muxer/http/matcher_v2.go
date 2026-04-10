@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/middlewares/requestdecorator"
 	"github.com/traefik/traefik/v3/pkg/muxer"
 )

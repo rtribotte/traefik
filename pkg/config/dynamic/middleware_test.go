@@ -37,17 +37,17 @@ func Test_GetStrategy_ipv6Subnet(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			strategy := IPStrategy{
+			config := &IPStrategy{
 				IPv6Subnet: test.ipv6Subnet,
 			}
 
-			get, err := strategy.Get()
+			strategy, err := config.Build()
 			if test.expectError {
 				require.Error(t, err)
-				assert.Nil(t, get)
+				assert.Nil(t, strategy)
 			} else {
 				require.NoError(t, err)
-				assert.NotNil(t, get)
+				assert.NotNil(t, strategy)
 			}
 		})
 	}

@@ -18,20 +18,13 @@ func WithClientIP(ctx context.Context, addr string) context.Context {
 	return context.WithValue(ctx, clientIPKey{}, addr)
 }
 
-// FromContext returns the resolved client IP previously stored with
-// WithClientIP and whether it was present.
-func FromContext(ctx context.Context) (string, bool) {
-	addr, ok := ctx.Value(clientIPKey{}).(string)
-	return addr, ok
-}
-
 // ClientIP returns the resolved client IP for the given request.
 // When the entrypoint has resolved a real client IP and stashed it in the
 // request context, that value is returned. Otherwise it falls back to the
 // host portion of req.RemoteAddr (matching the historical Traefik behavior).
 // The returned value is always stripped of any port.
 func ClientIP(req *http.Request) string {
-	if addr, ok := FromContext(req.Context()); ok {
+	if addr, ok := fromContext(req.Context()); ok {
 		return addr
 	}
 	host, _, err := net.SplitHostPort(req.RemoteAddr)
@@ -39,4 +32,11 @@ func ClientIP(req *http.Request) string {
 		return req.RemoteAddr
 	}
 	return host
+}
+
+// fromContext returns the resolved client IP previously stored with
+// WithClientIP and whether it was present.
+func fromContext(ctx context.Context) (string, bool) {
+	addr, ok := ctx.Value(clientIPKey{}).(string)
+	return addr, ok
 }

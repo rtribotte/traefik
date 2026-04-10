@@ -53,11 +53,11 @@ func TestClientIP(t *testing.T) {
 
 func TestWithClientIPAndFromContext(t *testing.T) {
 	ctx := context.Background()
-	_, ok := FromContext(ctx)
+	_, ok := fromContext(ctx)
 	assert.False(t, ok)
 
 	ctx = WithClientIP(ctx, "1.2.3.4")
-	got, ok := FromContext(ctx)
+	got, ok := fromContext(ctx)
 	assert.True(t, ok)
 	assert.Equal(t, "1.2.3.4", got)
 }
