@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/proxy/httputil"
 )
 
@@ -41,9 +41,9 @@ func TestXForwarded_ResolveClientIP_UntrustedPeer_StripsSourceHeader(t *testing.
 	// Untrusted peer: both XFF and the configured source header must be stripped.
 	assert.Empty(t, capture.req.Header.Get("CF-Connecting-IP"))
 	assert.Empty(t, capture.req.Header.Get("X-Forwarded-For"))
-	// No resolved IP in context since peer is untrusted.
-	_, ok := clientip.FromContext(capture.req.Context())
-	assert.False(t, ok)
+	// No resolved IP in context since peer is untrusted — ClientIP falls back
+	// to RemoteAddr.
+	assert.Equal(t, "8.8.8.8", clientip.ClientIP(capture.req))
 }
 
 func TestXForwarded_ResolveClientIP_TrustedPeer_StashesContextAndXRealIP(t *testing.T) {
@@ -62,9 +62,8 @@ func TestXForwarded_ResolveClientIP_TrustedPeer_StashesContextAndXRealIP(t *test
 
 	m.ServeHTTP(nil, req)
 
-	resolved, ok := clientip.FromContext(capture.req.Context())
-	assert.True(t, ok)
-	assert.Equal(t, "1.2.3.4", resolved)
+	// Resolved IP is in context — ClientIP returns the resolved value.
+	assert.Equal(t, "1.2.3.4", clientip.ClientIP(capture.req))
 	// X-Real-IP written by rewrite() reflects the resolved client, not the peer.
 	assert.Equal(t, "1.2.3.4", capture.req.Header.Get("X-Real-Ip"))
 }
@@ -85,9 +84,7 @@ func TestXForwarded_ResolveClientIP_XForwardedForChain(t *testing.T) {
 
 	m.ServeHTTP(nil, req)
 
-	resolved, ok := clientip.FromContext(capture.req.Context())
-	assert.True(t, ok)
-	assert.Equal(t, "1.2.3.4", resolved)
+	assert.Equal(t, "1.2.3.4", clientip.ClientIP(capture.req))
 	// ComputeFullForwardedFor=true preserves the incoming XFF chain as-is.
 	assert.Equal(t, "1.2.3.4, 10.0.0.2", capture.req.Header.Get("X-Forwarded-For"))
 	// Proxy append is still enabled.
@@ -129,9 +126,8 @@ func TestXForwarded_ResolveClientIP_Disabled_NoBehaviorChange(t *testing.T) {
 
 	m.ServeHTTP(nil, req)
 
-	// No context key, no X-Real-IP override beyond the historical behavior.
-	_, ok := clientip.FromContext(capture.req.Context())
-	assert.False(t, ok)
+	// No resolution — ClientIP falls back to RemoteAddr.
+	assert.Equal(t, "10.0.0.1", clientip.ClientIP(capture.req))
 	assert.Equal(t, "10.0.0.1", capture.req.Header.Get("X-Real-Ip"))
 	assert.Equal(t, "1.2.3.4", capture.req.Header.Get("X-Forwarded-For"))
 }

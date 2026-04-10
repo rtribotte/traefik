@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/proxy/httputil"
 	"golang.org/x/net/http/httpguts"
 )
@@ -175,29 +175,21 @@ func (x *XForwarded) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, h := range xHeaders {
 			unsafeHeader(r.Header).Del(h)
 		}
-		// When the peer is untrusted, also strip the configured client-IP
-		// source header so downstream applications that naively trust it
-		// (e.g. a backend reading CF-Connecting-IP) cannot be spoofed via
-		// an untrusted hop.
+		// If configured, the client-IP source header is also stripped.
 		if x.clientIPHeader != "" {
 			unsafeHeader(r.Header).Del(x.clientIPHeader)
 		}
 	}
 
-	// Resolve the real client IP once per request, using the configured
-	// source header and the trusted-peer pool, and stash it in the request
-	// context so downstream consumers (ip.ClientIP helper, IPStrategy
-	// fallback, interpolation, access log, tracing, ...) see a single
-	// coherent value. Resolution is a no-op when ResolveClientIP is disabled
-	// or when the peer is not trusted.
+	// Resolve the real client IP if a resolver is configured.
 	if x.resolver != nil {
 		if resolved := x.resolver.Resolve(r); resolved != "" {
 			r = r.WithContext(clientip.WithClientIP(r.Context(), resolved))
 			// When ComputeFullForwardedFor is disabled, replace the outbound
 			// X-Forwarded-For chain with just the resolved client IP
 			// (matching ingress-nginx's compute-full-forwarded-for=false
-			// default). We set the header here and tell the proxy layer not
-			// to append, so the outbound XFF is exactly the resolved IP.
+			// default).
+			// We set the header here and tell the proxy layer not to append, so the outbound XFF is exactly the resolved IP.
 			if !x.computeFullForwardedFor {
 				unsafeHeader(r.Header).Set(xForwardedFor, resolved)
 				r = r.WithContext(httputil.SetNotAppendXFF(r.Context()))
@@ -228,14 +220,10 @@ func (x *XForwarded) rewrite(outreq *http.Request) {
 	// is enabled and the peer is trusted) over the raw socket peer, so that
 	// X-Real-IP sent to the backend reflects the real client rather than the
 	// last trusted hop.
-	clientIP := ""
-	if resolved, ok := clientip.FromContext(outreq.Context()); ok {
-		clientIP = resolved
-	} else if host, _, err := net.SplitHostPort(outreq.RemoteAddr); err == nil {
-		clientIP = removeIPv6Zone(host)
-	}
+	clientIP := clientip.ClientIP(outreq)
 
 	if clientIP != "" {
+		clientIP = removeIPv6Zone(clientIP)
 		if unsafeHeader(outreq.Header).Get(xRealIP) == "" {
 			unsafeHeader(outreq.Header).Set(xRealIP, clientIP)
 		}

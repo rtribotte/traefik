@@ -19,7 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	ptypes "github.com/traefik/paerser/types"
-	"github.com/traefik/traefik/v3/pkg/ip"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/middlewares/capture"
 	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
@@ -261,8 +261,11 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request, next http
 	// header chain), prefer it over both the raw remote address and the raw
 	// X-Forwarded-For header value — the resolved value is the only one that
 	// has been validated against the trusted-peer pool.
-	if resolved, ok := clientip.FromContext(req.Context()); ok {
-		core[ClientHost] = resolved
+	// clientip.ClientIP returns the resolved IP when present, or falls back
+	// to RemoteAddr (stripped of port) when no resolution is configured.
+	resolvedHost := clientip.ClientIP(req)
+	if resolvedHost != core[ClientHost] {
+		core[ClientHost] = resolvedHost
 	} else if forwardedFor := req.Header.Get("X-Forwarded-For"); forwardedFor != "" {
 		core[ClientHost] = forwardedFor
 	}
