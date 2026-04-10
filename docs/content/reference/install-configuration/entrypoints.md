@@ -392,6 +392,150 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
     --entryPoints.web.forwardedHeaders.connection=foobar
     ```
 
+??? info "`forwardedHeaders.resolveClientIP`"
+
+    When enabled, Traefik resolves the real client IP by inspecting a configurable
+    source header (default `X-Forwarded-For`) and walking it right-to-left against
+    the `trustedIPs` pool, matching
+    [nginx's `ngx_http_realip_module`](https://nginx.org/en/docs/http/ngx_http_realip_module.html)
+    semantics. Resolution only runs when the immediate peer is in `trustedIPs`;
+    untrusted peers cannot influence the resolved value.
+
+    When resolution is active:
+
+    - The resolved client IP is stored in the request context and used by downstream
+      consumers: interpolation (`$remote_addr`, `$proxy_add_x_forwarded_for`),
+      `IPAllowList` / `IPWhiteList` (when no explicit `ipStrategy` is configured),
+      rate limiter, access logs (`ClientHost`), tracing (`client.address`), and the
+      outbound `X-Real-IP` / `X-Forwarded-For` headers sent to backends.
+    - When the peer is untrusted, the configured `clientIPHeader` is stripped from
+      the request (in addition to the existing `X-Forwarded-*` stripping) to prevent
+      spoofing of downstream applications that naively trust it.
+
+    ```yaml tab="File (YAML)"
+    ## Static configuration
+    entryPoints:
+      web:
+        address: ":80"
+        forwardedHeaders:
+          trustedIPs:
+            - "10.0.0.0/8"
+          resolveClientIP: true
+    ```
+
+    ```toml tab="File (TOML)"
+    ## Static configuration
+    [entryPoints]
+      [entryPoints.web]
+        address = ":80"
+
+        [entryPoints.web.forwardedHeaders]
+          trustedIPs = ["10.0.0.0/8"]
+          resolveClientIP = true
+    ```
+
+    ```bash tab="CLI"
+    ## Static configuration
+    --entryPoints.web.address=:80
+    --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
+    --entryPoints.web.forwardedHeaders.resolveClientIP
+    ```
+
+??? info "`forwardedHeaders.clientIPHeader`"
+
+    Defines the source header used to extract the real client IP when
+    `resolveClientIP` is enabled. Defaults to `X-Forwarded-For`.
+
+    For list-valued headers like `X-Forwarded-For`, Traefik walks the chain
+    right-to-left, skipping entries that are in `trustedIPs`, and returns the
+    first untrusted entry.
+
+    For single-valued headers like `CF-Connecting-IP`, `True-Client-IP`, or
+    `X-Real-IP`, the header value is used as-is.
+
+    Common values:
+
+    | Header                | Use case                                       |
+    |-----------------------|------------------------------------------------|
+    | `X-Forwarded-For`     | Default. AWS ALB, GCP L7, Azure AG, most proxies. |
+    | `CF-Connecting-IP`    | Cloudflare.                                    |
+    | `True-Client-IP`      | Akamai, Cloudflare Enterprise.                 |
+    | `X-Real-IP`           | nginx / HAProxy convention.                    |
+
+    ```yaml tab="File (YAML)"
+    ## Static configuration
+    entryPoints:
+      web:
+        address: ":80"
+        forwardedHeaders:
+          trustedIPs:
+            - "10.0.0.0/8"
+          resolveClientIP: true
+          clientIPHeader: "CF-Connecting-IP"
+    ```
+
+    ```toml tab="File (TOML)"
+    ## Static configuration
+    [entryPoints]
+      [entryPoints.web]
+        address = ":80"
+
+        [entryPoints.web.forwardedHeaders]
+          trustedIPs = ["10.0.0.0/8"]
+          resolveClientIP = true
+          clientIPHeader = "CF-Connecting-IP"
+    ```
+
+    ```bash tab="CLI"
+    ## Static configuration
+    --entryPoints.web.address=:80
+    --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
+    --entryPoints.web.forwardedHeaders.resolveClientIP
+    --entryPoints.web.forwardedHeaders.clientIPHeader=CF-Connecting-IP
+    ```
+
+??? info "`forwardedHeaders.computeFullForwardedFor`"
+
+    Controls the outbound `X-Forwarded-For` header sent to backends when
+    `resolveClientIP` is enabled.
+
+    - `true` (**default**): preserves the incoming `X-Forwarded-For` chain and
+      appends the resolved client IP — matching Traefik's historical behavior.
+    - `false`: replaces the chain with just the resolved client IP — matching
+      ingress-nginx's `compute-full-forwarded-for: false` default.
+
+    ```yaml tab="File (YAML)"
+    ## Static configuration
+    entryPoints:
+      web:
+        address: ":80"
+        forwardedHeaders:
+          trustedIPs:
+            - "10.0.0.0/8"
+          resolveClientIP: true
+          computeFullForwardedFor: false
+    ```
+
+    ```toml tab="File (TOML)"
+    ## Static configuration
+    [entryPoints]
+      [entryPoints.web]
+        address = ":80"
+
+        [entryPoints.web.forwardedHeaders]
+          trustedIPs = ["10.0.0.0/8"]
+          resolveClientIP = true
+          computeFullForwardedFor = false
+    ```
+
+    ```bash tab="CLI"
+    ## Static configuration
+    --entryPoints.web.address=:80
+    --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
+    --entryPoints.web.forwardedHeaders.resolveClientIP
+    --entryPoints.web.forwardedHeaders.computeFullForwardedFor=false
+    ```
+
 ### HTTP3
 
 As HTTP/3 actually uses UDP, when Traefik is configured with a TCP `entryPoint`

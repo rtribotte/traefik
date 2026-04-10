@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/static"
+	"github.com/traefik/traefik/v3/pkg/ip"
 	"github.com/traefik/traefik/v3/pkg/observability"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	"go.opentelemetry.io/contrib/propagators/autoprop"
@@ -166,7 +167,15 @@ func (t *Tracer) CaptureServerRequest(span trace.Span, r *http.Request) {
 		span.SetAttributes(semconv.NetworkPeerAddress(r.Host))
 	} else {
 		span.SetAttributes(semconv.NetworkPeerAddress(host))
-		span.SetAttributes(semconv.ClientAddress(host))
+		// client.address should reflect the real originating client when the
+		// entrypoint resolved one via the trusted-peer header chain; otherwise
+		// fall back to the transport peer address. network.peer.address stays
+		// the immediate peer regardless, per OTel semconv.
+		if resolved, ok := ip.FromContext(r.Context()); ok {
+			span.SetAttributes(semconv.ClientAddress(resolved))
+		} else {
+			span.SetAttributes(semconv.ClientAddress(host))
+		}
 		intPort, _ := strconv.Atoi(port)
 		span.SetAttributes(semconv.ClientPort(intPort))
 		span.SetAttributes(semconv.NetworkPeerPort(intPort))

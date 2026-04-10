@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/traefik/traefik/v3/pkg/ip"
 )
 
 // This the list of supported NGINX variables for interpolation.
@@ -123,10 +124,10 @@ func variableValue(rawVariable, variable string, req *http.Request, responseHead
 		return req.URL.RawQuery, nil
 
 	case remoteAddress:
-		return stripPort(req.RemoteAddr), nil
+		return ip.ClientIP(req), nil
 
 	case proxyAddXForwardedFor:
-		clientIP := stripPort(req.RemoteAddr)
+		clientIP := ip.ClientIP(req)
 		if prior := req.Header.Get("X-Forwarded-For"); prior != "" {
 			return prior + ", " + clientIP, nil
 		}

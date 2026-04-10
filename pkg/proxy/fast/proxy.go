@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"github.com/traefik/traefik/v3/pkg/ip"
 	proxyhttputil "github.com/traefik/traefik/v3/pkg/proxy/httputil"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/net/http/httpguts"
@@ -213,7 +214,16 @@ func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	outReq.Header.SetMethod(req.Method)
 
 	if !proxyhttputil.ShouldNotAppendXFF(req.Context()) {
-		if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+		// Prefer the client IP resolved at the entrypoint when available,
+		// so that the value appended to X-Forwarded-For reflects the real
+		// client rather than the last trusted hop.
+		var clientIP string
+		if resolved, ok := ip.FromContext(req.Context()); ok {
+			clientIP = resolved
+		} else if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+			clientIP = host
+		}
+		if clientIP != "" {
 			// If we aren't the first proxy retain prior
 			// X-Forwarded-For information as a comma+space
 			// separated list and fold multiple headers into one.

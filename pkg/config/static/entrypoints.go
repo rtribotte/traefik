@@ -56,6 +56,7 @@ func (ep *EntryPoint) SetDefaults() {
 	ep.Transport = &EntryPointsTransport{}
 	ep.Transport.SetDefaults()
 	ep.ForwardedHeaders = &ForwardedHeaders{}
+	ep.ForwardedHeaders.SetDefaults()
 	ep.UDP = &UDPConfig{}
 	ep.UDP.SetDefaults()
 	ep.HTTP = HTTPConfig{}
@@ -154,6 +155,14 @@ type ForwardedHeaders struct {
 	TrustedIPs             []string `description:"Trust only forwarded headers from selected IPs." json:"trustedIPs,omitempty" toml:"trustedIPs,omitempty" yaml:"trustedIPs,omitempty"`
 	Connection             []string `description:"List of Connection headers that are allowed to pass through the middleware chain before being removed." json:"connection,omitempty" toml:"connection,omitempty" yaml:"connection,omitempty"`
 	NotAppendXForwardedFor bool     `description:"Disable appending RemoteAddr to X-Forwarded-For header. Defaults to false (appending is enabled)." json:"notAppendXForwardedFor,omitempty" toml:"notAppendXForwardedFor,omitempty" yaml:"notAppendXForwardedFor,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+	ResolveClientIP         bool   `description:"Enable resolution of the real client IP from a trusted-peer header chain, matching nginx's ngx_http_realip_module semantics. Resolution only runs when the immediate peer is in TrustedIPs." json:"resolveClientIP,omitempty" toml:"resolveClientIP,omitempty" yaml:"resolveClientIP,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+	ClientIPHeader          string `description:"Header used as the source of the real client IP when ResolveClientIP is enabled. Defaults to X-Forwarded-For. Other common values are CF-Connecting-IP, True-Client-IP, or X-Real-IP." json:"clientIPHeader,omitempty" toml:"clientIPHeader,omitempty" yaml:"clientIPHeader,omitempty" export:"true"`
+	ComputeFullForwardedFor bool   `description:"When ResolveClientIP is enabled, preserve the incoming X-Forwarded-For chain on the outbound request instead of replacing it with the resolved client IP. Defaults to true (preserve chain), matching Traefik's historical behavior." json:"computeFullForwardedFor,omitempty" toml:"computeFullForwardedFor,omitempty" yaml:"computeFullForwardedFor,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+}
+
+// SetDefaults sets the default values.
+func (f *ForwardedHeaders) SetDefaults() {
+	f.ComputeFullForwardedFor = true
 }
 
 // ProxyProtocol contains Proxy-Protocol configuration.

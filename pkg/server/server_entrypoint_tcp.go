@@ -638,10 +638,15 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 
 	var handler http.Handler
 	handler, err = forwardedheaders.NewXForwarded(
-		configuration.ForwardedHeaders.Insecure,
-		configuration.ForwardedHeaders.TrustedIPs,
-		configuration.ForwardedHeaders.Connection,
-		configuration.ForwardedHeaders.NotAppendXForwardedFor,
+		forwardedheaders.Config{
+			Insecure:                configuration.ForwardedHeaders.Insecure,
+			TrustedIPs:              configuration.ForwardedHeaders.TrustedIPs,
+			ConnectionHeaders:       configuration.ForwardedHeaders.Connection,
+			NotAppendXForwardedFor:  configuration.ForwardedHeaders.NotAppendXForwardedFor,
+			ResolveClientIP:         configuration.ForwardedHeaders.ResolveClientIP,
+			ClientIPHeader:          configuration.ForwardedHeaders.ClientIPHeader,
+			ComputeFullForwardedFor: configuration.ForwardedHeaders.ComputeFullForwardedFor,
+		},
 		next)
 	if err != nil {
 		return nil, err

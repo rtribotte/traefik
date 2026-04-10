@@ -15,6 +15,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/traefik/traefik/v3/pkg/ip"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"golang.org/x/net/http/httpguts"
 )
@@ -66,7 +67,16 @@ func rewriteRequestBuilder(target *url.URL, passHostHeader bool, preservePath bo
 	return func(pr *httputil.ProxyRequest) {
 		copyForwardedHeader(pr.Out.Header, pr.In.Header)
 		if !ShouldNotAppendXFF(pr.In.Context()) {
-			if clientIP, _, err := net.SplitHostPort(pr.In.RemoteAddr); err == nil {
+			// Prefer the client IP resolved at the entrypoint when available,
+			// so that the value appended to X-Forwarded-For reflects the real
+			// client rather than the last trusted hop.
+			var clientIP string
+			if resolved, ok := ip.FromContext(pr.In.Context()); ok {
+				clientIP = resolved
+			} else if host, _, err := net.SplitHostPort(pr.In.RemoteAddr); err == nil {
+				clientIP = host
+			}
+			if clientIP != "" {
 				// If we aren't the first proxy retain prior
 				// X-Forwarded-For information as a comma+space
 				// separated list and fold multiple headers into one.

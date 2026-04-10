@@ -481,12 +481,13 @@ type IPStrategy struct {
 }
 
 // Get an IP selection strategy.
-// If nil return the RemoteAddr strategy
-// else return a strategy based on the configuration using the X-Forwarded-For Header.
-// Depth override the ExcludedIPs.
+// If nil it returns a strategy that honors the client IP resolved at the
+// entrypoint (see ip.ResolvedAddrStrategy) and falls back to the remote
+// address; otherwise it returns a strategy based on the configuration using
+// the X-Forwarded-For Header. Depth override the ExcludedIPs.
 func (s *IPStrategy) Get() (ip.Strategy, error) {
 	if s == nil {
-		return &ip.RemoteAddrStrategy{}, nil
+		return &ip.ResolvedAddrStrategy{}, nil
 	}
 
 	if s.Depth > 0 {
@@ -514,7 +515,7 @@ func (s *IPStrategy) Get() (ip.Strategy, error) {
 		return nil, fmt.Errorf("invalid IPv6 subnet %d value, should be greater to 0 and lower or equal to 128", *s.IPv6Subnet)
 	}
 
-	return &ip.RemoteAddrStrategy{
+	return &ip.ResolvedAddrStrategy{
 		IPv6Subnet: s.IPv6Subnet,
 	}, nil
 }
