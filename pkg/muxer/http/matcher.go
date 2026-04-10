@@ -38,12 +38,12 @@ func expectNParameters(fn func(*matchersTree, ...string) error, n ...int) func(*
 }
 
 func clientIP(tree *matchersTree, clientIP ...string) error {
-	checker, err := ip.NewChecker(clientIP)
+	checker, err := clientip.NewChecker(clientIP)
 	if err != nil {
 		return fmt.Errorf("initializing IP checker for ClientIP matcher: %w", err)
 	}
 
-	strategy := ip.RemoteAddrStrategy{}
+	strategy := clientip.RemoteAddrStrategy{}
 
 	tree.matcher = func(req *http.Request) bool {
 		ok, err := checker.Contains(strategy.GetIP(req))

@@ -136,12 +136,12 @@ func hostV2(tree *matchersTree, hosts ...string) error {
 }
 
 func clientIPV2(tree *matchersTree, clientIPs ...string) error {
-	checker, err := ip.NewChecker(clientIPs)
+	checker, err := clientip.NewChecker(clientIPs)
 	if err != nil {
 		return fmt.Errorf("could not initialize IP Checker for \"ClientIP\" matcher: %w", err)
 	}
 
-	strategy := ip.RemoteAddrStrategy{}
+	strategy := clientip.RemoteAddrStrategy{}
 
 	tree.matcher = func(req *http.Request) bool {
 		ok, err := checker.Contains(strategy.GetIP(req))

@@ -66,18 +66,18 @@ type XForwarded struct {
 	resolveClientIP         bool
 	clientIPHeader          string
 	computeFullForwardedFor bool
-	ipChecker               *ip.Checker
-	resolver                *ip.Resolver
+	ipChecker               *clientip.Checker
+	resolver                *clientip.Resolver
 	next                    http.Handler
 	hostname                string
 }
 
 // NewXForwarded creates a new XForwarded.
 func NewXForwarded(cfg Config, next http.Handler) (*XForwarded, error) {
-	var ipChecker *ip.Checker
+	var ipChecker *clientip.Checker
 	if len(cfg.TrustedIPs) > 0 {
 		var err error
-		ipChecker, err = ip.NewChecker(cfg.TrustedIPs)
+		ipChecker, err = clientip.NewChecker(cfg.TrustedIPs)
 		if err != nil {
 			return nil, err
 		}
@@ -98,9 +98,9 @@ func NewXForwarded(cfg Config, next http.Handler) (*XForwarded, error) {
 		clientIPHeader = xForwardedFor
 	}
 
-	var resolver *ip.Resolver
+	var resolver *clientip.Resolver
 	if cfg.ResolveClientIP && ipChecker != nil {
-		resolver = &ip.Resolver{
+		resolver = &clientip.Resolver{
 			Header:  clientIPHeader,
 			Trusted: ipChecker,
 		}
@@ -192,7 +192,7 @@ func (x *XForwarded) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// or when the peer is not trusted.
 	if x.resolver != nil {
 		if resolved := x.resolver.Resolve(r); resolved != "" {
-			r = r.WithContext(ip.WithClientIP(r.Context(), resolved))
+			r = r.WithContext(clientip.WithClientIP(r.Context(), resolved))
 			// When ComputeFullForwardedFor is disabled, replace the outbound
 			// X-Forwarded-For chain with just the resolved client IP
 			// (matching ingress-nginx's compute-full-forwarded-for=false
@@ -229,7 +229,7 @@ func (x *XForwarded) rewrite(outreq *http.Request) {
 	// X-Real-IP sent to the backend reflects the real client rather than the
 	// last trusted hop.
 	clientIP := ""
-	if resolved, ok := ip.FromContext(outreq.Context()); ok {
+	if resolved, ok := clientip.FromContext(outreq.Context()); ok {
 		clientIP = resolved
 	} else if host, _, err := net.SplitHostPort(outreq.RemoteAddr); err == nil {
 		clientIP = removeIPv6Zone(host)

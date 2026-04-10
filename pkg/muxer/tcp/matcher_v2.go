@@ -24,7 +24,7 @@ var tcpFuncsV2 = map[string]func(*matchersTree, ...string) error{
 var hostOrIPv2 = regexp.MustCompile(`^[[:word:]\.\-\:]+$`)
 
 func clientIPV2(tree *matchersTree, clientIPs ...string) error {
-	checker, err := ip.NewChecker(clientIPs)
+	checker, err := clientip.NewChecker(clientIPs)
 	if err != nil {
 		return fmt.Errorf("could not initialize IP Checker for \"ClientIP\" matcher: %w", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	ptypes "github.com/traefik/paerser/types"
-	"github.com/traefik/traefik/v3/pkg/ip"
 	"github.com/traefik/traefik/v3/pkg/types"
 )
 
@@ -478,46 +477,6 @@ type IPStrategy struct {
 	// IPv6Subnet configures Traefik to consider all IPv6 addresses from the defined subnet as originating from the same IP. Applies to RemoteAddrStrategy and DepthStrategy.
 	IPv6Subnet *int `json:"ipv6Subnet,omitempty" toml:"ipv6Subnet,omitempty" yaml:"ipv6Subnet,omitempty"`
 	// TODO(mpl): I think we should make RemoteAddr an explicit field. For one thing, it would yield better documentation.
-}
-
-// Get an IP selection strategy.
-// If nil it returns a strategy that honors the client IP resolved at the
-// entrypoint (see ip.ResolvedAddrStrategy) and falls back to the remote
-// address; otherwise it returns a strategy based on the configuration using
-// the X-Forwarded-For Header. Depth override the ExcludedIPs.
-func (s *IPStrategy) Get() (ip.Strategy, error) {
-	if s == nil {
-		return &ip.ResolvedAddrStrategy{}, nil
-	}
-
-	if s.Depth > 0 {
-		if s.IPv6Subnet != nil && (*s.IPv6Subnet <= 0 || *s.IPv6Subnet > 128) {
-			return nil, fmt.Errorf("invalid IPv6 subnet %d value, should be greater to 0 and lower or equal to 128", *s.IPv6Subnet)
-		}
-
-		return &ip.DepthStrategy{
-			Depth:      s.Depth,
-			IPv6Subnet: s.IPv6Subnet,
-		}, nil
-	}
-
-	if len(s.ExcludedIPs) > 0 {
-		checker, err := ip.NewChecker(s.ExcludedIPs)
-		if err != nil {
-			return nil, err
-		}
-		return &ip.PoolStrategy{
-			Checker: checker,
-		}, nil
-	}
-
-	if s.IPv6Subnet != nil && (*s.IPv6Subnet <= 0 || *s.IPv6Subnet > 128) {
-		return nil, fmt.Errorf("invalid IPv6 subnet %d value, should be greater to 0 and lower or equal to 128", *s.IPv6Subnet)
-	}
-
-	return &ip.ResolvedAddrStrategy{
-		IPv6Subnet: s.IPv6Subnet,
-	}, nil
 }
 
 // +k8s:deepcopy-gen=true

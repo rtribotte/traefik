@@ -218,7 +218,7 @@ func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		// so that the value appended to X-Forwarded-For reflects the real
 		// client rather than the last trusted hop.
 		var clientIP string
-		if resolved, ok := ip.FromContext(req.Context()); ok {
+		if resolved, ok := clientip.FromContext(req.Context()); ok {
 			clientIP = resolved
 		} else if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
 			clientIP = host

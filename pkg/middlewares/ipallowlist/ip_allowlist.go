@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
+	"github.com/traefik/traefik/v3/pkg/clientip"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/ip"
 	"github.com/traefik/traefik/v3/pkg/middlewares"
@@ -20,8 +21,8 @@ const (
 // ipAllowLister is a middleware that provides Checks of the Requesting IP against a set of Allowlists.
 type ipAllowLister struct {
 	next             http.Handler
-	allowLister      *ip.Checker
-	strategy         ip.Strategy
+	allowLister      *clientip.Checker
+	strategy         clientip.Strategy
 	name             string
 	rejectStatusCode int
 }
@@ -43,7 +44,7 @@ func New(ctx context.Context, next http.Handler, config dynamic.IPAllowList, nam
 		return nil, fmt.Errorf("invalid HTTP status code %d", rejectStatusCode)
 	}
 
-	checker, err := ip.NewChecker(config.SourceRange)
+	checker, err := clientip.NewChecker(config.SourceRange)
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse CIDRs %s: %w", config.SourceRange, err)
 	}

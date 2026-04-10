@@ -71,7 +71,7 @@ func rewriteRequestBuilder(target *url.URL, passHostHeader bool, preservePath bo
 			// so that the value appended to X-Forwarded-For reflects the real
 			// client rather than the last trusted hop.
 			var clientIP string
-			if resolved, ok := ip.FromContext(pr.In.Context()); ok {
+			if resolved, ok := clientip.FromContext(pr.In.Context()); ok {
 				clientIP = resolved
 			} else if host, _, err := net.SplitHostPort(pr.In.RemoteAddr); err == nil {
 				clientIP = host

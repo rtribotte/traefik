@@ -45,7 +45,7 @@ func alpn(tree *matchersTree, protos ...string) error {
 }
 
 func clientIP(tree *matchersTree, clientIP ...string) error {
-	checker, err := ip.NewChecker(clientIP)
+	checker, err := clientip.NewChecker(clientIP)
 	if err != nil {
 		return fmt.Errorf("initializing IP checker for ClientIP matcher: %w", err)
 	}

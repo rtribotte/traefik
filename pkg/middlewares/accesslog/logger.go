@@ -261,7 +261,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request, next http
 	// header chain), prefer it over both the raw remote address and the raw
 	// X-Forwarded-For header value — the resolved value is the only one that
 	// has been validated against the trusted-peer pool.
-	if resolved, ok := ip.FromContext(req.Context()); ok {
+	if resolved, ok := clientip.FromContext(req.Context()); ok {
 		core[ClientHost] = resolved
 	} else if forwardedFor := req.Header.Get("X-Forwarded-For"); forwardedFor != "" {
 		core[ClientHost] = forwardedFor

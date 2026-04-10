@@ -1,4 +1,4 @@
-package ip
+package clientip
 
 import (
 	"errors"

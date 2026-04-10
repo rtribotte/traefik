@@ -31,7 +31,7 @@ type namedHandler struct {
 type Balancer struct {
 	wantsHealthCheck bool
 
-	strategy            ip.RemoteAddrStrategy
+	strategy            clientip.RemoteAddrStrategy
 	nginxUpstreamHashBy string
 
 	handlersMu sync.RWMutex
@@ -56,7 +56,7 @@ func New(wantHealthCheck bool, nginxUpstreamHashBy string) *Balancer {
 		status:              make(map[string]struct{}),
 		fenced:              make(map[string]struct{}),
 		wantsHealthCheck:    wantHealthCheck,
-		strategy:            ip.RemoteAddrStrategy{},
+		strategy:            clientip.RemoteAddrStrategy{},
 		nginxUpstreamHashBy: nginxUpstreamHashBy,
 	}
 

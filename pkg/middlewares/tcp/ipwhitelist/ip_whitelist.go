@@ -18,7 +18,7 @@ const (
 // ipWhiteLister is a middleware that provides Checks of the Requesting IP against a set of Whitelists.
 type ipWhiteLister struct {
 	next        tcp.Handler
-	whiteLister *ip.Checker
+	whiteLister *clientip.Checker
 	name        string
 }
 
@@ -31,7 +31,7 @@ func New(ctx context.Context, next tcp.Handler, config dynamic.TCPIPWhiteList, n
 		return nil, errors.New("sourceRange is empty, IPWhiteLister not created")
 	}
 
-	checker, err := ip.NewChecker(config.SourceRange)
+	checker, err := clientip.NewChecker(config.SourceRange)
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse CIDR whitelist %s: %w", config.SourceRange, err)
 	}

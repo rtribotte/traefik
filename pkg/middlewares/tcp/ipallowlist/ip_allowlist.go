@@ -18,7 +18,7 @@ const (
 // ipAllowLister is a middleware that provides Checks of the Requesting IP against a set of Allowlists.
 type ipAllowLister struct {
 	next        tcp.Handler
-	allowLister *ip.Checker
+	allowLister *clientip.Checker
 	name        string
 }
 
@@ -31,7 +31,7 @@ func New(ctx context.Context, next tcp.Handler, config dynamic.TCPIPAllowList, n
 		return nil, errors.New("sourceRange is empty, IPAllowLister not created")
 	}
 
-	checker, err := ip.NewChecker(config.SourceRange)
+	checker, err := clientip.NewChecker(config.SourceRange)
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse CIDRs %s: %w", config.SourceRange, err)
 	}

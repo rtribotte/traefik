@@ -42,7 +42,7 @@ func TestXForwarded_ResolveClientIP_UntrustedPeer_StripsSourceHeader(t *testing.
 	assert.Empty(t, capture.req.Header.Get("CF-Connecting-IP"))
 	assert.Empty(t, capture.req.Header.Get("X-Forwarded-For"))
 	// No resolved IP in context since peer is untrusted.
-	_, ok := ip.FromContext(capture.req.Context())
+	_, ok := clientip.FromContext(capture.req.Context())
 	assert.False(t, ok)
 }
 
@@ -62,7 +62,7 @@ func TestXForwarded_ResolveClientIP_TrustedPeer_StashesContextAndXRealIP(t *test
 
 	m.ServeHTTP(nil, req)
 
-	resolved, ok := ip.FromContext(capture.req.Context())
+	resolved, ok := clientip.FromContext(capture.req.Context())
 	assert.True(t, ok)
 	assert.Equal(t, "1.2.3.4", resolved)
 	// X-Real-IP written by rewrite() reflects the resolved client, not the peer.
@@ -85,7 +85,7 @@ func TestXForwarded_ResolveClientIP_XForwardedForChain(t *testing.T) {
 
 	m.ServeHTTP(nil, req)
 
-	resolved, ok := ip.FromContext(capture.req.Context())
+	resolved, ok := clientip.FromContext(capture.req.Context())
 	assert.True(t, ok)
 	assert.Equal(t, "1.2.3.4", resolved)
 	// ComputeFullForwardedFor=true preserves the incoming XFF chain as-is.
@@ -130,7 +130,7 @@ func TestXForwarded_ResolveClientIP_Disabled_NoBehaviorChange(t *testing.T) {
 	m.ServeHTTP(nil, req)
 
 	// No context key, no X-Real-IP override beyond the historical behavior.
-	_, ok := ip.FromContext(capture.req.Context())
+	_, ok := clientip.FromContext(capture.req.Context())
 	assert.False(t, ok)
 	assert.Equal(t, "10.0.0.1", capture.req.Header.Get("X-Real-Ip"))
 	assert.Equal(t, "1.2.3.4", capture.req.Header.Get("X-Forwarded-For"))

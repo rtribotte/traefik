@@ -19,7 +19,7 @@ tcp:
     router1:
       service: myService
       middlewares:
-        - "foo-ip-allowlist"
+        - "foo-clientip-allowlist"
       rule: "Host(`example.com`)"
 
   middlewares:
@@ -60,20 +60,20 @@ tcp:
 
 ```yaml tab="Labels"
 labels:
-  # Create a middleware named `foo-ip-allowlist`
-  - "traefik.tcp.middlewares.foo-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32, 192.168.1.7"
-  # Apply the middleware named `foo-ip-allowlist` to the router named `router1`
-  - "traefik.tcp.routers.router1.middlewares=foo-ip-allowlist@docker"
+  # Create a middleware named `foo-clientip-allowlist`
+  - "traefik.tcp.middlewares.foo-clientip-allowlist.ipallowlist.sourcerange=127.0.0.1/32, 192.168.1.7"
+  # Apply the middleware named `foo-clientip-allowlist` to the router named `router1`
+  - "traefik.tcp.routers.router1.middlewares=foo-clientip-allowlist@docker"
 ```
 
 ```json tab="Consul Catalog" 
 {
   //...
   "Tags" : [
-    // Create a middleware named `foo-ip-allowlist`
-    "traefik.tcp.middlewares.foo-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32, 192.168.1.7",
-    // Apply the middleware named `foo-ip-allowlist` to the router named `router1`
-    "traefik.tcp.routers.router1.middlewares=foo-ip-allowlist@consulcatalog"
+    // Create a middleware named `foo-clientip-allowlist`
+    "traefik.tcp.middlewares.foo-clientip-allowlist.ipallowlist.sourcerange=127.0.0.1/32, 192.168.1.7",
+    // Apply the middleware named `foo-clientip-allowlist` to the router named `router1`
+    "traefik.tcp.routers.router1.middlewares=foo-clientip-allowlist@consulcatalog"
   ]
 }
 
@@ -101,7 +101,7 @@ spec:
   routes:
     # more fields...
     middlewares:
-      - name: foo-ip-allowlist
+      - name: foo-clientip-allowlist
 ```
 
 ## Available TCP Middlewares

@@ -124,10 +124,10 @@ func variableValue(rawVariable, variable string, req *http.Request, responseHead
 		return req.URL.RawQuery, nil
 
 	case remoteAddress:
-		return ip.ClientIP(req), nil
+		return clientip.ClientIP(req), nil
 
 	case proxyAddXForwardedFor:
-		clientIP := ip.ClientIP(req)
+		clientIP := clientip.ClientIP(req)
 		if prior := req.Header.Get("X-Forwarded-For"); prior != "" {
 			return prior + ", " + clientIP, nil
 		}

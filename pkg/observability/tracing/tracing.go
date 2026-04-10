@@ -171,7 +171,7 @@ func (t *Tracer) CaptureServerRequest(span trace.Span, r *http.Request) {
 		// entrypoint resolved one via the trusted-peer header chain; otherwise
 		// fall back to the transport peer address. network.peer.address stays
 		// the immediate peer regardless, per OTel semconv.
-		if resolved, ok := ip.FromContext(r.Context()); ok {
+		if resolved, ok := clientip.FromContext(r.Context()); ok {
 			span.SetAttributes(semconv.ClientAddress(resolved))
 		} else {
 			span.SetAttributes(semconv.ClientAddress(host))

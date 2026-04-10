@@ -452,7 +452,7 @@ func buildProxyProtocolListener(ctx context.Context, entryPoint *static.EntryPoi
 		return proxyListener, nil
 	}
 
-	checker, err := ip.NewChecker(entryPoint.ProxyProtocol.TrustedIPs)
+	checker, err := clientip.NewChecker(entryPoint.ProxyProtocol.TrustedIPs)
 	if err != nil {
 		return nil, err
 	}
