@@ -61,14 +61,3 @@ func TestWithClientIPAndFromContext(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "1.2.3.4", got)
 }
-
-func TestResolvedAddrStrategy_GetIP(t *testing.T) {
-	s := &ResolvedAddrStrategy{}
-
-	req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
-	req.RemoteAddr = "8.8.8.8:1234"
-	assert.Equal(t, "8.8.8.8", s.GetIP(req))
-
-	req = req.WithContext(WithClientIP(req.Context(), "1.2.3.4"))
-	assert.Equal(t, "1.2.3.4", s.GetIP(req))
-}

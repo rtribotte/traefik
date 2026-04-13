@@ -24,9 +24,9 @@ func (c *captureHandler) ServeHTTP(_ http.ResponseWriter, r *http.Request) {
 func TestXForwarded_ClientIPResolution_UntrustedPeer_StripsSourceHeader(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:      []string{"10.0.0.0/8"},
+		TrustedIPs:         []string{"10.0.0.0/8"},
 		ClientIPResolution: true,
-		ClientIPHeader:  "CF-Connecting-IP",
+		ClientIPHeader:     "CF-Connecting-IP",
 	}, capture)
 	require.NoError(t, err)
 
@@ -48,9 +48,9 @@ func TestXForwarded_ClientIPResolution_UntrustedPeer_StripsSourceHeader(t *testi
 func TestXForwarded_ClientIPResolution_TrustedPeer_StashesContextAndXRealIP(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:      []string{"10.0.0.0/8"},
+		TrustedIPs:         []string{"10.0.0.0/8"},
 		ClientIPResolution: true,
-		ClientIPHeader:  "CF-Connecting-IP",
+		ClientIPHeader:     "CF-Connecting-IP",
 	}, capture)
 	require.NoError(t, err)
 
@@ -69,9 +69,9 @@ func TestXForwarded_ClientIPResolution_TrustedPeer_StashesContextAndXRealIP(t *t
 func TestXForwarded_ClientIPResolution_XForwardedForChain(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:      []string{"10.0.0.0/8"},
+		TrustedIPs:         []string{"10.0.0.0/8"},
 		ClientIPResolution: true,
-		ClientIPHeader:  "X-Forwarded-For",
+		ClientIPHeader:     "X-Forwarded-For",
 	}, capture)
 	require.NoError(t, err)
 
@@ -91,9 +91,9 @@ func TestXForwarded_ClientIPResolution_XForwardedForChain(t *testing.T) {
 func TestXForwarded_ClientIPResolution_ClientIPReplaceXFF_True(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:           []string{"10.0.0.0/8"},
-		ClientIPResolution:      true,
-		ClientIPHeader:       "X-Forwarded-For",
+		TrustedIPs:         []string{"10.0.0.0/8"},
+		ClientIPResolution: true,
+		ClientIPHeader:     "X-Forwarded-For",
 		ClientIPReplaceXFF: true,
 	}, capture)
 	require.NoError(t, err)

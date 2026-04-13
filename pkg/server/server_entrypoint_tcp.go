@@ -639,13 +639,13 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 	var handler http.Handler
 	handler, err = forwardedheaders.NewXForwarded(
 		forwardedheaders.Config{
-			Insecure:                configuration.ForwardedHeaders.Insecure,
-			TrustedIPs:              configuration.ForwardedHeaders.TrustedIPs,
-			ConnectionHeaders:       configuration.ForwardedHeaders.Connection,
-			NotAppendXForwardedFor:  configuration.ForwardedHeaders.NotAppendXForwardedFor,
-			ClientIPResolution:      configuration.ForwardedHeaders.ClientIPResolution,
-			ClientIPHeader:          configuration.ForwardedHeaders.ClientIPHeader,
-			ClientIPReplaceXFF:   configuration.ForwardedHeaders.ClientIPReplaceXFF,
+			Insecure:               configuration.ForwardedHeaders.Insecure,
+			TrustedIPs:             configuration.ForwardedHeaders.TrustedIPs,
+			ConnectionHeaders:      configuration.ForwardedHeaders.Connection,
+			NotAppendXForwardedFor: configuration.ForwardedHeaders.NotAppendXForwardedFor,
+			ClientIPResolution:     configuration.ForwardedHeaders.ClientIPResolution,
+			ClientIPHeader:         configuration.ForwardedHeaders.ClientIPHeader,
+			ClientIPReplaceXFF:     configuration.ForwardedHeaders.ClientIPReplaceXFF,
 		},
 		next)
 	if err != nil {

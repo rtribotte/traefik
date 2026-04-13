@@ -61,7 +61,7 @@ func (r *Resolver) Resolve(req *http.Request) string {
 	// first untrusted entry found.
 	var parts []string
 	for _, v := range values {
-		for _, p := range strings.Split(v, ",") {
+		for p := range strings.SplitSeq(v, ",") {
 			if trimmed := strings.TrimSpace(p); trimmed != "" {
 				parts = append(parts, trimmed)
 			}

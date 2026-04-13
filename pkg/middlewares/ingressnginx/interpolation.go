@@ -176,13 +176,3 @@ func variableValue(rawVariable, variable string, req *http.Request, responseHead
 		return "", fmt.Errorf("unsupported variable: %s", rawVariable)
 	}
 }
-
-// stripPort removes the port from a host:port address.
-// It handles both IPv4 (192.168.1.1:8080) and IPv6 ([::1]:8080) formats.
-func stripPort(addr string) string {
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		return addr
-	}
-	return host
-}

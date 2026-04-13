@@ -16,26 +16,6 @@ type Strategy interface {
 	GetIP(req *http.Request) string
 }
 
-// RemoteAddrStrategy a strategy that always return the remote address.
-type RemoteAddrStrategy struct {
-	// IPv6Subnet instructs the strategy to return the first IP of the subnet where IP belongs.
-	IPv6Subnet *int
-}
-
-// GetIP returns the selected IP.
-func (s *RemoteAddrStrategy) GetIP(req *http.Request) string {
-	ip, _, err := net.SplitHostPort(req.RemoteAddr)
-	if err != nil {
-		return req.RemoteAddr
-	}
-
-	if s.IPv6Subnet != nil {
-		return getIPv6SubnetIP(ip, *s.IPv6Subnet)
-	}
-
-	return ip
-}
-
 // ResolvedAddrStrategy returns the resolved client IP, and falls back to the remote address.
 // It is used as the default strategy when no explicit IPStrategy has been configured.
 type ResolvedAddrStrategy struct {

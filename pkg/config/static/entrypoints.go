@@ -154,9 +154,9 @@ type ForwardedHeaders struct {
 	TrustedIPs             []string `description:"Trust only forwarded headers from selected IPs." json:"trustedIPs,omitempty" toml:"trustedIPs,omitempty" yaml:"trustedIPs,omitempty"`
 	Connection             []string `description:"List of Connection headers that are allowed to pass through the middleware chain before being removed." json:"connection,omitempty" toml:"connection,omitempty" yaml:"connection,omitempty"`
 	NotAppendXForwardedFor bool     `description:"Disable appending RemoteAddr to X-Forwarded-For header. Defaults to false (appending is enabled)." json:"notAppendXForwardedFor,omitempty" toml:"notAppendXForwardedFor,omitempty" yaml:"notAppendXForwardedFor,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
-	ClientIPResolution bool   `description:"Enable resolution of the real client IP from a trusted-peer header chain (only if immediate peer is in TrustedIPs)." json:"clientIPResolution,omitempty" toml:"clientIPResolution,omitempty" yaml:"clientIPResolution,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
-	ClientIPHeader     string `description:"Header used as the source of the real client IP when ClientIPResolution is enabled. Defaults to X-Forwarded-For." json:"clientIPHeader,omitempty" toml:"clientIPHeader,omitempty" yaml:"clientIPHeader,omitempty" export:"true"`
-	ClientIPReplaceXFF bool   `description:"Defines whether to transmit only the resolved client IP as the X-Forwarded-For content." json:"clientIPReplaceXFF,omitempty" toml:"clientIPReplaceXFF,omitempty" yaml:"clientIPReplaceXFF,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+	ClientIPResolution     bool     `description:"Enable resolution of the real client IP from a trusted-peer header chain." json:"clientIPResolution,omitempty" toml:"clientIPResolution,omitempty" yaml:"clientIPResolution,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+	ClientIPHeader         string   `description:"Header used as the source of the real client IP. Defaults to X-Forwarded-For." json:"clientIPHeader,omitempty" toml:"clientIPHeader,omitempty" yaml:"clientIPHeader,omitempty" export:"true"`
+	ClientIPReplaceXFF     bool     `description:"Defines whether to transmit only the resolved client IP as the X-Forwarded-For content." json:"clientIPReplaceXFF,omitempty" toml:"clientIPReplaceXFF,omitempty" yaml:"clientIPReplaceXFF,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 }
 
 // ProxyProtocol contains Proxy-Protocol configuration.

@@ -114,8 +114,8 @@ func TestResolver_Resolve(t *testing.T) {
 func TestResolver_Resolve_NilSafety(t *testing.T) {
 	var r *Resolver
 	req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
-	assert.Equal(t, "", r.Resolve(req))
+	assert.Empty(t, r.Resolve(req))
 
 	r = &Resolver{}
-	assert.Equal(t, "", r.Resolve(req))
+	assert.Empty(t, r.Resolve(req))
 }

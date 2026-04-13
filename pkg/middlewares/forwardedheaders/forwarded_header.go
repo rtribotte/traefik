@@ -49,9 +49,9 @@ type Config struct {
 	TrustedIPs             []string
 	ConnectionHeaders      []string
 	NotAppendXForwardedFor bool
-	ClientIPResolution        bool
+	ClientIPResolution     bool
 	ClientIPHeader         string
-	ClientIPReplaceXFF   bool
+	ClientIPReplaceXFF     bool
 }
 
 // XForwarded is an HTTP handler wrapper that sets the X-Forwarded headers,
@@ -63,9 +63,9 @@ type XForwarded struct {
 	trustedIPs             []string
 	connectionHeaders      []string
 	notAppendXForwardedFor bool
-	clientIPResolution        bool
+	clientIPResolution     bool
 	clientIPHeader         string
-	clientIPReplaceXFF   bool
+	clientIPReplaceXFF     bool
 	ipChecker              *clientip.Checker
 	resolver               *clientip.Resolver
 	next                   http.Handler
@@ -111,9 +111,9 @@ func NewXForwarded(cfg Config, next http.Handler) (*XForwarded, error) {
 		trustedIPs:             cfg.TrustedIPs,
 		connectionHeaders:      canonicalConnectionHeaders,
 		notAppendXForwardedFor: cfg.NotAppendXForwardedFor,
-		clientIPResolution:        cfg.ClientIPResolution,
+		clientIPResolution:     cfg.ClientIPResolution,
 		clientIPHeader:         http.CanonicalHeaderKey(clientIPHeader),
-		clientIPReplaceXFF:   cfg.ClientIPReplaceXFF,
+		clientIPReplaceXFF:     cfg.ClientIPReplaceXFF,
 		ipChecker:              ipChecker,
 		resolver:               resolver,
 		next:                   next,

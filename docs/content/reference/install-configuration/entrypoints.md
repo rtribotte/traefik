@@ -394,23 +394,23 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
 ??? info "`forwardedHeaders.clientIPResolution`"
 
-    When enabled, Traefik resolves the real client IP by inspecting a configurable
-    source header (default `X-Forwarded-For`) and walking it right-to-left against
-    the `trustedIPs` pool, matching
-    [nginx's `ngx_http_realip_module`](https://nginx.org/en/docs/http/ngx_http_realip_module.html)
-    semantics. Resolution only runs when the immediate peer is in `trustedIPs`;
-    untrusted peers cannot influence the resolved value.
+    When enabled, Traefik resolves the real client IP by inspecting a configurable source header (default `X-Forwarded-For`).
+    
+    To do so, the resolution walks the header right-to-left against the `trustedIPs` pool.
+    Resolution only runs when the immediate peer is in `trustedIPs`.
 
-    When resolution is active:
+    When enabled impacts the followings :
 
-    - The resolved client IP is stored in the request context and used by downstream
-      consumers: interpolation (`$remote_addr`, `$proxy_add_x_forwarded_for`),
-      `IPAllowList` / `IPWhiteList` (when no explicit `ipStrategy` is configured),
-      rate limiter, access logs (`ClientHost`), tracing (`client.address`), and the
-      outbound `X-Real-IP` / `X-Forwarded-For` headers sent to backends.
-    - When the peer is untrusted, the configured `clientIPHeader` is stripped from
-      the request (in addition to the existing `X-Forwarded-*` stripping) to prevent
-      spoofing of downstream applications that naively trust it.
+    - The [`ClientIP` router matcher](../routing-configuration/http/routing/rules-and-priority.md#clientip)
+    - IngressNginx provider variable interpolation (`$remote_addr`, `$proxy_add_x_forwarded_for`)
+    - The `IPAllowList` / `IPWhiteList` (when no explicit `ipStrategy` is configured)
+    - The rate limiter `sourceCriterion` (when no explicit `ipStrategy` is configured)
+    - Access logs (`ClientHost`)
+    - Tracing (`client.address`)
+    - The outbound `X-Real-IP` / `X-Forwarded-For` headers sent to backends
+    
+    When the peer is untrusted, the configured `clientIPHeader` is stripped from the request (in addition to the existing `X-Forwarded-*` stripping),
+    to prevent spoofing of downstream applications that naively trust it.
 
     ```yaml tab="File (YAML)"
     ## Static configuration
@@ -443,24 +443,12 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
 ??? info "`forwardedHeaders.clientIPHeader`"
 
-    Defines the source header used to extract the real client IP when
-    `clientIPResolution` is enabled. Defaults to `X-Forwarded-For`.
+    Defines the source header used to extract the real client IP. Defaults to `X-Forwarded-For`.
 
-    For list-valued headers like `X-Forwarded-For`, Traefik walks the chain
-    right-to-left, skipping entries that are in `trustedIPs`, and returns the
-    first untrusted entry.
+    For list-valued headers like `X-Forwarded-For`, Traefik walks the chain right-to-left,
+    skipping entries that are in `trustedIPs`, and returns the first untrusted entry.
 
-    For single-valued headers like `CF-Connecting-IP`, `True-Client-IP`, or
-    `X-Real-IP`, the header value is used as-is.
-
-    Common values:
-
-    | Header                | Use case                                       |
-    |-----------------------|------------------------------------------------|
-    | `X-Forwarded-For`     | Default. AWS ALB, GCP L7, Azure AG, most proxies. |
-    | `CF-Connecting-IP`    | Cloudflare.                                    |
-    | `True-Client-IP`      | Akamai, Cloudflare Enterprise.                 |
-    | `X-Real-IP`           | nginx / HAProxy convention.                    |
+    For single-valued headers the header value is used as-is.
 
     ```yaml tab="File (YAML)"
     ## Static configuration
@@ -496,13 +484,9 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
 ??? info "`forwardedHeaders.clientIPReplaceXFF`"
 
-    Controls the outbound `X-Forwarded-For` header sent to backends when
-    `clientIPResolution` is enabled.
+    Controls the outbound `X-Forwarded-For` header sent to backends when `clientIPResolution` is enabled.
 
-    - `false` (**default**): preserves the incoming `X-Forwarded-For` chain —
-      matching Traefik's historical behavior.
-    - `true`: replaces the chain with just the resolved client IP — matching
-      ingress-nginx's `compute-full-forwarded-for: false` default.
+    When enabled, the chain is replaced with just the resolved client IP.
 
     ```yaml tab="File (YAML)"
     ## Static configuration

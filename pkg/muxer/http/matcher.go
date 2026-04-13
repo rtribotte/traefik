@@ -43,7 +43,7 @@ func clientIP(tree *matchersTree, clientIP ...string) error {
 		return fmt.Errorf("initializing IP checker for ClientIP matcher: %w", err)
 	}
 
-	strategy := clientip.RemoteAddrStrategy{}
+	strategy := clientip.ResolvedAddrStrategy{}
 
 	tree.matcher = func(req *http.Request) bool {
 		ok, err := checker.Contains(strategy.GetIP(req))

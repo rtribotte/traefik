@@ -15,81 +15,6 @@ const (
 	ipv6BracketsZonePort = "[::abcd:ffff:c0a8:1%1]:80"
 )
 
-func TestRemoteAddrStrategy_GetIP(t *testing.T) {
-	testCases := []struct {
-		desc       string
-		expected   string
-		remoteAddr string
-		ipv6Subnet *int
-	}{
-		// Valid IP format
-		{
-			desc:     "Use RemoteAddr, ipv4",
-			expected: "192.0.2.1",
-		},
-		{
-			desc:       "Use RemoteAddr, ipv6 brackets with port, no IPv6 subnet",
-			remoteAddr: ipv6BracketsPort,
-			expected:   "::abcd:ffff:c0a8:1",
-		},
-		{
-			desc:       "Use RemoteAddr, ipv6 brackets with zone and port, no IPv6 subnet",
-			remoteAddr: ipv6BracketsZonePort,
-			expected:   "::abcd:ffff:c0a8:1%1",
-		},
-
-		// Invalid IPv6 format
-		{
-			desc:       "Use RemoteAddr, ipv6 basic, missing brackets, no IPv6 subnet",
-			remoteAddr: ipv6Basic,
-			expected:   ipv6Basic,
-		},
-
-		// Valid IP format with subnet
-		{
-			desc:       "Use RemoteAddr, ipv4, ignore subnet",
-			expected:   "192.0.2.1",
-			ipv6Subnet: intPtr(24),
-		},
-		{
-			desc:       "Use RemoteAddr, ipv6 brackets with port, subnet",
-			remoteAddr: ipv6BracketsPort,
-			expected:   "::abcd:0:0:0",
-			ipv6Subnet: intPtr(80),
-		},
-		{
-			desc:       "Use RemoteAddr, ipv6 brackets with zone and port, subnet",
-			remoteAddr: ipv6BracketsZonePort,
-			expected:   "::abcd:0:0:0",
-			ipv6Subnet: intPtr(80),
-		},
-
-		// Valid IP, invalid subnet
-		{
-			desc:       "Use RemoteAddr, ipv6 brackets with port, invalid subnet",
-			remoteAddr: ipv6BracketsPort,
-			expected:   "::abcd:ffff:c0a8:1",
-			ipv6Subnet: intPtr(500),
-		},
-	}
-
-	for _, test := range testCases {
-		t.Run(test.desc, func(t *testing.T) {
-			t.Parallel()
-
-			strategy := RemoteAddrStrategy{
-				IPv6Subnet: test.ipv6Subnet,
-			}
-			req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
-			if test.remoteAddr != "" {
-				req.RemoteAddr = test.remoteAddr
-			}
-			actual := strategy.GetIP(req)
-			assert.Equal(t, test.expected, actual)
-		})
-	}
-}
-
 func TestDepthStrategy_GetIP(t *testing.T) {
 	testCases := []struct {
 		desc          string
@@ -192,6 +117,90 @@ func TestTrustedIPsStrategy_GetIP(t *testing.T) {
 			strategy := PoolStrategy{Checker: checker}
 			req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
 			req.Header.Set(xForwardedFor, test.xForwardedFor)
+			actual := strategy.GetIP(req)
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
+func TestResolvedAddrStrategy_GetIP(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		expected   string
+		remoteAddr string
+		resolvedIP string // if non-empty, stashed in context via WithClientIP
+		ipv6Subnet *int
+	}{
+		// No resolved IP in context — falls back to RemoteAddr (same as RemoteAddrStrategy).
+		{
+			desc:     "Fallback to RemoteAddr, ipv4",
+			expected: "192.0.2.1",
+		},
+		{
+			desc:       "Fallback to RemoteAddr, ipv6 brackets with port",
+			remoteAddr: ipv6BracketsPort,
+			expected:   "::abcd:ffff:c0a8:1",
+		},
+		{
+			desc:       "Fallback to RemoteAddr, ipv6 brackets with zone and port",
+			remoteAddr: ipv6BracketsZonePort,
+			expected:   "::abcd:ffff:c0a8:1%1",
+		},
+		{
+			desc:       "Fallback to RemoteAddr, ipv6 basic (missing brackets)",
+			remoteAddr: ipv6Basic,
+			expected:   ipv6Basic,
+		},
+		{
+			desc:       "Fallback to RemoteAddr, ipv6 with subnet",
+			remoteAddr: ipv6BracketsPort,
+			expected:   "::abcd:0:0:0",
+			ipv6Subnet: intPtr(80),
+		},
+
+		// Resolved IP in context — takes priority over RemoteAddr.
+		{
+			desc:       "Resolved IP wins over RemoteAddr",
+			remoteAddr: "10.0.0.1:1234",
+			resolvedIP: "1.2.3.4",
+			expected:   "1.2.3.4",
+		},
+		{
+			desc:       "Resolved IPv6, no subnet",
+			remoteAddr: "10.0.0.1:1234",
+			resolvedIP: "::abcd:ffff:c0a8:1",
+			expected:   "::abcd:ffff:c0a8:1",
+		},
+		{
+			desc:       "Resolved IPv6, with subnet",
+			remoteAddr: "10.0.0.1:1234",
+			resolvedIP: "::abcd:ffff:c0a8:1",
+			expected:   "::abcd:0:0:0",
+			ipv6Subnet: intPtr(80),
+		},
+		{
+			desc:       "Resolved IPv4, subnet ignored for v4",
+			remoteAddr: "10.0.0.1:1234",
+			resolvedIP: "1.2.3.4",
+			expected:   "1.2.3.4",
+			ipv6Subnet: intPtr(24),
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			strategy := ResolvedAddrStrategy{
+				IPv6Subnet: test.ipv6Subnet,
+			}
+			req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
+			if test.remoteAddr != "" {
+				req.RemoteAddr = test.remoteAddr
+			}
+			if test.resolvedIP != "" {
+				req = req.WithContext(WithClientIP(req.Context(), test.resolvedIP))
+			}
 			actual := strategy.GetIP(req)
 			assert.Equal(t, test.expected, actual)
 		})

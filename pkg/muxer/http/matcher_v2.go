@@ -141,7 +141,7 @@ func clientIPV2(tree *matchersTree, clientIPs ...string) error {
 		return fmt.Errorf("could not initialize IP Checker for \"ClientIP\" matcher: %w", err)
 	}
 
-	strategy := clientip.RemoteAddrStrategy{}
+	strategy := clientip.ResolvedAddrStrategy{}
 
 	tree.matcher = func(req *http.Request) bool {
 		ok, err := checker.Contains(strategy.GetIP(req))

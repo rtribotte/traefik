@@ -110,7 +110,10 @@ The `Query` and `QueryRegexp` matchers allow matching requests based on query pa
 
 The `ClientIP` matcher allows matching requests sent from the given client IP.
 
-It only matches the request client IP and does not use the `X-Forwarded-For` header for matching.
+By default, it matches against the raw remote address (the immediate TCP peer) and does not use the `X-Forwarded-For` header for matching.
+
+However, when [`forwardedHeaders.clientIPResolution`](../../../install-configuration/entrypoints.md) is enabled on the entrypoint,
+the `ClientIP` matcher evaluates against the resolved real client IP.
 
 | Behavior                                                        | Rule                                                                    |
 |-----------------------------------------------------------------|:------------------------------------------------------------------------|
