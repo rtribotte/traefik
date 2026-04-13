@@ -392,6 +392,35 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
     --entryPoints.web.forwardedHeaders.connection=foobar
     ```
 
+??? info "`forwardedHeaders.notAppendXForwardedFor`"
+
+    Controls whether to disable the appending of the remote address (or resolved client IP) to the `X-Forwarded-For` header (default `false`).
+
+    ```yaml tab="File (YAML)"
+    ## Static configuration
+    entryPoints:
+      web:
+        address: ":80"
+        forwardedHeaders:
+          notAppendXForwardedFor: true
+    ```
+
+    ```toml tab="File (TOML)"
+    ## Static configuration
+    [entryPoints]
+      [entryPoints.web]
+        address = ":80"
+
+        [entryPoints.web.forwardedHeaders]
+          notAppendXForwardedFor = true
+    ```
+
+    ```bash tab="CLI"
+    ## Static configuration
+    --entryPoints.web.address=:80
+    --entryPoints.web.forwardedHeaders.notAppendXForwardedFor
+    ```
+
 ??? info "`forwardedHeaders.clientIPResolution`"
 
     When enabled, Traefik resolves the real client IP by inspecting a configurable source header (default `X-Forwarded-For`).

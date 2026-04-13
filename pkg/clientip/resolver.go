@@ -7,28 +7,19 @@ import (
 )
 
 // Resolver resolves the real client IP of a request by walking a configured
-// source header against a pool of trusted proxy IPs, matching nginx's
-// ngx_http_realip_module (set_real_ip_from + real_ip_recursive) semantics.
+// source header against a pool of trusted proxy IPs.
 //
-// If the immediate peer (req.RemoteAddr) is not in the trusted pool, the
-// Resolver returns an empty string: untrusted peers cannot influence real-IP
-// resolution, mirroring nginx behavior and providing anti-spoofing by design.
+// When the immediate peer (req.RemoteAddr) is in the trusted pool,
+// the configured header is read and walked to extract the real client IP.
+// When the immediate peer is NOT trusted
 type Resolver struct {
-	// Header is the source header to read (e.g. X-Forwarded-For,
-	// CF-Connecting-IP, True-Client-IP).
+	// Header is the source header to read.
 	Header string
-	// Trusted is the pool of trusted proxy IPs/CIDRs. Resolution only runs
-	// when the immediate peer is in this pool.
+	// Trusted is the pool of trusted proxy IPs/CIDRs.
 	Trusted *Checker
 }
 
-// Resolve returns the resolved client IP for the given request, or an empty
-// string if the immediate peer is not trusted or no usable value is found.
-//
-// For list-valued headers (X-Forwarded-For) the header is walked right-to-left,
-// skipping entries that are themselves in the trusted pool, and the first
-// untrusted entry is returned. For single-valued headers (CF-Connecting-IP,
-// X-Real-IP, True-Client-IP, ...) the first non-empty value is returned as-is.
+// Resolve returns the resolved client IP for the given request.
 func (r *Resolver) Resolve(req *http.Request) string {
 	if r == nil || r.Trusted == nil || r.Header == "" {
 		return ""
@@ -39,7 +30,7 @@ func (r *Resolver) Resolve(req *http.Request) string {
 		host = req.RemoteAddr
 	}
 	if contain, _ := r.Trusted.Contains(host); !contain {
-		return ""
+		return host
 	}
 
 	values := req.Header.Values(r.Header)

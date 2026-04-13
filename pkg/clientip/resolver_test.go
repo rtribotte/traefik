@@ -21,11 +21,11 @@ func TestResolver_Resolve(t *testing.T) {
 		want       string
 	}{
 		{
-			desc:       "untrusted peer returns empty",
+			desc:       "untrusted peer returns peer address",
 			header:     "X-Forwarded-For",
 			remoteAddr: "8.8.8.8:1234",
 			headers:    http.Header{"X-Forwarded-For": []string{"1.2.3.4"}},
-			want:       "",
+			want:       "8.8.8.8",
 		},
 		{
 			desc:       "trusted peer, XFF single value",
@@ -91,11 +91,11 @@ func TestResolver_Resolve(t *testing.T) {
 			want:       "1.2.3.4",
 		},
 		{
-			desc:       "IPv6 trusted peer, IPv4 resolved",
+			desc:       "IPv6 untrusted peer returns peer address",
 			header:     "X-Forwarded-For",
 			remoteAddr: "[::1]:1234",
 			headers:    http.Header{"X-Forwarded-For": []string{"1.2.3.4"}},
-			want:       "", // ::1 is not in the trust list
+			want:       "::1", // ::1 is not in the trust list, so peer is returned
 		},
 	}
 
