@@ -261,10 +261,10 @@ Add the Traefik LoadBalancer IP to your DNS records alongside NGINX. This allows
 
 ```bash
 # NGINX LoadBalancer
-echo $(kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.clientip }}{{ $ing.clientip }}{{ else }}{{ $ing.hostname }}{{ end }}')
+echo $(kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.ip }}{{ $ing.ip }}{{ else }}{{ $ing.hostname }}{{ end }}')
 
 # Traefik LoadBalancer
-echo $(kubectl get svc -n traefik traefik -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.clientip }}{{ $ing.clientip }}{{ else }}{{ $ing.hostname }}{{ end }}')
+echo $(kubectl get svc -n traefik traefik -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.ip }}{{ $ing.ip }}{{ else }}{{ $ing.hostname }}{{ end }}')
 ```
 
 **Progressive DNS migration:**
@@ -365,7 +365,7 @@ This way, traffic is always flowing to Traefik during the IP transfer.
 **Get your current NGINX LoadBalancer IP:**
 
 ```bash
-kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.clientip }}{{ $ing.clientip }}{{ else }}{{ $ing.hostname }}{{ end }}'
+kubectl get svc -n ingress-nginx ingress-nginx-controller -o go-template='{{ $ing := index .status.loadBalancer.ingress 0 }}{{ if $ing.ip }}{{ $ing.ip }}{{ else }}{{ $ing.hostname }}{{ end }}'
 ```
 
 ??? note "AWS (Network Load Balancer with Elastic IPs)"

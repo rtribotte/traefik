@@ -643,9 +643,9 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 			TrustedIPs:              configuration.ForwardedHeaders.TrustedIPs,
 			ConnectionHeaders:       configuration.ForwardedHeaders.Connection,
 			NotAppendXForwardedFor:  configuration.ForwardedHeaders.NotAppendXForwardedFor,
-			ResolveClientIP:         configuration.ForwardedHeaders.ResolveClientIP,
+			ClientIPResolution:      configuration.ForwardedHeaders.ClientIPResolution,
 			ClientIPHeader:          configuration.ForwardedHeaders.ClientIPHeader,
-			ComputeFullForwardedFor: configuration.ForwardedHeaders.ComputeFullForwardedFor,
+			ClientIPReplaceXFF:   configuration.ForwardedHeaders.ClientIPReplaceXFF,
 		},
 		next)
 	if err != nil {

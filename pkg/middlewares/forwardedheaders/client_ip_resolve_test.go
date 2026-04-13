@@ -21,13 +21,12 @@ func (c *captureHandler) ServeHTTP(_ http.ResponseWriter, r *http.Request) {
 	c.req = r
 }
 
-func TestXForwarded_ResolveClientIP_UntrustedPeer_StripsSourceHeader(t *testing.T) {
+func TestXForwarded_ClientIPResolution_UntrustedPeer_StripsSourceHeader(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:              []string{"10.0.0.0/8"},
-		ResolveClientIP:         true,
-		ClientIPHeader:          "CF-Connecting-IP",
-		ComputeFullForwardedFor: true,
+		TrustedIPs:      []string{"10.0.0.0/8"},
+		ClientIPResolution: true,
+		ClientIPHeader:  "CF-Connecting-IP",
 	}, capture)
 	require.NoError(t, err)
 
@@ -46,13 +45,12 @@ func TestXForwarded_ResolveClientIP_UntrustedPeer_StripsSourceHeader(t *testing.
 	assert.Equal(t, "8.8.8.8", clientip.ClientIP(capture.req))
 }
 
-func TestXForwarded_ResolveClientIP_TrustedPeer_StashesContextAndXRealIP(t *testing.T) {
+func TestXForwarded_ClientIPResolution_TrustedPeer_StashesContextAndXRealIP(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:              []string{"10.0.0.0/8"},
-		ResolveClientIP:         true,
-		ClientIPHeader:          "CF-Connecting-IP",
-		ComputeFullForwardedFor: true,
+		TrustedIPs:      []string{"10.0.0.0/8"},
+		ClientIPResolution: true,
+		ClientIPHeader:  "CF-Connecting-IP",
 	}, capture)
 	require.NoError(t, err)
 
@@ -68,13 +66,12 @@ func TestXForwarded_ResolveClientIP_TrustedPeer_StashesContextAndXRealIP(t *test
 	assert.Equal(t, "1.2.3.4", capture.req.Header.Get("X-Real-Ip"))
 }
 
-func TestXForwarded_ResolveClientIP_XForwardedForChain(t *testing.T) {
+func TestXForwarded_ClientIPResolution_XForwardedForChain(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:              []string{"10.0.0.0/8"},
-		ResolveClientIP:         true,
-		ClientIPHeader:          "X-Forwarded-For",
-		ComputeFullForwardedFor: true,
+		TrustedIPs:      []string{"10.0.0.0/8"},
+		ClientIPResolution: true,
+		ClientIPHeader:  "X-Forwarded-For",
 	}, capture)
 	require.NoError(t, err)
 
@@ -85,19 +82,19 @@ func TestXForwarded_ResolveClientIP_XForwardedForChain(t *testing.T) {
 	m.ServeHTTP(nil, req)
 
 	assert.Equal(t, "1.2.3.4", clientip.ClientIP(capture.req))
-	// ComputeFullForwardedFor=true preserves the incoming XFF chain as-is.
+	// ClientIPReplaceXFF=false (default) preserves the incoming XFF chain.
 	assert.Equal(t, "1.2.3.4, 10.0.0.2", capture.req.Header.Get("X-Forwarded-For"))
 	// Proxy append is still enabled.
 	assert.False(t, httputil.ShouldNotAppendXFF(capture.req.Context()))
 }
 
-func TestXForwarded_ResolveClientIP_ComputeFullForwardedFor_False(t *testing.T) {
+func TestXForwarded_ClientIPResolution_ClientIPReplaceXFF_True(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
-		TrustedIPs:              []string{"10.0.0.0/8"},
-		ResolveClientIP:         true,
-		ClientIPHeader:          "X-Forwarded-For",
-		ComputeFullForwardedFor: false,
+		TrustedIPs:           []string{"10.0.0.0/8"},
+		ClientIPResolution:      true,
+		ClientIPHeader:       "X-Forwarded-For",
+		ClientIPReplaceXFF: true,
 	}, capture)
 	require.NoError(t, err)
 
@@ -113,7 +110,7 @@ func TestXForwarded_ResolveClientIP_ComputeFullForwardedFor_False(t *testing.T) 
 	assert.True(t, httputil.ShouldNotAppendXFF(capture.req.Context()))
 }
 
-func TestXForwarded_ResolveClientIP_Disabled_NoBehaviorChange(t *testing.T) {
+func TestXForwarded_ClientIPResolution_Disabled_NoBehaviorChange(t *testing.T) {
 	capture := &captureHandler{}
 	m, err := NewXForwarded(Config{
 		Insecure: true,

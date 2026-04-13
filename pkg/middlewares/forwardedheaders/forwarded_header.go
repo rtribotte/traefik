@@ -45,13 +45,13 @@ var xHeaders = []string{
 
 // Config holds the configuration for the XForwarded middleware.
 type Config struct {
-	Insecure                bool
-	TrustedIPs              []string
-	ConnectionHeaders       []string
-	NotAppendXForwardedFor  bool
-	ResolveClientIP         bool
-	ClientIPHeader          string
-	ComputeFullForwardedFor bool
+	Insecure               bool
+	TrustedIPs             []string
+	ConnectionHeaders      []string
+	NotAppendXForwardedFor bool
+	ClientIPResolution        bool
+	ClientIPHeader         string
+	ClientIPReplaceXFF   bool
 }
 
 // XForwarded is an HTTP handler wrapper that sets the X-Forwarded headers,
@@ -59,17 +59,17 @@ type Config struct {
 // Unless insecure is set,
 // it first removes all the existing values for those headers if the remote address is not one of the trusted ones.
 type XForwarded struct {
-	insecure                bool
-	trustedIPs              []string
-	connectionHeaders       []string
-	notAppendXForwardedFor  bool
-	resolveClientIP         bool
-	clientIPHeader          string
-	computeFullForwardedFor bool
-	ipChecker               *clientip.Checker
-	resolver                *clientip.Resolver
-	next                    http.Handler
-	hostname                string
+	insecure               bool
+	trustedIPs             []string
+	connectionHeaders      []string
+	notAppendXForwardedFor bool
+	clientIPResolution        bool
+	clientIPHeader         string
+	clientIPReplaceXFF   bool
+	ipChecker              *clientip.Checker
+	resolver               *clientip.Resolver
+	next                   http.Handler
+	hostname               string
 }
 
 // NewXForwarded creates a new XForwarded.
@@ -94,12 +94,12 @@ func NewXForwarded(cfg Config, next http.Handler) (*XForwarded, error) {
 	}
 
 	clientIPHeader := cfg.ClientIPHeader
-	if cfg.ResolveClientIP && clientIPHeader == "" {
+	if cfg.ClientIPResolution && clientIPHeader == "" {
 		clientIPHeader = xForwardedFor
 	}
 
 	var resolver *clientip.Resolver
-	if cfg.ResolveClientIP && ipChecker != nil {
+	if cfg.ClientIPResolution && ipChecker != nil {
 		resolver = &clientip.Resolver{
 			Header:  clientIPHeader,
 			Trusted: ipChecker,
@@ -107,17 +107,17 @@ func NewXForwarded(cfg Config, next http.Handler) (*XForwarded, error) {
 	}
 
 	return &XForwarded{
-		insecure:                cfg.Insecure,
-		trustedIPs:              cfg.TrustedIPs,
-		connectionHeaders:       canonicalConnectionHeaders,
-		notAppendXForwardedFor:  cfg.NotAppendXForwardedFor,
-		resolveClientIP:         cfg.ResolveClientIP,
-		clientIPHeader:          http.CanonicalHeaderKey(clientIPHeader),
-		computeFullForwardedFor: cfg.ComputeFullForwardedFor,
-		ipChecker:               ipChecker,
-		resolver:                resolver,
-		next:                    next,
-		hostname:                hostname,
+		insecure:               cfg.Insecure,
+		trustedIPs:             cfg.TrustedIPs,
+		connectionHeaders:      canonicalConnectionHeaders,
+		notAppendXForwardedFor: cfg.NotAppendXForwardedFor,
+		clientIPResolution:        cfg.ClientIPResolution,
+		clientIPHeader:         http.CanonicalHeaderKey(clientIPHeader),
+		clientIPReplaceXFF:   cfg.ClientIPReplaceXFF,
+		ipChecker:              ipChecker,
+		resolver:               resolver,
+		next:                   next,
+		hostname:               hostname,
 	}, nil
 }
 
@@ -185,12 +185,8 @@ func (x *XForwarded) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if x.resolver != nil {
 		if resolved := x.resolver.Resolve(r); resolved != "" {
 			r = r.WithContext(clientip.WithClientIP(r.Context(), resolved))
-			// When ComputeFullForwardedFor is disabled, replace the outbound
-			// X-Forwarded-For chain with just the resolved client IP
-			// (matching ingress-nginx's compute-full-forwarded-for=false
-			// default).
-			// We set the header here and tell the proxy layer not to append, so the outbound XFF is exactly the resolved IP.
-			if !x.computeFullForwardedFor {
+			// Replace the outbound X-Forwarded-For chain with just the resolved client IP.
+			if x.clientIPReplaceXFF {
 				unsafeHeader(r.Header).Set(xForwardedFor, resolved)
 				r = r.WithContext(httputil.SetNotAppendXFF(r.Context()))
 			}
@@ -216,7 +212,7 @@ func (x *XForwarded) isTrustedIP(ip string) bool {
 }
 
 func (x *XForwarded) rewrite(outreq *http.Request) {
-	// Prefer the client IP resolved at the entrypoint (when ResolveClientIP
+	// Prefer the client IP resolved at the entrypoint (when ClientIPResolution
 	// is enabled and the peer is trusted) over the raw socket peer, so that
 	// X-Real-IP sent to the backend reflects the real client rather than the
 	// last trusted hop.

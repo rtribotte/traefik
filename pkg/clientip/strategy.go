@@ -36,16 +36,8 @@ func (s *RemoteAddrStrategy) GetIP(req *http.Request) string {
 	return ip
 }
 
-// ResolvedAddrStrategy returns the client IP resolved by the entrypoint
-// forwarded headers middleware (via the ip.ClientIP context helper) when
-// available, and otherwise falls back to the remote address.
-//
-// It is used as the default strategy when no explicit IPStrategy has been
-// configured on a middleware, so that IPAllowList, IPWhiteList, rate limiter,
-// in-flight request counter, and any other strategy-aware middleware
-// automatically honor the real client IP resolved once per request at the
-// entrypoint, while preserving the original behavior when the entrypoint has
-// not been configured to resolve it.
+// ResolvedAddrStrategy returns the resolved client IP, and falls back to the remote address.
+// It is used as the default strategy when no explicit IPStrategy has been configured.
 type ResolvedAddrStrategy struct {
 	// IPv6Subnet instructs the strategy to return the first IP of the subnet where IP belongs.
 	IPv6Subnet *int

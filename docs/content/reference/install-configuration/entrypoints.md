@@ -392,7 +392,7 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
     --entryPoints.web.forwardedHeaders.connection=foobar
     ```
 
-??? info "`forwardedHeaders.resolveClientIP`"
+??? info "`forwardedHeaders.clientIPResolution`"
 
     When enabled, Traefik resolves the real client IP by inspecting a configurable
     source header (default `X-Forwarded-For`) and walking it right-to-left against
@@ -420,7 +420,7 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
         forwardedHeaders:
           trustedIPs:
             - "10.0.0.0/8"
-          resolveClientIP: true
+          clientIPResolution: true
     ```
 
     ```toml tab="File (TOML)"
@@ -431,20 +431,20 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
         [entryPoints.web.forwardedHeaders]
           trustedIPs = ["10.0.0.0/8"]
-          resolveClientIP = true
+          clientIPResolution = true
     ```
 
     ```bash tab="CLI"
     ## Static configuration
     --entryPoints.web.address=:80
     --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
-    --entryPoints.web.forwardedHeaders.resolveClientIP
+    --entryPoints.web.forwardedHeaders.clientIPResolution
     ```
 
 ??? info "`forwardedHeaders.clientIPHeader`"
 
     Defines the source header used to extract the real client IP when
-    `resolveClientIP` is enabled. Defaults to `X-Forwarded-For`.
+    `clientIPResolution` is enabled. Defaults to `X-Forwarded-For`.
 
     For list-valued headers like `X-Forwarded-For`, Traefik walks the chain
     right-to-left, skipping entries that are in `trustedIPs`, and returns the
@@ -470,7 +470,7 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
         forwardedHeaders:
           trustedIPs:
             - "10.0.0.0/8"
-          resolveClientIP: true
+          clientIPResolution: true
           clientIPHeader: "CF-Connecting-IP"
     ```
 
@@ -482,7 +482,7 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
         [entryPoints.web.forwardedHeaders]
           trustedIPs = ["10.0.0.0/8"]
-          resolveClientIP = true
+          clientIPResolution = true
           clientIPHeader = "CF-Connecting-IP"
     ```
 
@@ -490,18 +490,18 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
     ## Static configuration
     --entryPoints.web.address=:80
     --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
-    --entryPoints.web.forwardedHeaders.resolveClientIP
+    --entryPoints.web.forwardedHeaders.clientIPResolution
     --entryPoints.web.forwardedHeaders.clientIPHeader=CF-Connecting-IP
     ```
 
-??? info "`forwardedHeaders.computeFullForwardedFor`"
+??? info "`forwardedHeaders.clientIPReplaceXFF`"
 
     Controls the outbound `X-Forwarded-For` header sent to backends when
-    `resolveClientIP` is enabled.
+    `clientIPResolution` is enabled.
 
-    - `true` (**default**): preserves the incoming `X-Forwarded-For` chain and
-      appends the resolved client IP — matching Traefik's historical behavior.
-    - `false`: replaces the chain with just the resolved client IP — matching
+    - `false` (**default**): preserves the incoming `X-Forwarded-For` chain —
+      matching Traefik's historical behavior.
+    - `true`: replaces the chain with just the resolved client IP — matching
       ingress-nginx's `compute-full-forwarded-for: false` default.
 
     ```yaml tab="File (YAML)"
@@ -512,8 +512,8 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
         forwardedHeaders:
           trustedIPs:
             - "10.0.0.0/8"
-          resolveClientIP: true
-          computeFullForwardedFor: false
+          clientIPResolution: true
+          clientIPReplaceXFF: true
     ```
 
     ```toml tab="File (TOML)"
@@ -524,16 +524,16 @@ You can configure Traefik to trust the forwarded headers information (`X-Forward
 
         [entryPoints.web.forwardedHeaders]
           trustedIPs = ["10.0.0.0/8"]
-          resolveClientIP = true
-          computeFullForwardedFor = false
+          clientIPResolution = true
+          clientIPReplaceXFF = true
     ```
 
     ```bash tab="CLI"
     ## Static configuration
     --entryPoints.web.address=:80
     --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8
-    --entryPoints.web.forwardedHeaders.resolveClientIP
-    --entryPoints.web.forwardedHeaders.computeFullForwardedFor=false
+    --entryPoints.web.forwardedHeaders.clientIPResolution
+    --entryPoints.web.forwardedHeaders.clientIPReplaceXFF
     ```
 
 ### HTTP3
