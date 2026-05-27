@@ -1,0 +1,22 @@
+# Base demo stack: a correctly wired Traefik + whoami.
+# Run from mcp/demo via ./demo.sh; scenario overlays in scenarios/*/compose.yml
+# add the broken/insecure bits each demo needs.
+services:
+  traefik:
+    image: traefik:v3.7
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8088:8080" # API / dashboard (api.insecure) on host :8088
+    volumes:
+      - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config/dynamic:/etc/traefik/dynamic:ro
+      - ./logs:/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  whoami:
+    image: traefik/whoami
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami.rule=Host(`whoami.localhost`)
+      - traefik.http.routers.whoami.entrypoints=web

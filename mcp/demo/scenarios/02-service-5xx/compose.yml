@@ -1,0 +1,11 @@
+# Scenario 02 — 5xx from a backend that goes down.
+# Adds a dedicated "billing" backend with a working router. Stop the container
+# mid-demo to make Traefik return 502 for billing.localhost while its router and
+# service still exist in the config.
+services:
+  billing:
+    image: traefik/whoami
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.billing.rule=Host(`billing.localhost`)
+      - traefik.http.routers.billing.entrypoints=web

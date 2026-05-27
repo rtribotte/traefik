@@ -1,0 +1,2 @@
+# File provider watches this directory. Scenario overlays drop extra config
+# files in here (e.g. TLS certificates for the security-audit scenario).

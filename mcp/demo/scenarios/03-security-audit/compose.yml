@@ -1,0 +1,18 @@
+# Scenario 03 — security audit.
+# Two findings to surface:
+#   - admin: a sensitive-looking service exposed on the plain HTTP entrypoint,
+#            no TLS, no auth middleware (public-no-TLS finding).
+#   - a short-lived TLS certificate mounted via the file provider, so cert_expiry
+#            flags it (run scripts/gen-certs.sh first).
+services:
+  traefik:
+    volumes:
+      - ./certs:/certs:ro
+      - ./scenarios/03-security-audit/dynamic/tls.yml:/etc/traefik/dynamic/tls.yml:ro
+
+  admin:
+    image: traefik/whoami
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin.rule=Host(`admin.localhost`)
+      - traefik.http.routers.admin.entrypoints=web

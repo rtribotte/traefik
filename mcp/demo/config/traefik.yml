@@ -1,0 +1,33 @@
+# Static (install) configuration for the demo Traefik.
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+api:
+  insecure: true # exposes the API/dashboard on :8080 for the MCP server.
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+log:
+  level: INFO
+
+# File access log so tail_access_logs has a target to read.
+accessLog:
+  filePath: "/logs/access.log"
+  format: json
+
+# Prometheus pull endpoint so the metrics-backed tools work.
+metrics:
+  prometheus: {}
+
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
