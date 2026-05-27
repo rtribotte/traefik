@@ -1,0 +1,40 @@
+{
+  "routers": {
+    "web@docker": {
+      "entryPoints": ["web"],
+      "service": "whoami",
+      "rule": "Host(`whoami.localhost`)",
+      "status": "enabled",
+      "using": ["web"]
+    },
+    "broken@docker": {
+      "entryPoints": ["web"],
+      "service": "missing",
+      "rule": "Host(`broken.localhost`)",
+      "status": "warning",
+      "error": ["the service \"missing@docker\" does not exist"]
+    }
+  },
+  "middlewares": {
+    "auth@docker": {
+      "basicAuth": {
+        "users": ["test:$apr1$xxxx"]
+      },
+      "status": "enabled",
+      "usedBy": ["web@docker"]
+    }
+  },
+  "services": {
+    "whoami@docker": {
+      "loadBalancer": {
+        "servers": [{"url": "http://172.17.0.2:80"}],
+        "passHostHeader": true
+      },
+      "status": "enabled",
+      "usedBy": ["web@docker"],
+      "serverStatus": {
+        "http://172.17.0.2:80": "UP"
+      }
+    }
+  }
+}
