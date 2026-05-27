@@ -1,0 +1,17 @@
+[
+  {
+    "name": "web",
+    "address": ":80",
+    "asDefault": true,
+    "http": {
+      "middlewares": ["redirect@internal"]
+    }
+  },
+  {
+    "name": "websecure",
+    "address": ":443",
+    "http": {
+      "tls": {}
+    }
+  }
+]

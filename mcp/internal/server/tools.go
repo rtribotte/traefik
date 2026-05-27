@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/traefik/traefik-mcp/internal/traefik"
@@ -26,6 +28,62 @@ func addReadTools(s *mcp.Server, target traefik.Target) {
 		Name:        "get_router",
 		Description: "Get a single HTTP router by its fully qualified name (e.g. my-router@docker).",
 	}, getRouter(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "list_services",
+		Description: "List all HTTP services with their type, backend servers, per-server health and status.",
+	}, listServices(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_service",
+		Description: "Get a single HTTP service by its fully qualified name (e.g. whoami@docker).",
+	}, getService(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_service_health",
+		Description: "Report the per-server health of an HTTP service: how many backends are UP vs DOWN.",
+	}, getServiceHealth(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "list_middlewares",
+		Description: "List all HTTP middlewares with their type, status and the routers using them.",
+	}, listMiddlewares(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_middleware",
+		Description: "Get a single HTTP middleware by its fully qualified name (e.g. auth@docker).",
+	}, getMiddleware(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_entrypoints",
+		Description: "List the configured entry points (listeners): name, address and whether TLS is the default.",
+	}, getEntryPoints(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_overview",
+		Description: "Summary counts of routers, services and middlewares per protocol, plus enabled features and providers.",
+	}, getOverview(target))
+}
+
+// configKeys marshals a dynamic config object and returns its top-level keys,
+// which identify the configured kind(s) — e.g. "loadBalancer" for a service or
+// "basicAuth" for a middleware. It avoids enumerating every dynamic field by
+// hand and stays correct as upstream adds new ones.
+func configKeys(v any) []string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	return keys
 }
 
 type pingInput struct{}
