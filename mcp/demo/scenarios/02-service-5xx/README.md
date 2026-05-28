@@ -7,11 +7,15 @@ the service definition — the wrong backend port — not in Traefik.
 ## Run
 
 ```bash
-./demo.sh up 02-service-5xx
+./demo.sh up 02-service-5xx   # brings up the stack and sends the 502 traffic
 
-# it 502s: Traefik routes correctly but can't reach the backend on port 9999
-curl -i -H 'Host: billing.localhost' http://localhost/
+./demo.sh traffic 02-service-5xx   # replay the 502 traffic any time
 ```
+
+`up` runs this scenario's `traffic.sh` automatically once Traefik is ready: it
+sends requests to `billing.localhost`, which 502 because Traefik routes
+correctly but can't reach the backend on port 9999. The base stack publishes the
+web entrypoint on host port 8081.
 
 ## What's wrong
 

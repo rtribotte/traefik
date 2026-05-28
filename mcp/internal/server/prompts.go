@@ -40,14 +40,18 @@ func promptResult(description, text string) *mcp.GetPromptResult {
 }
 
 func diagnoseRouterMissing(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-	router := req.Params.Arguments["router"]
+	return promptResult("Guided router diagnosis", buildRouterMissing(req.Params.Arguments["router"])), nil
+}
 
+// buildRouterMissing renders the router-diagnosis playbook. Shared by the
+// user-invoked prompt and the model-invoked tool so both stay in lockstep.
+func buildRouterMissing(router string) string {
 	target := "the router the user is asking about"
 	if router != "" {
 		target = fmt.Sprintf("router %q", router)
 	}
 
-	text := fmt.Sprintf(`Diagnose why %s is missing or not routing in Traefik.
+	return fmt.Sprintf(`Diagnose why %s is missing or not routing in Traefik.
 
 Work only from live data. Do not answer from earlier results — Traefik's config is
 dynamic and may have changed. Re-fetch at every step.
@@ -65,14 +69,15 @@ dynamic and may have changed. Re-fetch at every step.
 
 Then report the single most likely cause and the concrete fix. Rank the
 candidates if more than one is plausible.`, target)
-
-	return promptResult("Guided router diagnosis", text), nil
 }
 
 func diagnose5xx(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-	service := req.Params.Arguments["service"]
-	host := req.Params.Arguments["host"]
+	return promptResult("Guided 5xx diagnosis", buildDiagnose5xx(req.Params.Arguments["service"], req.Params.Arguments["host"])), nil
+}
 
+// buildDiagnose5xx renders the 5xx-diagnosis playbook. Shared by the user-invoked
+// prompt and the model-invoked tool so both stay in lockstep.
+func buildDiagnose5xx(service, host string) string {
 	subject := "the affected service"
 	if service != "" {
 		subject = fmt.Sprintf("service %q", service)
@@ -80,7 +85,7 @@ func diagnose5xx(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptRe
 		subject = fmt.Sprintf("the service behind host %q", host)
 	}
 
-	text := fmt.Sprintf(`Diagnose 5xx errors for %s and determine whether the fault is
+	return fmt.Sprintf(`Diagnose 5xx errors for %s and determine whether the fault is
 Traefik, the service configuration, or the backend application.
 
 Work only from live data. Re-fetch at every step; do not answer from earlier results.
@@ -101,8 +106,6 @@ Work only from live data. Re-fetch at every step; do not answer from earlier res
 
 Report whether the fault lies in Traefik routing, the service config, or the app,
 and give the concrete fix.`, subject, hostClause(host))
-
-	return promptResult("Guided 5xx diagnosis", text), nil
 }
 
 func hostClause(host string) string {

@@ -47,6 +47,19 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"traffic to a path, requests by method, etc.",
 	}, tailAccessLogs(deps.AccessLogPath))
 
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "diagnose_router_missing",
+		Description: "Return a step-by-step playbook for diagnosing why a Traefik router is " +
+			"missing or not routing traffic. Follow the returned steps using the live read tools.",
+	}, diagnoseRouterMissingTool)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "diagnose_5xx",
+		Description: "Return a step-by-step playbook for diagnosing 5xx errors and determining " +
+			"whether the fault is Traefik routing, the service config, or the backend app. " +
+			"Follow the returned steps using the live read tools.",
+	}, diagnose5xxTool)
+
 	addPrompts(s)
 
 	return s
