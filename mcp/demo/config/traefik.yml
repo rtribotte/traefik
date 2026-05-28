@@ -35,6 +35,13 @@ tracing:
       endpoint: lgtm:4317
       insecure: true
 
+# Local (Yaegi) plugin used by the trace-latency scenario. Declared here so it
+# is installed in the instance; it only affects routes that reference it.
+experimental:
+  localPlugins:
+    slowdown:
+      moduleName: github.com/traefik/traefik-mcp/plugins/slowdown
+
 providers:
   docker:
     exposedByDefault: false

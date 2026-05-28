@@ -1,10 +1,10 @@
 # Scenario 08 — find a slow request in the traces.
-# checkout routes correctly, the backend is UP, every request returns 200. Some
-# requests are slow because the backend application is slow to respond. Unlike
-# scenario 05 (which reads the access log), here the latency is investigated
-# through the distributed traces Traefik ships to Tempo: search_traces surfaces
-# the slow trace and get_trace shows the span tree, making clear the time is
-# spent in the backend hop, not in Traefik's own processing.
+# checkout routes correctly, the backend (whoami) is UP and fast, every request
+# returns 200. The latency comes from a local Yaegi plugin middleware
+# (slowdown@file) that sleeps a random duration per request. The delay is not
+# configurable, so it cannot be inferred from the middleware configuration: it
+# can only be found in the distributed traces, where the time appears in the
+# middleware hop rather than the entrypoint or the backend service.
 services:
   checkout:
     image: traefik/whoami
@@ -12,3 +12,4 @@ services:
       - traefik.enable=true
       - traefik.http.routers.checkout.rule=Host(`checkout.localhost`)
       - traefik.http.routers.checkout.entrypoints=web
+      - traefik.http.routers.checkout.middlewares=slowdown@file
