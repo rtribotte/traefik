@@ -4,6 +4,7 @@ package server
 
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
 )
 
@@ -16,6 +17,9 @@ type Deps struct {
 	// AppLogPath is the host path to Traefik's JSON application log, enabling the
 	// app-log tool. Empty disables it at call time with a helpful error.
 	AppLogPath string
+	// Tempo queries distributed traces. Nil disables the trace tools at call
+	// time with a helpful error.
+	Tempo *tempo.Client
 }
 
 // instructions guide the client to treat Traefik's configuration as live state.
@@ -78,6 +82,22 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"status, request/response counts and durations by entrypoint and service, open " +
 			"connections, TLS certificate expiry, and more.",
 	}, getMetrics(deps.Target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "search_traces",
+		Description: "Search Traefik's distributed traces in Tempo with an optional TraceQL " +
+			"filter, returning matching trace summaries (trace ID, root service and operation, " +
+			"duration). Use it to find slow requests ({duration>1s}), failed ones ({status=error}), " +
+			"or recent traffic, then fetch a specific trace with get_trace.",
+	}, searchTraces(deps.Tempo))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "get_trace",
+		Description: "Return the full span tree of one trace by ID (from search_traces): each " +
+			"span's service, operation, parent, duration, status and attributes. Use it to see " +
+			"where time went or which hop failed across the entrypoint, router, middleware and " +
+			"service spans of a request.",
+	}, getTrace(deps.Tempo))
 
 	addPrompts(s)
 

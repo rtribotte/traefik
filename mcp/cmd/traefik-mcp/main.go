@@ -14,6 +14,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/traefik/traefik-mcp/internal/server"
+	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
 )
 
@@ -25,6 +26,7 @@ func main() {
 	timeout := flag.Duration("traefik.timeout", 5*time.Second, "Timeout for Traefik API requests.")
 	accessLog := flag.String("traefik.access-log", "", "Path to Traefik's JSON access log file (enables the access-log tool).")
 	appLog := flag.String("traefik.app-log", "", "Path to Traefik's JSON application log file (enables the app-log tool).")
+	tempoURL := flag.String("tempo.url", "", "Base URL of a Tempo (otel-lgtm) instance (enables the trace tools), e.g. http://localhost:3200.")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -32,7 +34,12 @@ func main() {
 
 	target := traefik.NewHTTPTarget(*name, *apiURL, &http.Client{Timeout: *timeout})
 
-	srv := server.New("traefik-mcp", version, server.Deps{Target: target, AccessLogPath: *accessLog, AppLogPath: *appLog})
+	var tempoClient *tempo.Client
+	if *tempoURL != "" {
+		tempoClient = tempo.New(*tempoURL, &http.Client{Timeout: *timeout})
+	}
+
+	srv := server.New("traefik-mcp", version, server.Deps{Target: target, AccessLogPath: *accessLog, AppLogPath: *appLog, Tempo: tempoClient})
 
 	if err := srv.Run(ctx, &mcp.StdioTransport{}); err != nil {
 		fmt.Fprintf(os.Stderr, "traefik-mcp: %v\n", err)

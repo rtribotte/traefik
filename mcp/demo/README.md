@@ -8,7 +8,8 @@ overlays that introduce the specific breakage each demo needs.
 ```
 demo/
   docker-compose.yml        base stack: Traefik (api.insecure, prometheus,
-                            file access log) + whoami
+                            file access log, OTLP tracing) + whoami + otel-lgtm
+                            (Tempo trace store, query API on :3200)
   config/
     traefik.yml             static (install) configuration
     dynamic/                file-provider directory (watched)
@@ -19,6 +20,10 @@ demo/
     02-service-5xx/         backend that goes down -> 502
     03-security-audit/      public-no-TLS route + expiring cert
     04-secured-route/       advisory config generation (no extra infra)
+    05-slow-backend/        slow backend, diagnosed from access-log durations
+    06-config-error/        unresolved refs, diagnosed from the app log
+    07-cert-expiry/         expiring cert, surfaced via the metrics endpoint
+    08-trace-latency/       slow request, found in the Tempo distributed traces
 ```
 
 ## Usage
@@ -47,7 +52,8 @@ Traefik API/dashboard: http://localhost:8080 — this is what the MCP server rea
       "args": [
         "--traefik.api-url=http://localhost:8088",
         "--traefik.access-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/access.log",
-        "--traefik.app-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/traefik.log"
+        "--traefik.app-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/traefik.log",
+        "--tempo.url=http://localhost:3200"
       ]
     }
   }

@@ -13,6 +13,17 @@ services:
       - ./config/dynamic:/etc/traefik/dynamic:ro
       - ./logs:/logs
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - lgtm
+
+  # otel-lgtm: Grafana's all-in-one Loki/Grafana/Tempo/Mimir image. Traefik
+  # ships OTLP traces to it (gRPC :4317); Tempo's query API is on :3200, which
+  # the MCP server reads via --tempo.url.
+  lgtm:
+    image: grafana/otel-lgtm:0.11.16
+    ports:
+      - "3000:3000" # Grafana UI
+      - "3200:3200" # Tempo query API (read by traefik-mcp)
 
   whoami:
     image: traefik/whoami

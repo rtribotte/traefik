@@ -1,0 +1,14 @@
+# Scenario 08 — find a slow request in the traces.
+# checkout routes correctly, the backend is UP, every request returns 200. Some
+# requests are slow because the backend application is slow to respond. Unlike
+# scenario 05 (which reads the access log), here the latency is investigated
+# through the distributed traces Traefik ships to Tempo: search_traces surfaces
+# the slow trace and get_trace shows the span tree, making clear the time is
+# spent in the backend hop, not in Traefik's own processing.
+services:
+  checkout:
+    image: traefik/whoami
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.checkout.rule=Host(`checkout.localhost`)
+      - traefik.http.routers.checkout.entrypoints=web

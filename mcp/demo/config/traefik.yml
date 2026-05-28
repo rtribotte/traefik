@@ -28,6 +28,13 @@ accessLog:
 metrics:
   prometheus: {}
 
+# Ship traces over OTLP/gRPC to otel-lgtm's Tempo, which the trace tools read.
+tracing:
+  otlp:
+    grpc:
+      endpoint: lgtm:4317
+      insecure: true
+
 providers:
   docker:
     exposedByDefault: false
