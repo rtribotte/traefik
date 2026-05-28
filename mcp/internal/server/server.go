@@ -45,5 +45,7 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"investigate 5xx errors, latency or which router/service served a request.",
 	}, tailAccessLogs(deps.AccessLogPath))
 
+	addPrompts(s)
+
 	return s
 }
