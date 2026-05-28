@@ -1,8 +1,0 @@
-# The slowdown plugin middleware, referenced by the checkout router as
-# slowdown@file. The plugin takes no options — its delay is random and not
-# configurable — so inspecting this middleware reveals nothing about the latency.
-http:
-  middlewares:
-    slowdown:
-      plugin:
-        slowdown: {}

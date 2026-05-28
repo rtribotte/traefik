@@ -1,0 +1,5 @@
+displayName: Random Plugin
+type: middleware
+import: github.com/traefik/traefik-mcp/plugins/randomplugin
+summary: Custom request-processing middleware.
+testData: {}

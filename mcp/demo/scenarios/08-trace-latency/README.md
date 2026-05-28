@@ -3,12 +3,13 @@
 Nothing looks broken: `checkout.localhost` routes correctly, the backend
 (whoami) is UP and fast, and every request returns 200. Yet requests are slow,
 by a random amount. The cause is a local Yaegi plugin middleware
-(`slowdown@file`) that sleeps a random duration on every request.
+(`randomplugin@file`) that sleeps a random duration on every request.
 
-The delay is **not configurable** — the plugin takes no options — so it cannot
-be inferred from the middleware configuration. It can only be found in the
-**distributed traces** Traefik ships to Tempo (otel-lgtm): the time appears in
-Traefik's middleware chain, not the backend service.
+The delay is **not configurable** — the plugin takes no options — and its name
+gives nothing away, so it cannot be inferred from the middleware configuration.
+It can only be found in the **distributed traces** Traefik ships to Tempo
+(otel-lgtm): the time appears in Traefik's middleware chain, not the backend
+service.
 
 ## Run
 
@@ -29,15 +30,16 @@ ingestion before querying.
   time is going?"
 
 Expected: the assistant inspects the router/service/middleware config and the
-backend health and finds nothing wrong — in particular the `slowdown` middleware
-has no options, so the config gives no hint. It calls `search_traces` with
+backend health and finds nothing wrong — in particular the `randomplugin`
+middleware has no options and its name says nothing, so the config gives no
+hint. It calls `search_traces` with
 `{duration>1s}`, picks a slow trace, and `get_trace` on its ID. It sees two
 spans: the entrypoint span (`GET`) lasting ~2s, and the backend span
 (`ReverseProxy`) lasting only a few milliseconds and starting ~2s into the
 request. The gap means the time is spent in Traefik's middleware chain before
 the backend is ever called — i.e. a middleware, not the backend or the network.
-The culprit is the `slowdown` plugin, invisible in its configuration but plain
-in the trace.
+The culprit is the `randomplugin` middleware, invisible in its configuration but
+plain in the trace.
 
 > Point the MCP server at Tempo so the assistant can query traces: add
 > `--tempo.url=http://localhost:3200` to its args in the Claude Desktop config.

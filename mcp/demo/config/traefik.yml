@@ -39,8 +39,8 @@ tracing:
 # is installed in the instance; it only affects routes that reference it.
 experimental:
   localPlugins:
-    slowdown:
-      moduleName: github.com/traefik/traefik-mcp/plugins/slowdown
+    randomplugin:
+      moduleName: github.com/traefik/traefik-mcp/plugins/randomplugin
 
 providers:
   docker:

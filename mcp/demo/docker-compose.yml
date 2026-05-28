@@ -11,7 +11,7 @@ services:
     volumes:
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./config/dynamic:/etc/traefik/dynamic:ro
-      - ./plugins/slowdown:/plugins-local/src/github.com/traefik/traefik-mcp/plugins/slowdown:ro
+      - ./plugins/randomplugin:/plugins-local/src/github.com/traefik/traefik-mcp/plugins/randomplugin:ro
       - ./logs:/logs
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:

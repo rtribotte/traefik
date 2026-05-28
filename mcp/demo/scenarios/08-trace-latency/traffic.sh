@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generate traffic for the trace-latency scenario. Every request is delayed a
-# random amount by the slowdown plugin middleware, so the traces in Tempo show a
+# random amount by the randomplugin middleware, so the traces in Tempo show a
 # spread of durations and a {duration>1s} search isolates the slow ones.
 set -euo pipefail
 

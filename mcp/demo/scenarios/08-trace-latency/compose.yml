@@ -1,10 +1,11 @@
 # Scenario 08 — find a slow request in the traces.
 # checkout routes correctly, the backend (whoami) is UP and fast, every request
 # returns 200. The latency comes from a local Yaegi plugin middleware
-# (slowdown@file) that sleeps a random duration per request. The delay is not
-# configurable, so it cannot be inferred from the middleware configuration: it
-# can only be found in the distributed traces, where the time appears in the
-# middleware hop rather than the entrypoint or the backend service.
+# (randomplugin@file) that sleeps a random duration per request. The delay is
+# not configurable and the plugin name reveals nothing, so it cannot be inferred
+# from the middleware configuration: it can only be found in the distributed
+# traces, where the time appears in the middleware chain rather than the
+# entrypoint or the backend service.
 services:
   checkout:
     image: traefik/whoami
@@ -12,4 +13,4 @@ services:
       - traefik.enable=true
       - traefik.http.routers.checkout.rule=Host(`checkout.localhost`)
       - traefik.http.routers.checkout.entrypoints=web
-      - traefik.http.routers.checkout.middlewares=slowdown@file
+      - traefik.http.routers.checkout.middlewares=randomplugin@file

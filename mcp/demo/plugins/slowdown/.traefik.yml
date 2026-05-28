@@ -1,5 +1,0 @@
-displayName: Slowdown
-type: middleware
-import: github.com/traefik/traefik-mcp/plugins/slowdown
-summary: Adds a random, non-configurable delay to each request.
-testData: {}
