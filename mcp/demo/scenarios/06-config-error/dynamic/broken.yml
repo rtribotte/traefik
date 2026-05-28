@@ -1,0 +1,14 @@
+# A dynamic config the file provider loads but cannot fully apply: the router
+# references a service and a middleware that are never defined. Traefik logs an
+# error for each unresolved reference and the route never serves traffic. The
+# failure is visible only in the application log — not the access log (no request
+# ever succeeds) and not as an obvious clue in the router list.
+http:
+  routers:
+    reports:
+      rule: "Host(`reports.localhost`)"
+      entrypoints:
+        - web
+      service: reports-backend
+      middlewares:
+        - reports-auth

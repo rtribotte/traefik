@@ -11,8 +11,11 @@ import (
 type Deps struct {
 	Target traefik.Target
 	// AccessLogPath is the host path to Traefik's JSON access log, enabling the
-	// log-tailing tools. Empty disables them at call time with a helpful error.
+	// access-log tool. Empty disables it at call time with a helpful error.
 	AccessLogPath string
+	// AppLogPath is the host path to Traefik's JSON application log, enabling the
+	// app-log tool. Empty disables it at call time with a helpful error.
+	AppLogPath string
 }
 
 // instructions guide the client to treat Traefik's configuration as live state.
@@ -46,6 +49,15 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"traffic question — errors, slow requests, which router/service served a host, " +
 			"traffic to a path, requests by method, etc.",
 	}, tailAccessLogs(deps.AccessLogPath))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "tail_traefik_logs",
+		Description: "Return recent entries from Traefik's application log, newest last. This is " +
+			"where Traefik reports configuration and runtime errors (unresolved middleware/service " +
+			"references, TLS/certificate problems, provider connection failures, invalid config). " +
+			"Filters are optional and combine with AND: level (exact), minLevel (e.g. warn for " +
+			"warnings and errors), and contains (substring in the message or error).",
+	}, tailAppLogs(deps.AppLogPath))
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "diagnose_router_missing",

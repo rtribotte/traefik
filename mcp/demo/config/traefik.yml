@@ -15,6 +15,9 @@ entryPoints:
 
 log:
   level: INFO
+  # File app log so tail_traefik_logs has a target to read.
+  filePath: "/logs/traefik.log"
+  format: json
 
 # File access log so tail_access_logs has a target to read.
 accessLog:

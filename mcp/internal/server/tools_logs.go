@@ -60,3 +60,43 @@ func tailAccessLogs(path string) mcp.ToolHandlerFor[tailAccessLogsInput, tailAcc
 		return nil, tailAccessLogsOutput{Entries: entries}, nil
 	}
 }
+
+type tailAppLogsInput struct {
+	Count    int    `json:"count,omitempty" jsonschema:"max entries to return, newest last (default 50)"`
+	Level    string `json:"level,omitempty" jsonschema:"only entries with this exact level (debug, info, warn, error)"`
+	MinLevel string `json:"minLevel,omitempty" jsonschema:"only entries at this level or more severe (e.g. warn for warnings and errors)"`
+	Contains string `json:"contains,omitempty" jsonschema:"only entries whose message or error contains this (case-insensitive)"`
+}
+
+type tailAppLogsOutput struct {
+	Entries []logs.AppEntry `json:"entries"`
+}
+
+func tailAppLogs(path string) mcp.ToolHandlerFor[tailAppLogsInput, tailAppLogsOutput] {
+	return func(_ context.Context, _ *mcp.CallToolRequest, in tailAppLogsInput) (*mcp.CallToolResult, tailAppLogsOutput, error) {
+		if path == "" {
+			return nil, tailAppLogsOutput{}, fmt.Errorf("app log path not configured; start traefik-mcp with --traefik.app-log pointing at the JSON application log file")
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, tailAppLogsOutput{}, fmt.Errorf("opening app log %s: %w", path, err)
+		}
+		defer f.Close()
+
+		count := in.Count
+		if count <= 0 {
+			count = 50
+		}
+
+		entries, err := logs.TailApp(f, count, logs.AppFilter{
+			Level:    in.Level,
+			MinLevel: in.MinLevel,
+			Contains: in.Contains,
+		})
+		if err != nil {
+			return nil, tailAppLogsOutput{}, err
+		}
+		return nil, tailAppLogsOutput{Entries: entries}, nil
+	}
+}

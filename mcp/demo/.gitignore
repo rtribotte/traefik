@@ -2,3 +2,5 @@ logs/*.log
 certs/*.crt
 certs/*.key
 certs/*.csr
+# Dynamic config files demo.sh copies in from scenarios at runtime.
+config/dynamic/*.yml

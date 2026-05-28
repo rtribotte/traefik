@@ -1,0 +1,6 @@
+{"level":"info","version":"3.7.1","time":"2026-05-28T14:58:36Z","message":"Traefik version 3.7.1 built on 2026-05-11T13:15:50Z"}
+{"level":"info","time":"2026-05-28T14:58:36Z","message":"Starting provider *file.Provider"}
+{"level":"warn","time":"2026-05-28T14:58:37Z","message":"Router uses a nonexistent middleware"}
+{"level":"error","entryPointName":"web","routerName":"broken@file","error":"the service \"missing-service@file\" does not exist","time":"2026-05-28T14:58:53Z"}
+not a json line
+{"level":"error","middlewareName":"does-not-exist@file","routerName":"broken@file","error":"middleware \"does-not-exist@file\" does not exist","time":"2026-05-28T14:58:54Z"}

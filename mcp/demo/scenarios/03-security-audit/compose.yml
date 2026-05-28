@@ -7,8 +7,9 @@
 services:
   traefik:
     volumes:
+      # tls.yml is copied into config/dynamic by demo.sh (it can't be bind-mounted
+      # into the read-only dynamic dir); certs is a fresh mount path.
       - ./certs:/certs:ro
-      - ./scenarios/03-security-audit/dynamic/tls.yml:/etc/traefik/dynamic/tls.yml:ro
 
   admin:
     image: traefik/whoami

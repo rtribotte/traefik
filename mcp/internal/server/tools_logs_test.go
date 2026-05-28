@@ -33,3 +33,22 @@ func TestTailAccessLogs_MissingFile(t *testing.T) {
 	_, _, err := tailAccessLogs("/nonexistent/access.log")(context.Background(), nil, tailAccessLogsInput{})
 	require.Error(t, err)
 }
+
+func TestTailAppLogs(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "traefik.log")
+	lines := `{"level":"info","time":"t","message":"Starting provider"}` + "\n" +
+		`{"level":"error","routerName":"broken@file","error":"the service \"missing-service@file\" does not exist","time":"t"}` + "\n"
+	require.NoError(t, os.WriteFile(path, []byte(lines), 0o644))
+
+	_, out, err := tailAppLogs(path)(context.Background(), nil, tailAppLogsInput{Level: "error"})
+	require.NoError(t, err)
+	require.Len(t, out.Entries, 1)
+	assert.Contains(t, out.Entries[0].Error, "missing-service")
+	assert.Equal(t, "broken@file", out.Entries[0].Fields["routerName"])
+}
+
+func TestTailAppLogs_NoPath(t *testing.T) {
+	_, _, err := tailAppLogs("")(context.Background(), nil, tailAppLogsInput{})
+	require.Error(t, err)
+}
