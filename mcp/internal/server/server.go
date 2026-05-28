@@ -61,18 +61,11 @@ func New(name, version string, deps Deps) *mcp.Server {
 	}, diagnose5xxTool)
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name: "get_reload_status",
-		Description: "Report whether Traefik's last configuration reload succeeded, when it " +
-			"happened, and how many reloads have occurred. Use this to check if a config " +
-			"change was actually applied.",
-	}, getReloadStatus(deps.Target))
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "get_request_metrics",
-		Description: "Return cumulative HTTP request counts by service/entrypoint, status code " +
-			"and method, from Traefik's Prometheus metrics. Filter by scope, name substring, or " +
-			"minStatus (e.g. 500). Complements the access log with totals since startup.",
-	}, getRequestMetrics(deps.Target))
+		Name: "get_metrics",
+		Description: "Return Traefik's raw Prometheus /metrics output as text: config reload " +
+			"status, request/response counts and durations by entrypoint and service, open " +
+			"connections, TLS certificate expiry, and more.",
+	}, getMetrics(deps.Target))
 
 	addPrompts(s)
 
