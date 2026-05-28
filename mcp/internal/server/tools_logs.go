@@ -10,9 +10,16 @@ import (
 )
 
 type tailAccessLogsInput struct {
-	Count     int    `json:"count,omitempty" jsonschema:"max entries to return (default 50)"`
-	MinStatus int    `json:"minStatus,omitempty" jsonschema:"only entries with HTTP status >= this (e.g. 500 for server errors)"`
-	Service   string `json:"service,omitempty" jsonschema:"only entries whose service name contains this"`
+	Count         int     `json:"count,omitempty" jsonschema:"max entries to return, newest last (default 50)"`
+	Status        int     `json:"status,omitempty" jsonschema:"only entries with this exact HTTP status (e.g. 404)"`
+	MinStatus     int     `json:"minStatus,omitempty" jsonschema:"only entries with HTTP status >= this (e.g. 500 for server errors)"`
+	MaxStatus     int     `json:"maxStatus,omitempty" jsonschema:"only entries with HTTP status <= this (e.g. 299 with minStatus 200 for successes)"`
+	Service       string  `json:"service,omitempty" jsonschema:"only entries whose service name contains this (case-insensitive)"`
+	Router        string  `json:"router,omitempty" jsonschema:"only entries whose router name contains this (case-insensitive)"`
+	Host          string  `json:"host,omitempty" jsonschema:"only entries whose request host contains this (case-insensitive)"`
+	Method        string  `json:"method,omitempty" jsonschema:"only entries with this HTTP method (e.g. POST)"`
+	Path          string  `json:"path,omitempty" jsonschema:"only entries whose request path contains this (case-insensitive)"`
+	MinDurationMs float64 `json:"minDurationMs,omitempty" jsonschema:"only entries that took at least this many milliseconds, for finding slow requests"`
 }
 
 type tailAccessLogsOutput struct {
@@ -36,7 +43,17 @@ func tailAccessLogs(path string) mcp.ToolHandlerFor[tailAccessLogsInput, tailAcc
 			count = 50
 		}
 
-		entries, err := logs.TailAccess(f, count, logs.AccessFilter{MinStatus: in.MinStatus, Service: in.Service})
+		entries, err := logs.TailAccess(f, count, logs.AccessFilter{
+			Status:        in.Status,
+			MinStatus:     in.MinStatus,
+			MaxStatus:     in.MaxStatus,
+			Service:       in.Service,
+			Router:        in.Router,
+			Host:          in.Host,
+			Method:        in.Method,
+			Path:          in.Path,
+			MinDurationMs: in.MinDurationMs,
+		})
 		if err != nil {
 			return nil, tailAccessLogsOutput{}, err
 		}

@@ -40,9 +40,11 @@ func New(name, version string, deps Deps) *mcp.Server {
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "tail_access_logs",
-		Description: "Return recent entries from Traefik's access log, newest last. Filter by " +
-			"minStatus (e.g. 500 to see only server errors) or service name. Use this to " +
-			"investigate 5xx errors, latency or which router/service served a request.",
+		Description: "Return recent entries from Traefik's access log, newest last. All filters are " +
+			"optional and combine with AND: exact status, status range (minStatus/maxStatus), " +
+			"service, router, host, method, path substring, and minDurationMs. Use it for any " +
+			"traffic question — errors, slow requests, which router/service served a host, " +
+			"traffic to a path, requests by method, etc.",
 	}, tailAccessLogs(deps.AccessLogPath))
 
 	addPrompts(s)

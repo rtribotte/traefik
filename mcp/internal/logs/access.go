@@ -24,20 +24,51 @@ type AccessEntry struct {
 	ClientHost string  `json:"clientHost"`
 }
 
-// AccessFilter narrows which access-log entries are returned.
+// AccessFilter narrows which access-log entries are returned. Every field is
+// optional; a zero value matches everything. Multiple fields combine with AND.
 type AccessFilter struct {
-	MinStatus int    // keep entries with status >= MinStatus (0 = no filter).
-	Service   string // keep entries whose service name contains this (empty = no filter).
+	Status        int     // exact HTTP status.
+	MinStatus     int     // status >= MinStatus.
+	MaxStatus     int     // status <= MaxStatus.
+	Service       string  // service name contains this (case-insensitive).
+	Router        string  // router name contains this (case-insensitive).
+	Host          string  // request host contains this (case-insensitive).
+	Method        string  // request method equals this (case-insensitive).
+	Path          string  // request path contains this (case-insensitive).
+	MinDurationMs float64 // duration >= this, for finding slow requests.
 }
 
 func (f AccessFilter) keep(e AccessEntry) bool {
-	if f.MinStatus > 0 && e.Status < f.MinStatus {
+	switch {
+	case f.Status != 0 && e.Status != f.Status:
 		return false
-	}
-	if f.Service != "" && !strings.Contains(e.Service, f.Service) {
+	case f.MinStatus > 0 && e.Status < f.MinStatus:
+		return false
+	case f.MaxStatus > 0 && e.Status > f.MaxStatus:
+		return false
+	case f.MinDurationMs > 0 && e.DurationMs < f.MinDurationMs:
+		return false
+	case f.Method != "" && !strings.EqualFold(e.Method, f.Method):
+		return false
+	case !containsFold(e.Service, f.Service):
+		return false
+	case !containsFold(e.Router, f.Router):
+		return false
+	case !containsFold(e.Host, f.Host):
+		return false
+	case !containsFold(e.Path, f.Path):
 		return false
 	}
 	return true
+}
+
+// containsFold reports whether s contains substr, case-insensitively. An empty
+// substr always matches.
+func containsFold(s, substr string) bool {
+	if substr == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
 // TailAccess parses r as a JSON access log and returns up to the last n entries

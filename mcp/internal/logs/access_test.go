@@ -66,3 +66,37 @@ func TestTailAccess_FilterService(t *testing.T) {
 		assert.Contains(t, e.Service, "billing")
 	}
 }
+
+func TestTailAccess_Filters(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		filter AccessFilter
+		want   int
+	}{
+		{"exact status", AccessFilter{Status: 200}, 1},
+		{"exact status 502", AccessFilter{Status: 502}, 2},
+		{"status range 2xx", AccessFilter{MinStatus: 200, MaxStatus: 299}, 1},
+		{"status range 4xx-5xx", AccessFilter{MinStatus: 400}, 3},
+		{"max status only", AccessFilter{MaxStatus: 399}, 1},
+		{"host substring", AccessFilter{Host: "billing"}, 2},
+		{"host case-insensitive", AccessFilter{Host: "BILLING"}, 2},
+		{"router substring", AccessFilter{Router: "whoami"}, 1},
+		{"method", AccessFilter{Method: "get"}, 4},
+		{"path substring", AccessFilter{Path: "/pay"}, 1},
+		{"min duration", AccessFilter{MinDurationMs: 2.6}, 1},
+		{"combined", AccessFilter{MinStatus: 500, Host: "billing", Method: "GET"}, 2},
+		{"no match", AccessFilter{Status: 418}, 0},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			f, err := os.Open("testdata/access.log")
+			require.NoError(t, err)
+			defer f.Close()
+
+			entries, err := TailAccess(f, 100, test.filter)
+			require.NoError(t, err)
+			assert.Len(t, entries, test.want)
+		})
+	}
+}
