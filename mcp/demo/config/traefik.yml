@@ -14,7 +14,10 @@ entryPoints:
     address: ":443"
 
 log:
-  level: INFO
+  # DEBUG so Traefik dumps its redacted static configuration as JSON at startup
+  # ("Static configuration loaded [json]"); the MCP server reads that line to
+  # deduce which tools to expose.
+  level: DEBUG
   # File app log so tail_traefik_logs has a target to read.
   filePath: "/logs/traefik.log"
   format: json

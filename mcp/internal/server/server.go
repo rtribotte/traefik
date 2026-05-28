@@ -4,6 +4,7 @@ package server
 
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
 )
@@ -20,6 +21,20 @@ type Deps struct {
 	// Tempo queries distributed traces. Nil disables the trace tools at call
 	// time with a helpful error.
 	Tempo *tempo.Client
+	// Caps are the observability capabilities deduced from Traefik's static
+	// configuration. When set, data-source-backed tools (metrics, traces, logs)
+	// are registered only if the matching source is configured. Nil means the
+	// static configuration is unknown, so every tool is registered.
+	Caps *staticconf.Capabilities
+}
+
+// has reports whether a capability-gated tool should be registered. With no
+// known capabilities every tool is registered; otherwise have decides.
+func (d Deps) has(have func(staticconf.Capabilities) bool) bool {
+	if d.Caps == nil {
+		return true
+	}
+	return have(*d.Caps)
 }
 
 // instructions guide the client to treat Traefik's configuration as live state.
@@ -45,23 +60,27 @@ func New(name, version string, deps Deps) *mcp.Server {
 	)
 	addReadTools(s, deps.Target)
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "tail_access_logs",
-		Description: "Return recent entries from Traefik's access log, newest last. All filters are " +
-			"optional and combine with AND: exact status, status range (minStatus/maxStatus), " +
-			"service, router, host, method, path substring, and minDurationMs. Use it for any " +
-			"traffic question — errors, slow requests, which router/service served a host, " +
-			"traffic to a path, requests by method, etc.",
-	}, tailAccessLogs(deps.AccessLogPath))
+	if deps.has(func(c staticconf.Capabilities) bool { return c.FileAccessLog }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "tail_access_logs",
+			Description: "Return recent entries from Traefik's access log, newest last. All filters are " +
+				"optional and combine with AND: exact status, status range (minStatus/maxStatus), " +
+				"service, router, host, method, path substring, and minDurationMs. Use it for any " +
+				"traffic question — errors, slow requests, which router/service served a host, " +
+				"traffic to a path, requests by method, etc.",
+		}, tailAccessLogs(deps.AccessLogPath))
+	}
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "tail_traefik_logs",
-		Description: "Return recent entries from Traefik's application log, newest last. This is " +
-			"where Traefik reports configuration and runtime errors (unresolved middleware/service " +
-			"references, TLS/certificate problems, provider connection failures, invalid config). " +
-			"Filters are optional and combine with AND: level (exact), minLevel (e.g. warn for " +
-			"warnings and errors), and contains (substring in the message or error).",
-	}, tailAppLogs(deps.AppLogPath))
+	if deps.has(func(c staticconf.Capabilities) bool { return c.FileAppLog }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "tail_traefik_logs",
+			Description: "Return recent entries from Traefik's application log, newest last. This is " +
+				"where Traefik reports configuration and runtime errors (unresolved middleware/service " +
+				"references, TLS/certificate problems, provider connection failures, invalid config). " +
+				"Filters are optional and combine with AND: level (exact), minLevel (e.g. warn for " +
+				"warnings and errors), and contains (substring in the message or error).",
+		}, tailAppLogs(deps.AppLogPath))
+	}
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "diagnose_router_missing",
@@ -76,28 +95,32 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"Follow the returned steps using the live read tools.",
 	}, diagnose5xxTool)
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "get_metrics",
-		Description: "Return Traefik's raw Prometheus /metrics output as text: config reload " +
-			"status, request/response counts and durations by entrypoint and service, open " +
-			"connections, TLS certificate expiry, and more.",
-	}, getMetrics(deps.Target))
+	if deps.has(func(c staticconf.Capabilities) bool { return c.PrometheusMetrics }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "get_metrics",
+			Description: "Return Traefik's raw Prometheus /metrics output as text: config reload " +
+				"status, request/response counts and durations by entrypoint and service, open " +
+				"connections, TLS certificate expiry, and more.",
+		}, getMetrics(deps.Target))
+	}
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "search_traces",
-		Description: "Search Traefik's distributed traces in Tempo with an optional TraceQL " +
-			"filter, returning matching trace summaries (trace ID, root service and operation, " +
-			"duration). Use it to find slow requests ({duration>1s}), failed ones ({status=error}), " +
-			"or recent traffic, then fetch a specific trace with get_trace.",
-	}, searchTraces(deps.Tempo))
+	if deps.has(func(c staticconf.Capabilities) bool { return c.OTLPTracing }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "search_traces",
+			Description: "Search Traefik's distributed traces in Tempo with an optional TraceQL " +
+				"filter, returning matching trace summaries (trace ID, root service and operation, " +
+				"duration). Use it to find slow requests ({duration>1s}), failed ones ({status=error}), " +
+				"or recent traffic, then fetch a specific trace with get_trace.",
+		}, searchTraces(deps.Tempo))
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "get_trace",
-		Description: "Return the full span tree of one trace by ID (from search_traces): each " +
-			"span's service, operation, parent, duration, status and attributes. Use it to see " +
-			"where time went or which hop failed across the entrypoint, router, middleware and " +
-			"service spans of a request.",
-	}, getTrace(deps.Tempo))
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "get_trace",
+			Description: "Return the full span tree of one trace by ID (from search_traces): each " +
+				"span's service, operation, parent, duration, status and attributes. Use it to see " +
+				"where time went or which hop failed across the entrypoint, router, middleware and " +
+				"service spans of a request.",
+		}, getTrace(deps.Tempo))
+	}
 
 	addPrompts(s)
 

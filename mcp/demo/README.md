@@ -60,5 +60,11 @@ Traefik API/dashboard: http://localhost:8080 — this is what the MCP server rea
 }
 ```
 
+On startup the server reads `--traefik.app-log` for the line where Traefik dumps
+its static configuration (`Static configuration loaded [json]`) and registers
+only the tools whose data sources are configured — metrics, traces and the log
+tools. Traefik logs that line only at `log.level=DEBUG` (the demo config sets
+it); without it the server falls back to registering every tool.
+
 Each scenario's README lists the prompts to try and what the assistant should
 conclude.

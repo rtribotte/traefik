@@ -14,6 +14,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/traefik/traefik-mcp/internal/server"
+	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
 )
@@ -39,10 +40,45 @@ func main() {
 		tempoClient = tempo.New(*tempoURL, &http.Client{Timeout: *timeout})
 	}
 
-	srv := server.New("traefik-mcp", version, server.Deps{Target: target, AccessLogPath: *accessLog, AppLogPath: *appLog, Tempo: tempoClient})
+	caps := detectCapabilities(*appLog)
+
+	srv := server.New("traefik-mcp", version, server.Deps{
+		Target:        target,
+		AccessLogPath: *accessLog,
+		AppLogPath:    *appLog,
+		Tempo:         tempoClient,
+		Caps:          caps,
+	})
 
 	if err := srv.Run(ctx, &mcp.StdioTransport{}); err != nil {
 		fmt.Fprintf(os.Stderr, "traefik-mcp: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+// detectCapabilities recovers Traefik's static configuration from its app log
+// and derives which data-source tools to expose. A nil result means the static
+// configuration is unknown (no app log, or Traefik not at debug level), in which
+// case the server falls back to registering every tool.
+func detectCapabilities(appLog string) *staticconf.Capabilities {
+	if appLog == "" {
+		return nil
+	}
+
+	f, err := os.Open(appLog)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "traefik-mcp: cannot read app log for static config: %v\n", err)
+		return nil
+	}
+	defer f.Close()
+
+	cfg, err := staticconf.FromLog(f)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "traefik-mcp: %v; registering all tools\n", err)
+		return nil
+	}
+
+	caps := staticconf.Detect(cfg)
+	fmt.Fprintf(os.Stderr, "traefik-mcp: detected capabilities from static config: %+v\n", caps)
+	return &caps
 }
