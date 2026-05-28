@@ -25,6 +25,13 @@ func (f *fakeTarget) Get(_ context.Context, path string, out any) error {
 	return json.Unmarshal(f.responses[path], out)
 }
 
+func (f *fakeTarget) GetRaw(_ context.Context, path string) ([]byte, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.responses[path], nil
+}
+
 func newRawdataTarget(t *testing.T) *fakeTarget {
 	t.Helper()
 	return newFixtureTarget(t, map[string]string{"/api/rawdata": "rawdata.json"})

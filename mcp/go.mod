@@ -6,6 +6,8 @@ replace github.com/traefik/traefik/v3 => ../
 
 require (
 	github.com/modelcontextprotocol/go-sdk v1.6.1
+	github.com/prometheus/client_model v0.6.2
+	github.com/prometheus/common v0.67.4
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -235,8 +237,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/otp v1.5.0 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
-	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/redis/go-redis/v9 v9.8.0 // indirect
 	github.com/regfish/regfish-dnsapi-go v0.1.1 // indirect
