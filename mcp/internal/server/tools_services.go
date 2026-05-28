@@ -22,7 +22,8 @@ type ServiceSummary struct {
 type listServicesInput struct{}
 
 type listServicesOutput struct {
-	Services []ServiceSummary `json:"services"`
+	ConfigHash string           `json:"configHash"`
+	Services   []ServiceSummary `json:"services"`
 }
 
 func listServices(target traefik.Target) mcp.ToolHandlerFor[listServicesInput, listServicesOutput] {
@@ -32,7 +33,7 @@ func listServices(target traefik.Target) mcp.ToolHandlerFor[listServicesInput, l
 			return nil, listServicesOutput{}, err
 		}
 
-		out := listServicesOutput{Services: make([]ServiceSummary, 0, len(raw.Services))}
+		out := listServicesOutput{ConfigHash: raw.Hash(), Services: make([]ServiceSummary, 0, len(raw.Services))}
 		for name, info := range raw.Services {
 			out.Services = append(out.Services, serviceSummary(name, info))
 		}

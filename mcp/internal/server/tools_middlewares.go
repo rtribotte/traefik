@@ -20,6 +20,7 @@ type MiddlewareSummary struct {
 type listMiddlewaresInput struct{}
 
 type listMiddlewaresOutput struct {
+	ConfigHash  string              `json:"configHash"`
 	Middlewares []MiddlewareSummary `json:"middlewares"`
 }
 
@@ -30,7 +31,7 @@ func listMiddlewares(target traefik.Target) mcp.ToolHandlerFor[listMiddlewaresIn
 			return nil, listMiddlewaresOutput{}, err
 		}
 
-		out := listMiddlewaresOutput{Middlewares: make([]MiddlewareSummary, 0, len(raw.Middlewares))}
+		out := listMiddlewaresOutput{ConfigHash: raw.Hash(), Middlewares: make([]MiddlewareSummary, 0, len(raw.Middlewares))}
 		for name, info := range raw.Middlewares {
 			summary := MiddlewareSummary{
 				Name:   name,

@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -91,16 +89,8 @@ func getConfigHash(target traefik.Target) mcp.ToolHandlerFor[getConfigHashInput,
 			return nil, configHashOutput{}, err
 		}
 
-		// json.Marshal sorts map keys, so the fingerprint is stable across calls
-		// for an unchanged snapshot.
-		b, err := json.Marshal(raw)
-		if err != nil {
-			return nil, configHashOutput{}, err
-		}
-		sum := sha256.Sum256(b)
-
 		return nil, configHashOutput{
-			Hash:        hex.EncodeToString(sum[:]),
+			Hash:        raw.Hash(),
 			Routers:     len(raw.Routers) + len(raw.TCPRouters) + len(raw.UDPRouters),
 			Services:    len(raw.Services) + len(raw.TCPServices) + len(raw.UDPServices),
 			Middlewares: len(raw.Middlewares) + len(raw.TCPMiddlewares),
@@ -153,7 +143,8 @@ type RouterSummary struct {
 type listRoutersInput struct{}
 
 type listRoutersOutput struct {
-	Routers []RouterSummary `json:"routers"`
+	ConfigHash string          `json:"configHash"`
+	Routers    []RouterSummary `json:"routers"`
 }
 
 func listRouters(target traefik.Target) mcp.ToolHandlerFor[listRoutersInput, listRoutersOutput] {
@@ -163,7 +154,7 @@ func listRouters(target traefik.Target) mcp.ToolHandlerFor[listRoutersInput, lis
 			return nil, listRoutersOutput{}, err
 		}
 
-		out := listRoutersOutput{Routers: make([]RouterSummary, 0, len(raw.Routers))}
+		out := listRoutersOutput{ConfigHash: raw.Hash(), Routers: make([]RouterSummary, 0, len(raw.Routers))}
 		for name, info := range raw.Routers {
 			out.Routers = append(out.Routers, routerSummary(name, info))
 		}

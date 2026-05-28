@@ -2,6 +2,9 @@ package traefik
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 
 	"github.com/traefik/traefik/v3/pkg/config/runtime"
 )
@@ -41,4 +44,17 @@ func FetchRawData(ctx context.Context, target Target) (*RawData, error) {
 		return nil, err
 	}
 	return &raw, nil
+}
+
+// Hash returns a stable sha256 fingerprint of the snapshot. It is stable across
+// calls because json.Marshal sorts map keys, so an unchanged configuration
+// always yields the same hash. Clients embed it in tool output to detect when
+// the configuration has changed under them and re-fetch.
+func (r *RawData) Hash() string {
+	b, err := json.Marshal(r)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:])
 }

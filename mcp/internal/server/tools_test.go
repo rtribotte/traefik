@@ -140,6 +140,12 @@ func TestGetConfigHash(t *testing.T) {
 	_, out2, err := handler(context.Background(), nil, getConfigHashInput{})
 	require.NoError(t, err)
 	assert.Equal(t, out.Hash, out2.Hash)
+
+	// The hash embedded in list_routers output must match the standalone tool,
+	// so the model sees a consistent fingerprint either way.
+	_, routers, err := listRouters(newRawdataTarget(t))(context.Background(), nil, listRoutersInput{})
+	require.NoError(t, err)
+	assert.Equal(t, out.Hash, routers.ConfigHash)
 }
 
 func TestGetConfigHash_ChangesWithConfig(t *testing.T) {
