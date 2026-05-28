@@ -44,7 +44,10 @@ Traefik API/dashboard: http://localhost:8080 — this is what the MCP server rea
   "mcpServers": {
     "traefik": {
       "command": "/Users/romain/go/src/github.com/traefik/traefik/mcp/bin/traefik-mcp",
-      "args": ["--traefik.api-url=http://localhost:8080"]
+      "args": [
+        "--traefik.api-url=http://localhost:8088",
+        "--traefik.access-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/access.log"
+      ]
     }
   }
 }

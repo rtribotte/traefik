@@ -10,6 +10,9 @@ import (
 // Deps holds the collaborators the MCP surface is built on.
 type Deps struct {
 	Target traefik.Target
+	// AccessLogPath is the host path to Traefik's JSON access log, enabling the
+	// log-tailing tools. Empty disables them at call time with a helpful error.
+	AccessLogPath string
 }
 
 // instructions guide the client to treat Traefik's configuration as live state.
@@ -34,5 +37,13 @@ func New(name, version string, deps Deps) *mcp.Server {
 		&mcp.ServerOptions{Instructions: instructions},
 	)
 	addReadTools(s, deps.Target)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "tail_access_logs",
+		Description: "Return recent entries from Traefik's access log, newest last. Filter by " +
+			"minStatus (e.g. 500 to see only server errors) or service name. Use this to " +
+			"investigate 5xx errors, latency or which router/service served a request.",
+	}, tailAccessLogs(deps.AccessLogPath))
+
 	return s
 }

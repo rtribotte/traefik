@@ -23,6 +23,7 @@ func main() {
 	apiURL := flag.String("traefik.api-url", "http://localhost:8080", "Base URL of the Traefik API.")
 	name := flag.String("traefik.name", "primary", "Name identifying this Traefik instance in tool output.")
 	timeout := flag.Duration("traefik.timeout", 5*time.Second, "Timeout for Traefik API requests.")
+	accessLog := flag.String("traefik.access-log", "", "Path to Traefik's JSON access log file (enables log-tailing tools).")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -30,7 +31,7 @@ func main() {
 
 	target := traefik.NewHTTPTarget(*name, *apiURL, &http.Client{Timeout: *timeout})
 
-	srv := server.New("traefik-mcp", version, server.Deps{Target: target})
+	srv := server.New("traefik-mcp", version, server.Deps{Target: target, AccessLogPath: *accessLog})
 
 	if err := srv.Run(ctx, &mcp.StdioTransport{}); err != nil {
 		fmt.Fprintf(os.Stderr, "traefik-mcp: %v\n", err)
