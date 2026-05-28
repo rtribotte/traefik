@@ -125,6 +125,38 @@ func TestListMiddlewares(t *testing.T) {
 	assert.Equal(t, []string{"web@docker"}, mw.UsedBy)
 }
 
+func TestGetConfigHash(t *testing.T) {
+	handler := getConfigHash(newRawdataTarget(t))
+
+	_, out, err := handler(context.Background(), nil, getConfigHashInput{})
+	require.NoError(t, err)
+
+	assert.Len(t, out.Hash, 64) // sha256 hex
+	assert.Equal(t, 2, out.Routers)
+	assert.Equal(t, 1, out.Services)
+	assert.Equal(t, 1, out.Middlewares)
+
+	// Same snapshot -> same hash.
+	_, out2, err := handler(context.Background(), nil, getConfigHashInput{})
+	require.NoError(t, err)
+	assert.Equal(t, out.Hash, out2.Hash)
+}
+
+func TestGetConfigHash_ChangesWithConfig(t *testing.T) {
+	base := getConfigHash(newRawdataTarget(t))
+	_, out, err := base(context.Background(), nil, getConfigHashInput{})
+	require.NoError(t, err)
+
+	// A snapshot with one extra router must produce a different hash.
+	mutated := &fakeTarget{responses: map[string]json.RawMessage{
+		"/api/rawdata": json.RawMessage(`{"routers":{"x@docker":{"rule":"Host(` + "`x`" + `)","service":"x","status":"enabled"}}}`),
+	}}
+	_, out2, err := getConfigHash(mutated)(context.Background(), nil, getConfigHashInput{})
+	require.NoError(t, err)
+
+	assert.NotEqual(t, out.Hash, out2.Hash)
+}
+
 func TestGetEntryPoints(t *testing.T) {
 	target := newFixtureTarget(t, map[string]string{"/api/entrypoints": "entrypoints.json"})
 	handler := getEntryPoints(target)

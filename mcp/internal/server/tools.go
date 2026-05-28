@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -63,6 +65,47 @@ func addReadTools(s *mcp.Server, target traefik.Target) {
 		Name:        "get_overview",
 		Description: "Summary counts of routers, services and middlewares per protocol, plus enabled features and providers.",
 	}, getOverview(target))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "get_config_hash",
+		Description: "Return a fingerprint (sha256) of Traefik's current runtime configuration, " +
+			"plus resource counts. Call this before relying on previously fetched routers, " +
+			"services or middlewares: if the hash differs from the last one you saw, the " +
+			"configuration changed and you must re-fetch it. Cheap to call repeatedly.",
+	}, getConfigHash(target))
+}
+
+type getConfigHashInput struct{}
+
+type configHashOutput struct {
+	Hash        string `json:"hash"`
+	Routers     int    `json:"routers"`
+	Services    int    `json:"services"`
+	Middlewares int    `json:"middlewares"`
+}
+
+func getConfigHash(target traefik.Target) mcp.ToolHandlerFor[getConfigHashInput, configHashOutput] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ getConfigHashInput) (*mcp.CallToolResult, configHashOutput, error) {
+		raw, err := traefik.FetchRawData(ctx, target)
+		if err != nil {
+			return nil, configHashOutput{}, err
+		}
+
+		// json.Marshal sorts map keys, so the fingerprint is stable across calls
+		// for an unchanged snapshot.
+		b, err := json.Marshal(raw)
+		if err != nil {
+			return nil, configHashOutput{}, err
+		}
+		sum := sha256.Sum256(b)
+
+		return nil, configHashOutput{
+			Hash:        hex.EncodeToString(sum[:]),
+			Routers:     len(raw.Routers) + len(raw.TCPRouters) + len(raw.UDPRouters),
+			Services:    len(raw.Services) + len(raw.TCPServices) + len(raw.UDPServices),
+			Middlewares: len(raw.Middlewares) + len(raw.TCPMiddlewares),
+		}, nil
+	}
 }
 
 // configKeys marshals a dynamic config object and returns its top-level keys,
