@@ -88,6 +88,11 @@ case "$cmd" in
     clear_dynamic
     sync_dynamic
     docker compose "${files[@]}" up -d --remove-orphans
+    # Traefik's static config (traefik.yml: tracing, metrics, entrypoints) is
+    # only read at startup. docker compose up won't recreate an already-running
+    # traefik on a mounted-file change, so force-recreate just that service to
+    # pick up edits when switching scenarios.
+    docker compose "${files[@]}" up -d --force-recreate --no-deps traefik
     if [[ -n "$scenario" && -f "scenarios/$scenario/traffic.sh" ]]; then
       wait_ready
       run_traffic
