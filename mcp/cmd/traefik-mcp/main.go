@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/traefik/traefik-mcp/internal/loki"
+	"github.com/traefik/traefik-mcp/internal/prom"
 	"github.com/traefik/traefik-mcp/internal/server"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
@@ -28,6 +30,8 @@ func main() {
 	accessLog := flag.String("traefik.access-log", "", "Path to Traefik's JSON access log file (enables the access-log tool).")
 	appLog := flag.String("traefik.app-log", "", "Path to Traefik's JSON application log file (enables the app-log tool).")
 	tempoURL := flag.String("tempo.url", "", "Base URL of a Tempo (otel-lgtm) instance (enables the trace tools), e.g. http://localhost:3200.")
+	lokiURL := flag.String("loki.url", "", "Base URL of a Loki (otel-lgtm) instance (enables querying OTLP-shipped access logs), e.g. http://localhost:3100.")
+	promURL := flag.String("prometheus.url", "", "Base URL of a Prometheus (otel-lgtm) instance (enables querying OTLP-shipped metrics), e.g. http://localhost:9090.")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -40,6 +44,16 @@ func main() {
 		tempoClient = tempo.New(*tempoURL, &http.Client{Timeout: *timeout})
 	}
 
+	var lokiClient *loki.Client
+	if *lokiURL != "" {
+		lokiClient = loki.New(*lokiURL, &http.Client{Timeout: *timeout})
+	}
+
+	var promClient *prom.Client
+	if *promURL != "" {
+		promClient = prom.New(*promURL, &http.Client{Timeout: *timeout})
+	}
+
 	caps := detectCapabilities(*appLog)
 
 	srv := server.New("traefik-mcp", version, server.Deps{
@@ -47,6 +61,8 @@ func main() {
 		AccessLogPath: *accessLog,
 		AppLogPath:    *appLog,
 		Tempo:         tempoClient,
+		Loki:          lokiClient,
+		Prom:          promClient,
 		Caps:          caps,
 	})
 

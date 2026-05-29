@@ -72,7 +72,7 @@ func TestServer_GatesToolsOnCapabilities(t *testing.T) {
 
 	// Nil caps: every data-source tool is registered (back-compat).
 	all := tools(Deps{Target: target})
-	for _, name := range []string{"tail_access_logs", "tail_traefik_logs", "get_metrics", "search_traces", "get_trace"} {
+	for _, name := range []string{"tail_access_logs", "tail_traefik_logs", "get_metrics", "search_traces", "get_trace", "query_access_logs", "query_metrics"} {
 		assert.True(t, all[name], name)
 	}
 
@@ -83,6 +83,16 @@ func TestServer_GatesToolsOnCapabilities(t *testing.T) {
 	assert.False(t, traceOnly["get_metrics"])
 	assert.False(t, traceOnly["tail_access_logs"])
 	assert.False(t, traceOnly["tail_traefik_logs"])
+	assert.False(t, traceOnly["query_access_logs"])
+	assert.False(t, traceOnly["query_metrics"])
+
+	// OTLP logs/metrics caps register exactly the otel-lgtm query tools.
+	otlp := tools(Deps{Target: target, Caps: &staticconf.Capabilities{OTLPAccessLog: true, OTLPMetrics: true}})
+	assert.True(t, otlp["query_access_logs"])
+	assert.True(t, otlp["query_metrics"])
+	assert.False(t, otlp["tail_access_logs"])
+	assert.False(t, otlp["get_metrics"])
+	assert.False(t, otlp["search_traces"])
 
 	// Core read tools and prompts-as-tools are always present.
 	assert.True(t, traceOnly["list_routers"])

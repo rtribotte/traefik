@@ -22,14 +22,26 @@ log:
   filePath: "/logs/traefik.log"
   format: json
 
-# File access log so tail_access_logs has a target to read.
+# Access log to BOTH a file (tail_access_logs) and OTLP/gRPC → otel-lgtm's Loki
+# (query_access_logs). dualOutput keeps the file output, which OTLP disables by
+# default. OTLP access logging requires the experimental.otlpLogs flag below.
 accessLog:
   filePath: "/logs/access.log"
   format: json
+  otlp:
+    grpc:
+      endpoint: lgtm:4317
+      insecure: true
+  dualOutput: true
 
-# Prometheus pull endpoint so the metrics-backed tools work.
+# Metrics to BOTH a Prometheus pull endpoint (get_metrics) and OTLP/gRPC →
+# otel-lgtm's Prometheus (query_metrics).
 metrics:
   prometheus: {}
+  otlp:
+    grpc:
+      endpoint: lgtm:4317
+      insecure: true
 
 # Ship traces over OTLP/gRPC to otel-lgtm's Tempo, which the trace tools read.
 tracing:
@@ -38,9 +50,11 @@ tracing:
       endpoint: lgtm:4317
       insecure: true
 
-# Local (Yaegi) plugin used by the trace-latency scenario. Declared here so it
-# is installed in the instance; it only affects routes that reference it.
+# otlpLogs: required to ship access logs over OTLP (see accessLog.otlp above).
+# localPlugins: the trace-latency scenario's Yaegi plugin, installed here so it
+# is available; it only affects routes that reference it.
 experimental:
+  otlpLogs: true
   localPlugins:
     randomplugin:
       moduleName: github.com/traefik/traefik-mcp/plugins/randomplugin

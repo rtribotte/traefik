@@ -53,7 +53,9 @@ Traefik API/dashboard: http://localhost:8080 — this is what the MCP server rea
         "--traefik.api-url=http://localhost:8088",
         "--traefik.access-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/access.log",
         "--traefik.app-log=/Users/romain/go/src/github.com/traefik/traefik/mcp/demo/logs/traefik.log",
-        "--tempo.url=http://localhost:3200"
+        "--tempo.url=http://localhost:3200",
+        "--loki.url=http://localhost:3100",
+        "--prometheus.url=http://localhost:9090"
       ]
     }
   }
@@ -65,6 +67,13 @@ its static configuration (`Static configuration loaded [json]`) and registers
 only the tools whose data sources are configured — metrics, traces and the log
 tools. Traefik logs that line only at `log.level=DEBUG` (the demo config sets
 it); without it the server falls back to registering every tool.
+
+The demo Traefik exports metrics and access logs over OTLP to otel-lgtm *as well
+as* the Prometheus pull endpoint and the file logs, so two extra tools surface:
+`query_metrics` (PromQL against lgtm's Prometheus, `--prometheus.url`) and
+`query_access_logs` (Traefik's access logs from lgtm's Loki, `--loki.url`).
+These complement `get_metrics` (raw current scrape) and `tail_access_logs` (file
+tail) with history, aggregation and time-windowed queries.
 
 Each scenario's README lists the prompts to try and what the assistant should
 conclude.

@@ -4,6 +4,8 @@ package server
 
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/traefik/traefik-mcp/internal/loki"
+	"github.com/traefik/traefik-mcp/internal/prom"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
@@ -21,6 +23,12 @@ type Deps struct {
 	// Tempo queries distributed traces. Nil disables the trace tools at call
 	// time with a helpful error.
 	Tempo *tempo.Client
+	// Loki queries access logs Traefik ships over OTLP. Nil disables the
+	// access-log query tool at call time with a helpful error.
+	Loki *loki.Client
+	// Prom queries metrics Traefik ships over OTLP. Nil disables the metrics
+	// query tool at call time with a helpful error.
+	Prom *prom.Client
 	// Caps are the observability capabilities deduced from Traefik's static
 	// configuration. When set, data-source-backed tools (metrics, traces, logs)
 	// are registered only if the matching source is configured. Nil means the
@@ -120,6 +128,30 @@ func New(name, version string, deps Deps) *mcp.Server {
 				"where time went or which hop failed across the entrypoint, router, middleware and " +
 				"service spans of a request.",
 		}, getTrace(deps.Tempo))
+	}
+
+	if deps.has(func(c staticconf.Capabilities) bool { return c.OTLPAccessLog }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "query_access_logs",
+			Description: "Return recent Traefik access-log entries from Loki (otel-lgtm), newest " +
+				"last, when Traefik ships access logs over OTLP. Same filters as tail_access_logs " +
+				"(status, status range, service, router, host, method, path, minDurationMs), plus " +
+				"lookbackMinutes for the time window. Use it for any traffic question — errors, slow " +
+				"requests, which router/service served a host — when logs go to otel-lgtm.",
+		}, queryAccessLogs(deps.Loki))
+	}
+
+	if deps.has(func(c staticconf.Capabilities) bool { return c.OTLPMetrics }) {
+		mcp.AddTool(s, &mcp.Tool{
+			Name: "query_metrics",
+			Description: "Run a PromQL query against the Prometheus that otel-lgtm fills from " +
+				"Traefik's OTLP metrics. Unlike get_metrics (a raw current scrape), this gives " +
+				"history and aggregation: rates, sums and quantiles over time. Common metrics: " +
+				"traefik_service_requests_total, traefik_service_request_duration_seconds_bucket, " +
+				"traefik_entrypoint_requests_total, traefik_config_reloads_total, " +
+				"traefik_open_connections. Set rangeMinutes for a range query (series); omit it " +
+				"for an instant query (samples).",
+		}, queryMetrics(deps.Prom))
 	}
 
 	addPrompts(s)
