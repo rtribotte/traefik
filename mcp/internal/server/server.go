@@ -64,7 +64,13 @@ Every list tool returns a "configHash" fingerprint of the configuration. If it
 differs from the one you saw previously, the configuration changed and any cached
 understanding is stale. Use get_config_hash for a cheap explicit check.
 
-When diagnosing a router or service, always re-fetch its current state first.`
+When diagnosing a router or service, always re-fetch its current state first.
+
+Whenever you author or modify Traefik configuration — a fix, a new router, a
+middleware, a whole file — you MUST pass it through validate_traefik_config
+before presenting it, and never show the user configuration you have not
+validated. Ground the configuration in the reference first (get_traefik_concept
+for the field contract, get_traefik_schema for the JSON Schema), then validate.`
 
 // New builds an MCP server with the read-only Traefik tools registered.
 func New(name, version string, deps Deps) *mcp.Server {
@@ -162,14 +168,16 @@ func New(name, version string, deps Deps) *mcp.Server {
 		Description: "Return the full reference page for a concept id (from search_traefik_docs): every " +
 			"field with its type, default and description — the exact contract for that configuration " +
 			"object. Ground on this before authoring or correcting configuration; field names, types and " +
-			"enums are exact for the pinned Traefik version.",
+			"enums are exact for the pinned Traefik version. After authoring the configuration, validate it " +
+			"with validate_traefik_config before presenting it.",
 	}, getConcept(deps.Reference))
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "get_traefik_schema",
 		Description: "Return the JSON Schema for a concept id (from search_traefik_docs), suitable for " +
 			"structured generation or as a tool input schema, so a generated fragment cannot be " +
-			"structurally invalid.",
+			"structurally invalid. Generating against the schema does not replace validation: still run " +
+			"validate_traefik_config on the authored configuration before presenting it.",
 	}, getSchema(deps.Reference))
 
 	mcp.AddTool(s, &mcp.Tool{
@@ -186,8 +194,9 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"JSON, including multi-document YAML. It auto-detects what you passed — a whole traefik.yaml " +
 			"(static install or dynamic routing config), a Traefik or Gateway API CRD, or an annotated " +
 			"Kubernetes manifest — by matching it against the schema registry. Pass 'concept' to validate " +
-			"a single fragment (e.g. one middleware) against that concept's schema. Use it to vet " +
-			"generated or hand-written configuration before applying it.",
+			"a single fragment (e.g. one middleware) against that concept's schema. This is the required " +
+			"final gate: run it on any configuration you author or modify, and never present configuration " +
+			"to the user that has not passed it.",
 	}, validateConfig(deps.Reference))
 
 	//mcp.AddTool(s, &mcp.Tool{
