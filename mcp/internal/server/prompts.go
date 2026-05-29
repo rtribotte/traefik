@@ -7,27 +7,19 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// addPrompts registers the guided diagnostic workflows. Prompts are explicitly
+// addPrompts registers the guided diagnostic workflow. Prompts are explicitly
 // selected by the user, so unlike searched tools they always load — making them
 // the reliable way to enforce a multi-step procedure (notably: re-fetch live
 // state instead of answering from earlier results).
 func addPrompts(s *mcp.Server) {
 	s.AddPrompt(&mcp.Prompt{
-		Name:        "diagnose_router_missing",
-		Description: "Diagnose why a Traefik router is missing or not routing traffic.",
+		Name:        "diagnose",
+		Description: "Diagnose a Traefik routing problem — a missing/not-routing router, 5xx errors, or unexplained latency — from live data, and ground the fix in the reference.",
 		Arguments: []*mcp.PromptArgument{
-			{Name: "router", Description: "Fully qualified router name if known (e.g. api@docker). Optional."},
+			{Name: "problem", Description: "What's wrong, in the user's words (e.g. 'api.localhost 404s', 'billing returns 502', 'checkout is slow'). Optional."},
+			{Name: "target", Description: "The router, service or host involved if known (e.g. api@docker, billing.localhost). Optional."},
 		},
-	}, diagnoseRouterMissing)
-
-	s.AddPrompt(&mcp.Prompt{
-		Name:        "diagnose_5xx",
-		Description: "Diagnose 5xx errors and determine whether the fault is Traefik, the service config, or the app.",
-		Arguments: []*mcp.PromptArgument{
-			{Name: "service", Description: "Service name if known (e.g. billing@docker). Optional."},
-			{Name: "host", Description: "Request host if known (e.g. billing.localhost). Optional."},
-		},
-	}, diagnose5xx)
+	}, diagnose)
 }
 
 func promptResult(description, text string) *mcp.GetPromptResult {
@@ -39,78 +31,67 @@ func promptResult(description, text string) *mcp.GetPromptResult {
 	}
 }
 
-func diagnoseRouterMissing(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-	return promptResult("Guided router diagnosis", buildRouterMissing(req.Params.Arguments["router"])), nil
+func diagnose(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	return promptResult("Guided Traefik diagnosis", buildDiagnose(req.Params.Arguments["problem"], req.Params.Arguments["target"])), nil
 }
 
-// buildRouterMissing renders the router-diagnosis playbook. Shared by the
-// user-invoked prompt and the model-invoked tool so both stay in lockstep.
-func buildRouterMissing(router string) string {
-	target := "the router the user is asking about"
-	if router != "" {
-		target = fmt.Sprintf("router %q", router)
+// buildDiagnose renders the general triage playbook. Shared by the user-invoked
+// prompt and the model-invoked tool so both stay in lockstep. It covers the three
+// symptom families (missing route, 5xx, latency) behind one entry point and ends
+// by grounding the fix in the embedded reference.
+func buildDiagnose(problem, target string) string {
+	subject := "the problem the user is describing"
+	if problem != "" {
+		subject = fmt.Sprintf("this problem: %q", problem)
+	}
+	if target != "" {
+		subject += fmt.Sprintf(" (involving %q)", target)
 	}
 
-	return fmt.Sprintf(`Diagnose why %s is missing or not routing in Traefik.
+	return fmt.Sprintf(`Diagnose %s in Traefik.
 
-Work only from live data. Do not answer from earlier results — Traefik's config is
-dynamic and may have changed. Re-fetch at every step.
+Work only from live data. Traefik's configuration is dynamic and may have changed,
+so re-fetch at every step; never answer from earlier results. Begin every path with
+list_routers (note its configHash) and get_overview for the active providers.
 
-1. Call list_routers to get the current routers (note its configHash).
-2. If the router is absent entirely, the most likely cause is that it was never
-   registered: a misspelled label/key (e.g. "rulee" instead of "rule"), the wrong
-   provider, or exposedByDefault=false without traefik.enable. Confirm by checking
-   get_overview for the active providers.
-3. If the router is present but its status is "warning" or "disabled", call
-   get_router on it and read its errors. Common causes: it references a middleware
-   that does not exist, references a missing service, or uses v2 rule syntax on v3.
-4. Cross-check referenced names with list_middlewares and list_services.
-5. Use tail_access_logs to see whether any request ever reached the router.
+First classify the symptom, then follow the matching path:
 
-Then report the single most likely cause and the concrete fix. Rank the
-candidates if more than one is plausible.`, target)
-}
+A — the route is missing, 404s, or never takes effect:
+  1. If the router is absent, it was likely never registered: a misspelled
+     label/key (e.g. "rulee" for "rule"), the wrong provider, or
+     exposedByDefault=false without traefik.enable.
+  2. If present but its status is "warning" or "disabled", call get_router and read
+     its errors. Common causes: it references a middleware or service that does not
+     exist, or uses Traefik v2 rule syntax on v3.
+  3. Cross-check referenced names with list_middlewares and list_services.
+  4. Use tail_access_logs to see whether any request ever reached the router.
 
-func diagnose5xx(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-	return promptResult("Guided 5xx diagnosis", buildDiagnose5xx(req.Params.Arguments["service"], req.Params.Arguments["host"])), nil
-}
+B — the route returns 5xx errors:
+  1. Confirm a router actually matches the request (get_router). If none matches,
+     this is a routing/404 problem, not a 5xx — say so.
+  2. Call get_service and get_service_health: are the backend servers UP? Is the
+     configured server list/port what you expect?
+  3. Call tail_access_logs with minStatus=500 (and the service name) for the actual
+     5xx entries, their count and paths.
+  4. Interpret: 502 with backends unreachable -> the backend is down or the service
+     points at the wrong port (a service-config problem, not Traefik); 503 with no
+     healthy servers -> all backends failing health checks; 500 passed through ->
+     the application itself errored, Traefik is fine.
 
-// buildDiagnose5xx renders the 5xx-diagnosis playbook. Shared by the user-invoked
-// prompt and the model-invoked tool so both stay in lockstep.
-func buildDiagnose5xx(service, host string) string {
-	subject := "the affected service"
-	if service != "" {
-		subject = fmt.Sprintf("service %q", service)
-	} else if host != "" {
-		subject = fmt.Sprintf("the service behind host %q", host)
-	}
+C — the route works but is slow:
+  1. Confirm routing and health are fine (router present, servers UP, 200s).
+  2. Call tail_access_logs filtered to the host/service, ideally with minDurationMs,
+     to read the request durations.
+  3. If durations are high but the backend is fast, look in the traces:
+     search_traces with {duration>...} then get_trace. A large gap between the
+     entrypoint span and the ReverseProxy span means the time is in the middleware
+     chain, not the backend or the network.
 
-	return fmt.Sprintf(`Diagnose 5xx errors for %s and determine whether the fault is
-Traefik, the service configuration, or the backend application.
+Once you know the cause, ground the fix before proposing it: search_traefik_docs
+for the relevant concept, get_traefik_concept for its exact v3 contract, and if you
+produce corrected configuration, run validate_traefik_config on it before telling
+the user to apply it.
 
-Work only from live data. Re-fetch at every step; do not answer from earlier results.
-
-1. Call list_routers (and get_router on the matching one) to confirm a router
-   actually matches the request%s. If none matches, this is a routing/404 problem,
-   not a 5xx — say so.
-2. Call get_service and get_service_health for the service. Are the backend
-   servers UP? Is the configured server list/port what you expect?
-3. Call tail_access_logs with minStatus=500 (and the service name) to see the
-   actual 5xx entries, their count and paths.
-4. Interpret:
-   - 502 with the router/service present but backends unreachable -> the backend
-     is down or the service points at the wrong port. This is a service
-     configuration problem, not Traefik.
-   - 503 with no healthy servers -> all backends failing health checks.
-   - 500 passed through -> the application itself errored; Traefik is fine.
-
-Report whether the fault lies in Traefik routing, the service config, or the app,
-and give the concrete fix.`, subject, hostClause(host))
-}
-
-func hostClause(host string) string {
-	if host == "" {
-		return ""
-	}
-	return fmt.Sprintf(" for host %q", host)
+Report the single most likely cause and the concrete fix. Rank the candidates if
+more than one is plausible.`, subject)
 }

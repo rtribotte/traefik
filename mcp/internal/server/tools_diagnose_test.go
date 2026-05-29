@@ -8,22 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDiagnoseRouterMissingTool(t *testing.T) {
-	_, out, err := diagnoseRouterMissingTool(context.Background(), nil, diagnoseRouterMissingInput{Router: "api@docker"})
+func TestDiagnoseTool(t *testing.T) {
+	_, out, err := diagnoseTool(context.Background(), nil, diagnoseInput{Problem: "api.localhost 404s", Target: "api@docker"})
 	require.NoError(t, err)
-	assert.Contains(t, out.Playbook, `router "api@docker"`)
+	assert.Contains(t, out.Playbook, "api.localhost 404s")
 	assert.Contains(t, out.Playbook, "list_routers")
 }
 
-func TestDiagnose5xxTool(t *testing.T) {
-	_, out, err := diagnose5xxTool(context.Background(), nil, diagnose5xxInput{Service: "billing@docker"})
+// The tool and the prompt render the exact same playbook, so they never drift.
+func TestDiagnoseTool_SharesPromptText(t *testing.T) {
+	_, out, err := diagnoseTool(context.Background(), nil, diagnoseInput{Problem: "billing returns 502", Target: "billing@docker"})
 	require.NoError(t, err)
-	assert.Contains(t, out.Playbook, `service "billing@docker"`)
-	assert.Contains(t, out.Playbook, "get_service_health")
-}
-
-func TestDiagnoseTools_SharePromptText(t *testing.T) {
-	_, out, err := diagnose5xxTool(context.Background(), nil, diagnose5xxInput{Service: "billing@docker", Host: "billing.localhost"})
-	require.NoError(t, err)
-	assert.Equal(t, buildDiagnose5xx("billing@docker", "billing.localhost"), out.Playbook)
+	assert.Equal(t, buildDiagnose("billing returns 502", "billing@docker"), out.Playbook)
 }

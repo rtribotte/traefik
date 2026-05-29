@@ -97,17 +97,11 @@ func New(name, version string, deps Deps) *mcp.Server {
 	}
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name: "diagnose_router_missing",
-		Description: "Return a step-by-step playbook for diagnosing why a Traefik router is " +
-			"missing or not routing traffic. Follow the returned steps using the live read tools.",
-	}, diagnoseRouterMissingTool)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "diagnose_5xx",
-		Description: "Return a step-by-step playbook for diagnosing 5xx errors and determining " +
-			"whether the fault is Traefik routing, the service config, or the backend app. " +
-			"Follow the returned steps using the live read tools.",
-	}, diagnose5xxTool)
+		Name: "diagnose",
+		Description: "Return a step-by-step playbook for diagnosing a Traefik routing problem — a " +
+			"missing or not-routing router, 5xx errors, or unexplained latency. Follow the returned " +
+			"steps using the live read tools, then ground the fix in the reference.",
+	}, diagnoseTool)
 
 	if deps.has(func(c staticconf.Capabilities) bool { return c.PrometheusMetrics }) {
 		mcp.AddTool(s, &mcp.Tool{
