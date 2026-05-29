@@ -95,9 +95,11 @@ func TestServer_GatesToolsOnCapabilities(t *testing.T) {
 	assert.False(t, otlp["get_metrics"])
 	assert.False(t, otlp["search_traces"])
 
-	// Core read tools and prompts-as-tools are always present.
+	// Core read tools are always present.
 	assert.True(t, traceOnly["list_routers"])
-	assert.True(t, traceOnly["diagnose"])
+	// The diagnose playbook tool is disabled while we measure its influence on
+	// how the model resolves the scenarios on its own.
+	assert.False(t, traceOnly["diagnose"])
 
 	// Reference grounding and validation tools are capability-independent: always present.
 	for _, name := range []string{"search_traefik_docs", "get_traefik_concept", "get_traefik_schema", "get_traefik_doc", "validate_traefik_config"} {

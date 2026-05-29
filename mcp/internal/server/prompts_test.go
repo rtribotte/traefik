@@ -48,9 +48,7 @@ func TestServer_ListPrompts(t *testing.T) {
 	res, err := session.ListPrompts(context.Background(), nil)
 	require.NoError(t, err)
 
-	names := map[string]bool{}
-	for _, p := range res.Prompts {
-		names[p.Name] = true
-	}
-	assert.True(t, names["diagnose"])
+	// Prompts are disabled while we measure how the model resolves the scenarios
+	// without the guided diagnosis playbook. buildDiagnose stays unit-tested.
+	assert.Empty(t, res.Prompts)
 }

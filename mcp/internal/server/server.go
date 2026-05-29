@@ -96,13 +96,6 @@ func New(name, version string, deps Deps) *mcp.Server {
 		}, tailAppLogs(deps.AppLogPath))
 	}
 
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "diagnose",
-		Description: "Return a step-by-step playbook for diagnosing a Traefik routing problem — a " +
-			"missing or not-routing router, 5xx errors, or unexplained latency. Follow the returned " +
-			"steps using the live read tools, then ground the fix in the reference.",
-	}, diagnoseTool)
-
 	if deps.has(func(c staticconf.Capabilities) bool { return c.PrometheusMetrics }) {
 		mcp.AddTool(s, &mcp.Tool{
 			Name: "get_metrics",
@@ -197,7 +190,14 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"generated or hand-written configuration before applying it.",
 	}, validateConfig(deps.Reference))
 
-	addPrompts(s)
+	//mcp.AddTool(s, &mcp.Tool{
+	//	Name: "diagnose",
+	//	Description: "Return a step-by-step playbook for diagnosing a Traefik routing problem — a " +
+	//		"missing or not-routing router, 5xx errors, or unexplained latency. Follow the returned " +
+	//		"steps using the live read tools, then ground the fix in the reference.",
+	//}, diagnoseTool)
+
+	//addPrompts(s)
 
 	return s
 }
