@@ -4,8 +4,10 @@ package server
 
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/traefik/traefik-mcp/internal/configschema"
 	"github.com/traefik/traefik-mcp/internal/loki"
 	"github.com/traefik/traefik-mcp/internal/prom"
+	"github.com/traefik/traefik-mcp/internal/rag"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
@@ -29,6 +31,12 @@ type Deps struct {
 	// Prom queries metrics Traefik ships over OTLP. Nil disables the metrics
 	// query tool at call time with a helpful error.
 	Prom *prom.Client
+	// Validator validates static and dynamic configuration against the embedded
+	// JSON Schemas. Nil disables the validation tools at call time.
+	Validator *configschema.Validator
+	// Retriever searches the embedded Traefik reference corpus. Nil disables the
+	// documentation search tool at call time.
+	Retriever rag.Retriever
 	// Caps are the observability capabilities deduced from Traefik's static
 	// configuration. When set, data-source-backed tools (metrics, traces, logs)
 	// are registered only if the matching source is configured. Nil means the
@@ -153,6 +161,31 @@ func New(name, version string, deps Deps) *mcp.Server {
 				"for an instant query (samples).",
 		}, queryMetrics(deps.Prom))
 	}
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "validate_static_config",
+		Description: "Validate Traefik static (install) configuration — the traefik.yaml/.toml with " +
+			"entryPoints, providers, log, metrics, tracing, certificatesResolvers, etc. — against the " +
+			"official JSON Schema. Accepts YAML or JSON and returns each violation with its location. " +
+			"Use it before applying generated or hand-written install configuration.",
+	}, validateConfig(deps.Validator, configschema.Static))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "validate_dynamic_config",
+		Description: "Validate Traefik dynamic (routing) configuration — http/tcp/udp routers, services, " +
+			"middlewares and tls — against the official JSON Schema. Accepts YAML or JSON and returns each " +
+			"violation with its location. Use it before applying generated or hand-written routing " +
+			"configuration to a file provider.",
+	}, validateConfig(deps.Validator, configschema.Dynamic))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "search_traefik_docs",
+		Description: "Search the Traefik configuration reference (github.com/traefik/reference) for the " +
+			"concept behind a question — middlewares, routers, services, providers, CRDs, annotations and " +
+			"static configuration sections — returning each match's concept id, summary and canonical " +
+			"documentation URL. Use it to find how a feature is configured or which option to set, for " +
+			"both Traefik Proxy (oss) and Traefik Hub (hub).",
+	}, searchDocs(deps.Retriever))
 
 	addPrompts(s)
 

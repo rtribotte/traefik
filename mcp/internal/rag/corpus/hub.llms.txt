@@ -1,0 +1,109 @@
+# Traefik Hub configuration reference
+
+> Machine readable configuration surface for Traefik Hub v3.20.2. Per concept Markdown pages with rich frontmatter, plus a parallel JSON Schema. Generated from the Go source at https://github.com/traefik/reference.
+
+## Hub middlewares
+
+Hub middlewares for API gateway, AI gateway, security and traffic management.
+
+- [hub.middlewares.apikey](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/apikey.md): APIKey. Configuration holds the API Key middleware configuration.
+- [hub.middlewares.basicauth](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/basicauth.md): BasicAuth. Config configures a basic auth ACP handler.
+- [hub.middlewares.cache](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/cache.md): Cache. Configuration holds the Cache Middleware configuration.
+- [hub.middlewares.chatcompletion](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/chat-completion.md): ChatCompletion. Config holds the ChatCompletion Middleware configuration.
+- [hub.middlewares.contentguard](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/content-guard.md): ContentGuard. Config holds the configuration for content-guard middleware.
+- [hub.middlewares.coraza](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/coraza.md): Coraza. Configuration holds the Coraza middleware configuration.
+- [hub.middlewares.distributedratelimit](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/distributedratelimit.md): DistributedRateLimit. Configuration holds the DistributedRateLimit middleware configuration.
+- [hub.middlewares.forcecase](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/forcecase.md): ForceCase. Configuration holds the Force Case middleware configuration.
+- [hub.middlewares.hmac](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/hmac.md): HMAC. Configuration holds the HMAC Authentication Middleware configuration.
+- [hub.middlewares.hubapikey](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/apikey.md): HubAPIKey. Configuration configures an API Key handler.
+- [hub.middlewares.hubldap](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/ldap.md): HubLDAP. Configuration holds the configuration for the Hub LDAP middleware.
+- [hub.middlewares.jwt](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/jwt.md): JWT. Configuration configures a JWT ACP handler.
+- [hub.middlewares.ldap](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/ldap.md): LDAP. Configuration holds the LDAP Middleware configuration.
+- [hub.middlewares.llmguard](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/llm-guard.md): LLMGuard. Config is the unified configuration for an LLM guard middleware.
+- [hub.middlewares.mcp](https://doc.traefik.io/traefik-hub/mcp-gateway/mcp.md): MCP. Config holds MCP middleware configuration.
+- [hub.middlewares.metrics](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/middlewares/metrics.md): Metrics. Configuration configures an API Management metrics handler.
+- [hub.middlewares.oauthclientcreds](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/oauth-client-creds.md): OAuthClientCreds. Configuration holds the configuration for the OAuth client credentials middleware.
+- [hub.middlewares.oauthintro](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/oauth-introspection.md): OAuthIntrospection. Configuration configures an OAuth 2.0 Token Introspection middleware.
+- [hub.middlewares.oidc](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/oidc.md): OIDC. Configuration holds the configuration for the OIDC middleware.
+- [hub.middlewares.opa](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/opa.md): OPA. Configuration holds the OPA middleware configuration.
+- [hub.middlewares.plan](https://doc.traefik.io/traefik-hub/api-management/api-plans.md): Plan. Configuration holds the configuration of the plan middleware.
+- [hub.middlewares.queryparam](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/http/middlewares/query-param.md): QueryParam. Configuration holds the QueryParam middleware configuration.
+- [hub.middlewares.responsesapi](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/responses-api.md): ResponsesAPI. Config holds the ResponsesAPI Middleware configuration.
+- [hub.middlewares.semanticcache](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/semantic-cache.md): SemanticCache. Config holds the config for semantic cache middleware.
+- [hub.middlewares.tokenratelimit](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/token-rate-limit.md): TokenRateLimit. Config holds the configuration for the token rate limit middleware.
+
+## Hub providers
+
+Hub specific provider integrations.
+
+- [hub.providers.consulcatalogenterprise](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/providers/consul-catalog-enterprise.md): ConsulCatalogEnterprise. Provider is the Consul Catalog Enterprise provider implementation.
+- [hub.providers.hub](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/providers/hub.md): Hub. Provider holds configurations of the provider.
+- [hub.providers.kubernetescrd](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/providers/kubernetes-crd.md): KubernetesCRD. Provider wraps the kubernetescrd provider and adds Uplink CRD support. It watches Uplink resources and populates the http.uplinks part of the dynamic configuration.
+- [hub.providers.microcks](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/providers/microcks.md): Microcks. Provider is a provider.Provider implementation that queries a Microcks instance for service configurations.
+- [hub.providers.multicluster](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/providers/multicluster.md): MultiCluster. Provider is the multicluster provider.
+- [hub.providers.nutanixprismcentral](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/providers/nutanix-prism-central.md): NutanixPrismCentral. Provider is the Nutanix Prism Central provider implementation.
+- [hub.providers.traefik](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/providers/traefik.md): Traefik. Provider wraps Traefik's internal provider to handle distributed ACME challenges. It extends Traefik's internal provider functionality by handling both standard and distributed ACME HTTP challenges. T...
+
+## Hub CRDs
+
+Hub Kubernetes Custom Resource Definitions (hub.traefik.io).
+
+- [crd.accesscontrolpolicy](https://doc.traefik.io/traefik-hub/authentication-authorization/access-overview.md): AccessControlPolicy. AccessControlPolicy defines an access control policy.
+- [crd.aiservice](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/crd/aiservice.md): AIService. AIService is a Kubernetes-like Service to interact with a text-based LLM provider. It defines the parameters and credentials required to interact with various LLM providers.
+- [crd.api](https://doc.traefik.io/traefik-hub/api-management/api.md): API. API defines an HTTP interface that is exposed to external clients. It specifies the supported versions
+- [crd.apiauth](https://doc.traefik.io/traefik-hub/api-management/api-auth.md): APIAuth. APIAuth defines the authentication configuration for APIs.
+- [crd.apibundle](https://doc.traefik.io/traefik-hub/api-management/api-bundle.md): APIBundle. APIBundle defines a set of APIs.
+- [crd.apicatalogitem](https://doc.traefik.io/traefik-hub/api-management/api-catalogitem.md): APICatalogItem. APICatalogItem defines APIs that will be part of the API catalog on the portal.
+- [crd.apiplan](https://doc.traefik.io/traefik-hub/api-management/api-plans.md): APIPlan. APIPlan defines API Plan policy.
+- [crd.apiportal](https://doc.traefik.io/traefik-hub/api-management/api-portal.md): APIPortal. APIPortal defines a developer portal for accessing the documentation of APIs.
+- [crd.apiportalauth](https://doc.traefik.io/traefik-hub/api-management/api-portal-auth.md): APIPortalAuth. APIPortalAuth defines the authentication configuration for an APIPortal.
+- [crd.apiratelimit](https://doc.traefik.io/traefik-hub/api-management/api-rate-limit.md): APIRateLimit. APIRateLimit defines how group of consumers are rate limited on a set of APIs.
+- [crd.apiversion](https://doc.traefik.io/traefik-hub/api-management/api-version.md): APIVersion. APIVersion defines a version of an API.
+- [crd.contentitem](https://doc.traefik.io/traefik-hub/api-management/content-item.md): ContentItem. ContentItem defines additional documentation for given resource.
+- [crd.managedapplication](https://doc.traefik.io/traefik-hub/api-management/managed-applications.md): ManagedApplication. ManagedApplication represents a managed application.
+- [crd.managedsubscription](https://doc.traefik.io/traefik-hub/api-management/managed-subscription.md): ManagedSubscription. ManagedSubscription defines a Subscription managed by the API manager as the result of a pre-negotiation with its
+- [crd.uplink](https://doc.traefik.io/traefik-hub/api-gateway/reference/routing/kubernetes/http/ref-uplink.md): Uplink. Uplink is an inter-cluster service advertisement: a child cluster declares an Uplink to advertise
+
+## Hub static configuration
+
+Hub static config sections under the `hub` key of traefik.yaml.
+
+- [hub.static](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/static.md): Hub. Hub static configuration. Lives under the top level "hub" key of the Traefik static configuration file.
+- [hub.static.aigateway](https://doc.traefik.io/traefik-hub/ai-gateway/overview.md): AIGateway. AIGateway holds the ai gateway configuration.
+- [hub.static.apimanagement](https://doc.traefik.io/traefik-hub/api-management/apim-overview.md): APIManagement. APIManagement holds the API management configuration.
+- [hub.static.experimental](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/static/experimental.md): Experimental. Experimental holds experimental features.
+- [hub.static.mcpgateway](https://doc.traefik.io/traefik-hub/mcp-gateway/mcp.md): MCPGateway. MCPGateway holds the MCP gateway configuration.
+- [hub.static.pluginregistry](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/static/pluginregistry.md): PluginRegistry. PluginRegistry holds the plugin registry configuration.
+- [hub.static.providers](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/providers/overview.md): Providers. Providers contains providers configuration.
+- [hub.static.redis](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/static/redis.md): Config. Config is the Redis configuration.
+- [hub.static.tracing](https://doc.traefik.io/traefik-hub/api-gateway/reference/install/observability/tracing.md): Tracing. Tracing holds the tracing configuration.
+
+## Hub developer portal REST
+
+Endpoints exposed by the Hub developer portal HTTP API.
+
+- [hub.rest.createapikey](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/createapikey.md): createAPIKey. Create API key
+- [hub.rest.createapplication](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/createapplication.md): createApplication. Create application
+- [hub.rest.deleteapikey](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/deleteapikey.md): deleteAPIKey. Delete API key
+- [hub.rest.deleteapplication](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/deleteapplication.md): deleteApplication. Delete application
+- [hub.rest.deleteselfservicesubscription](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/deleteselfservicesubscription.md): deleteSelfServiceSubscription. Delete self-service subscription
+- [hub.rest.getapispec](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/getapispec.md): getAPISpec. Get API specification
+- [hub.rest.getapiversionspec](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/getapiversionspec.md): getAPIVersionSpec. Get API version specification
+- [hub.rest.getcontent](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/getcontent.md): getContent. Get content
+- [hub.rest.getportal](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/getportal.md): getPortal. Get portal information
+- [hub.rest.listapikeys](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/listapikeys.md): listAPIKeys. List API keys
+- [hub.rest.listapplications](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/listapplications.md): listApplications. List applications
+- [hub.rest.suspendapikey](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/suspendapikey.md): suspendAPIKey. Suspend or unsuspend API key
+- [hub.rest.updateapplication](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/updateapplication.md): updateApplication. Update application
+- [hub.rest.upsertselfservicesubscriptions](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/upsertselfservicesubscriptions.md): upsertSelfServiceSubscriptions. Create or update self-service subscriptions
+
+## Hub shared concepts
+
+Reusable Hub building blocks referenced from multiple kinds.
+
+- [hub.api.devportal](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/api/devportal/INDEX.md): DevPortalAPIIndex. Index of the developer portal REST API endpoints.
+- [hub.concept.uplink](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/concepts/uplink.md): Uplink. Uplink represents an inter-cluster service advertisement. A child cluster declares an Uplink to advertise to a parent cluster that it can handle a particular workload. This advertisement gets automati...
+- [hub.concept.uplinkhealthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/concepts/uplinkhealthcheck.md): UplinkHealthCheck. UplinkHealthCheck mirrors Traefik's ServerHealthCheck. Based-On: https://github.com/traefik/traefik/blob/master/pkg/config/dynamic/http_config.go
+- [hub.concept.uplinkpassivehealthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/concepts/uplinkpassivehealthcheck.md): UplinkPassiveHealthCheck. UplinkPassiveHealthCheck mirrors Traefik's PassiveServerHealthCheck. Based-On: https://github.com/traefik/traefik/blob/master/pkg/config/dynamic/http_config.go
+- [hub.dyn.http](https://raw.githubusercontent.com/traefik/reference/main/reference/hub/dyn/http.md): DynExt. Extensions Hub adds on top of Traefik dynamic.HTTPConfiguration and dynamic.Router.
+

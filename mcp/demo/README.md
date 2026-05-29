@@ -75,5 +75,13 @@ as* the Prometheus pull endpoint and the file logs, so two extra tools surface:
 These complement `get_metrics` (raw current scrape) and `tail_access_logs` (file
 tail) with history, aggregation and time-windowed queries.
 
+Three more tools need no live Traefik and are always available: `search_traefik_docs`
+searches the embedded Traefik configuration reference (from
+[github.com/traefik/reference](https://github.com/traefik/reference)) for the concept
+behind a question and returns its summary and documentation URL; `validate_static_config`
+and `validate_dynamic_config` check a YAML/JSON install or routing configuration against
+the official JSON Schemas and report each violation with its location — useful for vetting
+generated or hand-written configuration before applying it.
+
 Each scenario's README lists the prompts to try and what the assistant should
 conclude.

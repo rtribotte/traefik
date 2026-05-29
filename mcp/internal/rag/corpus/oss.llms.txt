@@ -1,0 +1,222 @@
+# Traefik OSS configuration reference
+
+> Machine readable configuration surface for Traefik v3.7.0. Per concept Markdown pages with rich frontmatter, plus a parallel JSON Schema. Generated from the Go source at https://github.com/traefik/reference.
+
+## HTTP middlewares
+
+Per request transformations applied between routers and services.
+
+- [http.middlewares.addprefix](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/addprefix.md): AddPrefix. AddPrefix holds the add prefix middleware configuration. This middleware updates the path of a request before forwarding it. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/addprefix/
+- [http.middlewares.basicauth](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/basicauth.md): BasicAuth. BasicAuth holds the basic auth middleware configuration. This middleware restricts access to your services to known users. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/basicauth/
+- [http.middlewares.buffering](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/buffering.md): Buffering. Buffering holds the buffering middleware configuration. This middleware retries or limits the size of requests that can be forwarded to backends. More info: https://doc.traefik.io/traefik/v3.7/middlew...
+- [http.middlewares.chain](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/chain.md): Chain. Chain holds the chain middleware configuration. This middleware enables to define reusable combinations of other pieces of middleware.
+- [http.middlewares.circuitbreaker](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/circuitbreaker.md): CircuitBreaker. CircuitBreaker holds the circuit breaker middleware configuration. This middleware protects the system from stacking requests to unhealthy services, resulting in cascading failures. More info: https:/...
+- [http.middlewares.compress](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/compress.md): Compress. Compress holds the compress middleware configuration. This middleware compresses responses before sending them to the client, using gzip, brotli, or zstd compression.
+- [http.middlewares.contenttype](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/contenttype.md): ContentType. ContentType holds the content-type middleware configuration. This middleware exists to enable the correct behavior until at least the default one can be changed in a future version.
+- [http.middlewares.digestauth](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/digestauth.md): DigestAuth. DigestAuth holds the digest auth middleware configuration. This middleware restricts access to your services to known users. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/digestauth/
+- [http.middlewares.encodedcharacters](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/encodedcharacters.md): EncodedCharacters. EncodedCharacters configures which encoded characters are allowed in the request path.
+- [http.middlewares.errors](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/errorpages.md): ErrorPage. ErrorPage holds the custom error middleware configuration. This middleware returns a custom page in lieu of the default, according to configured ranges of HTTP Status codes.
+- [http.middlewares.forwardauth](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/forwardauth.md): ForwardAuth. ForwardAuth holds the forward auth middleware configuration. This middleware delegates the request authentication to a Service. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/forwarda...
+- [http.middlewares.grpcweb](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/grpcweb.md): GrpcWeb. GrpcWeb holds the gRPC web middleware configuration. This middleware converts a gRPC web request to an HTTP/2 gRPC request.
+- [http.middlewares.headers](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/headers.md): Headers. Headers holds the headers middleware configuration. This middleware manages the requests and responses headers. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/headers/#customrequesthe...
+- [http.middlewares.inflightreq](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/inflightreq.md): InFlightReq. InFlightReq holds the in-flight request middleware configuration. This middleware limits the number of requests being processed and served concurrently. More info: https://doc.traefik.io/traefik/v3.7/...
+- [http.middlewares.ipallowlist](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/ipallowlist.md): IPAllowList. IPAllowList holds the IP allowlist middleware configuration. This middleware limits allowed requests based on the client IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/ipallowlist...
+- [http.middlewares.ipwhitelist](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/http/middlewares/ipwhitelist.md): IPWhiteList (deprecated: please use IPAllowList instead). IPWhiteList holds the IP whitelist middleware configuration. This middleware limits allowed requests based on the client IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/ipwhitelist...
+- [http.middlewares.passtlsclientcert](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/passtlsclientcert.md): PassTLSClientCert. PassTLSClientCert holds the pass TLS client cert middleware configuration. This middleware adds the selected data from the passed client TLS certificate to a header. More info: https://doc.traefik.io/...
+- [http.middlewares.ratelimit](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/ratelimit.md): RateLimit. RateLimit holds the rate limit configuration. This middleware ensures that services will receive a fair amount of requests, and allows one to define what fair is.
+- [http.middlewares.redirectregex](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/redirectregex.md): RedirectRegex. RedirectRegex holds the redirect regex middleware configuration. This middleware redirects a request using regex matching and replacement. More info: https://doc.traefik.io/traefik/v3.7/middlewares/ht...
+- [http.middlewares.redirectscheme](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/redirectscheme.md): RedirectScheme. RedirectScheme holds the redirect scheme middleware configuration. This middleware redirects requests from a scheme/port to another. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/red...
+- [http.middlewares.replacepath](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/replacepath.md): ReplacePath. ReplacePath holds the replace path middleware configuration. This middleware replaces the path of the request URL and store the original path in an X-Replaced-Path header. More info: https://doc.traef...
+- [http.middlewares.replacepathregex](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/replacepathregex.md): ReplacePathRegex. ReplacePathRegex holds the replace path regex middleware configuration. This middleware replaces the path of a URL using regex matching and replacement. More info: https://doc.traefik.io/traefik/v3.7/...
+- [http.middlewares.retry](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/retry.md): Retry. Retry holds the retry middleware configuration. This middleware reissues requests a given number of times to a backend server if that server does not reply. As soon as the server answers, the middlewa...
+- [http.middlewares.stripprefix](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/stripprefix.md): StripPrefix. StripPrefix holds the strip prefix middleware configuration. This middleware removes the specified prefixes from the URL path. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/strippref...
+- [http.middlewares.stripprefixregex](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/stripprefixregex.md): StripPrefixRegex. StripPrefixRegex holds the strip prefix regex middleware configuration. This middleware removes the matching prefixes from the URL path. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http...
+
+## TCP middlewares
+
+Per connection transformations for TCP routers.
+
+- [tcp.middlewares.inflightconn](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/tcp/middlewares/inflightconn.md): TCPInFlightConn. TCPInFlightConn holds the TCP InFlightConn middleware configuration. This middleware prevents services from being overwhelmed with high load, by limiting the number of allowed simultaneous connections...
+- [tcp.middlewares.ipallowlist](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/tcp/middlewares/ipallowlist.md): TCPIPAllowList. TCPIPAllowList holds the TCP IPAllowList middleware configuration. This middleware limits allowed requests based on the client IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/tcp/ipallo...
+- [tcp.middlewares.ipwhitelist](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/tcp/middlewares/ipwhitelist.md): TCPIPWhiteList (deprecated: please use IPAllowList instead). TCPIPWhiteList holds the TCP IPWhiteList middleware configuration.
+
+## Routers, services, TLS
+
+Top level dynamic configuration types.
+
+- [http.routers](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/http/routers.md): Router. Router holds the router configuration.
+- [http.services](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/http/services.md): Service. Service holds a service configuration (can only be of one type at the same time).
+- [tcp.routers](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/tcp/routers.md): TCPRouter. TCPRouter holds the router configuration.
+- [tcp.services](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/tcp/services.md): TCPService. TCPService holds a tcp service configuration (can only be of one type at the same time).
+- [tls](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/tls.md): TLS. TLSConfiguration contains all the configuration parameters of a TLS connection.
+- [udp.routers](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/udp/routers.md): UDPRouter. UDPRouter defines the configuration for an UDP router.
+- [udp.services](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/udp/services.md): UDPService. UDPService defines the configuration for a UDP service. All fields are mutually exclusive.
+
+## Static configuration
+
+Top level traefik.yaml sections (process wide).
+
+- [static](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static.md): StaticConfiguration. Configuration is the static configuration.
+- [static.accesslog](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/observability/logs-and-accesslogs.md): AccessLog. AccessLog holds the configuration settings for the access logger (middlewares/accesslog).
+- [static.api](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/api-dashboard.md): API. API holds the API configuration.
+- [static.certificatesresolvers](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/certificate-resolvers/overview.md): CertificateResolver. CertificateResolver contains the configuration for the different types of certificates resolver.
+- [static.core](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static/core.md): Core (deprecated: Please do not use this field). Core configures Traefik core behavior.
+- [static.entrypoints](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/entrypoints.md): EntryPoint. EntryPoint holds the entry point configuration.
+- [static.experimental](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/experimental/plugins.md): Experimental. Experimental experimental Traefik features.
+- [static.global](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static/global.md): Global. Global holds the global configuration.
+- [static.hostresolver](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static/hostresolver.md): HostResolverConfig. HostResolverConfig contain configuration for CNAME Flattening.
+- [static.log](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/observability/logs-and-accesslogs.md): TraefikLog. TraefikLog holds the configuration settings for the traefik logger.
+- [static.metrics](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/observability/metrics.md): Metrics. Metrics provides options to expose and send Traefik metrics to different third party monitoring systems.
+- [static.ocsp](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/ocsp.md): OCSPConfig. OCSPConfig contains the OCSP configuration.
+- [static.ping](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/observability/healthcheck.md): Handler. Handler expose ping routes.
+- [static.providers](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/overview.md): Providers. Provider configuration. One sub-key per enabled provider.
+- [static.serverstransport](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static/serverstransport.md): ServersTransport. ServersTransport options to configure communication between Traefik and the servers.
+- [static.spiffe](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/spiffe.md): SpiffeClientConfig. SpiffeClientConfig defines the SPIFFE client configuration.
+- [static.tcpserverstransport](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/static/tcpserverstransport.md): TCPServersTransport. TCPServersTransport options to configure communication between Traefik and the servers.
+- [static.tracing](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/observability/tracing.md): Tracing. Tracing holds the tracing configuration.
+
+## Providers
+
+Discovery sources Traefik watches for dynamic configuration.
+
+- [provider.consul](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kv/consul.md): ProviderBuilder. ProviderBuilder is responsible for constructing namespaced instances of the Consul provider.
+- [provider.consulcatalog](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/hashicorp/consul-catalog.md): ProviderBuilder. ProviderBuilder is responsible for constructing namespaced instances of the Consul Catalog provider.
+- [provider.docker](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/docker.md): Provider. Provider holds configurations of the provider.
+- [provider.ecs](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/others/ecs.md): Provider. Provider holds configurations of the provider.
+- [provider.etcd](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kv/etcd.md): Provider. Provider holds configurations of the provider.
+- [provider.file](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/others/file.md): Provider. Provider holds configurations of the provider.
+- [provider.http](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/others/http.md): Provider. Provider is a provider.Provider implementation that queries an HTTP(s) endpoint for a configuration.
+- [provider.knative](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kubernetes/knative.md): Provider. Provider holds configurations of the provider.
+- [provider.kubernetescrd](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kubernetes/kubernetes-crd.md): Provider. Provider holds configurations of the provider.
+- [provider.kubernetesgateway](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kubernetes/kubernetes-gateway.md): Provider. Provider holds configurations of the provider.
+- [provider.kubernetesingress](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kubernetes/kubernetes-ingress.md): Provider. Provider holds configurations of the provider.
+- [provider.kubernetesingressnginx](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx.md): Provider. Provider holds configurations of the provider.
+- [provider.nomad](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/hashicorp/nomad.md): ProviderBuilder. ProviderBuilder is responsible for constructing namespaced instances of the Nomad provider.
+- [provider.redis](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kv/redis.md): Provider. Provider holds configurations of the provider.
+- [provider.rest](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/providers/rest.md): Provider. Provider is a provider.Provider implementation that provides a Rest API.
+- [provider.swarm](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/swarm.md): SwarmProvider. SwarmProvider holds configurations of the provider.
+- [provider.zookeeper](https://doc.traefik.io/traefik/v3.7/reference/install-configuration/providers/kv/zk.md): Provider. Provider holds configurations of the provider.
+
+## CRDs
+
+Traefik native Kubernetes Custom Resource Definitions.
+
+- [crd.ingressroute](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/ingressroute.md): IngressRoute. IngressRoute is the CRD implementation of a Traefik HTTP Router.
+- [crd.ingressroutetcp](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/tcp/ingressroutetcp.md): IngressRouteTCP. IngressRouteTCP is the CRD implementation of a Traefik TCP Router.
+- [crd.ingressrouteudp](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/udp/ingressrouteudp.md): IngressRouteUDP. IngressRouteUDP is a CRD implementation of a Traefik UDP Router.
+- [crd.middleware](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/middleware.md): Middleware. Middleware is the CRD implementation of a Traefik Middleware.
+- [crd.middlewaretcp](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/tcp/middlewaretcp.md): MiddlewareTCP. MiddlewareTCP is the CRD implementation of a Traefik TCP middleware.
+- [crd.serverstransport](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/serverstransport.md): ServersTransport. ServersTransport is the CRD implementation of a ServersTransport.
+- [crd.serverstransporttcp](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/tcp/serverstransporttcp.md): ServersTransportTCP. ServersTransportTCP is the CRD implementation of a TCPServersTransport.
+- [crd.tlsoption](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/tls/tlsoption.md): TLSOption. TLSOption is the CRD implementation of a Traefik TLS Option, allowing to configure some parameters of the TLS connection.
+- [crd.tlsstore](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/tls/tlsstore.md): TLSStore. TLSStore is the CRD implementation of a Traefik TLS Store.
+- [crd.traefikservice](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/traefikservice.md): TraefikService. TraefikService is the CRD implementation of a Traefik Service.
+
+## Annotations
+
+Annotations Traefik reads from Kubernetes Ingress and Service objects.
+
+- [annotations.gateway-service](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/gateway-api.md): GatewayServiceAnnotations. Annotations on Kubernetes Service objects read by the Traefik Kubernetes Gateway API provider. This is an exhaustive list: any other annotation under the traefik.io/service.* prefix is silently ignore...
+- [annotations.ingress](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/ingress.md): TraefikIngressAnnotations. Annotations supported on Kubernetes Ingress objects by the Traefik Ingress provider.
+- [annotations.ingress-nginx](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/ingress-nginx.md): IngressNGINXAnnotations. nginx-style annotations on Kubernetes Ingress objects supported by the Traefik ingress-nginx provider.
+
+## Shared concepts
+
+Reusable building blocks referenced from multiple kinds.
+
+- [concept.accesslog](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/accesslog.md): AccessLog. AccessLog holds the configuration settings for the access logger (middlewares/accesslog).
+- [concept.accesslogfields](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/accesslogfields.md): AccessLogFields. AccessLogFields holds configuration for access log fields.
+- [concept.accesslogfilters](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/accesslogfilters.md): AccessLogFilters. AccessLogFilters holds filters configuration.
+- [concept.api](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/api.md): API. API holds the API configuration.
+- [concept.certandstores](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/certandstores.md): CertAndStores. CertAndStores allows mapping a TLS certificate to a list of entry points.
+- [concept.certificate](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/certificate.md): Certificate. Certificate holds a SSL cert/key pair Certs and Key could be either a file path, or the file content itself.
+- [concept.certificateresolver](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/certificateresolver.md): CertificateResolver. CertificateResolver contains the configuration for the different types of certificates resolver.
+- [concept.clientauth](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/clientauth.md): ClientAuth. ClientAuth defines the parameters of the client authentication part of the TLS connection, if any.
+- [concept.clienttls](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/clienttls.md): ClientTLS. ClientTLS holds TLS specific configurations as client CA, Cert and Key can be either path or file contents. TODO: remove this struct when CAOptional option will be removed.
+- [concept.configuration](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/configuration.md): Configuration. Configuration is the root of the dynamic configuration.
+- [concept.cookie](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/cookie.md): Cookie. Cookie holds the sticky configuration based on cookie.
+- [concept.core](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/core.md): Core. Core configures Traefik core behavior.
+- [concept.datadog](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/datadog.md): Datadog. Datadog contains address and metrics pushing interval configuration.
+- [concept.domain](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/domain.md): Domain. Domain holds a domain name with SANs.
+- [concept.entrypointstransport](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/entrypointstransport.md): EntryPointsTransport. EntryPointsTransport configures communication between clients and Traefik.
+- [concept.experimental](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/experimental.md): Experimental. Experimental experimental Traefik features.
+- [concept.failover](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/failover.md): Failover. Failover holds the Failover configuration.
+- [concept.failovererror](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/failovererror.md): FailoverError. FailoverError holds errors configuration.
+- [concept.fastproxyconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/fastproxyconfig.md): FastProxyConfig. FastProxyConfig holds the FastProxy configuration.
+- [concept.fieldheaders](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/fieldheaders.md): FieldHeaders. FieldHeaders holds configuration for access log headers.
+- [concept.forwardedheaders](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/forwardedheaders.md): ForwardedHeaders. ForwardedHeaders Trust client forwarding headers.
+- [concept.forwardingtimeouts](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/forwardingtimeouts.md): ForwardingTimeouts. ForwardingTimeouts contains timeout configurations for forwarding requests to the backend servers.
+- [concept.generatedcert](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/generatedcert.md): GeneratedCert. GeneratedCert defines the default generated certificate configuration.
+- [concept.global](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/global.md): Global. Global holds the global configuration.
+- [concept.handler](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/handler.md): Handler. Handler expose ping routes.
+- [concept.healthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/healthcheck.md): HealthCheck. HealthCheck controls healthcheck awareness and propagation at the services level.
+- [concept.highestrandomweight](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/highestrandomweight.md): HighestRandomWeight. HighestRandomWeight is a weighted sticky load-balancer of services.
+- [concept.hostresolverconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/hostresolverconfig.md): HostResolverConfig. HostResolverConfig contain configuration for CNAME Flattening.
+- [concept.hrwservice](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/hrwservice.md): HRWService. HRWService is a reference to a service load-balanced with highest random weight.
+- [concept.http2config](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/http2config.md): HTTP2Config. HTTP2Config is the HTTP2 configuration of an entry point.
+- [concept.http3config](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/http3config.md): HTTP3Config. HTTP3Config is the HTTP3 configuration of an entry point.
+- [concept.httpconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/httpconfig.md): HTTPConfig. HTTPConfig is the HTTP configuration of an entry point.
+- [concept.httpconfiguration](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/httpconfiguration.md): HTTPConfiguration. HTTPConfiguration contains all the HTTP configuration parameters.
+- [concept.influxdb2](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/influxdb2.md): InfluxDB2. InfluxDB2 contains address, token and metrics pushing interval configuration.
+- [concept.ipstrategy](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/ipstrategy.md): IPStrategy. IPStrategy holds the IP strategy configuration used by Traefik to determine the client IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/ipallowlist/#ipstrategy
+- [concept.lifecycle](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/lifecycle.md): LifeCycle. LifeCycle contains configurations relevant to the lifecycle (such as the shutdown phase) of Traefik.
+- [concept.metrics](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/metrics.md): Metrics. Metrics provides options to expose and send Traefik metrics to different third party monitoring systems.
+- [concept.middleware](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/middleware.md): Middleware. Middleware holds the Middleware configuration.
+- [concept.mirroring](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/mirroring.md): Mirroring. Mirroring holds the Mirroring configuration.
+- [concept.mirrorservice](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/mirrorservice.md): MirrorService. MirrorService holds the MirrorService configuration.
+- [concept.model](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/model.md): Model. Model holds model configuration.
+- [concept.observabilityconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/observabilityconfig.md): ObservabilityConfig. ObservabilityConfig holds the observability configuration for an entry point.
+- [concept.ocspconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/ocspconfig.md): OCSPConfig. OCSPConfig contains the OCSP configuration.
+- [concept.options](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/options.md): Options. Options configures TLS for an entry point.
+- [concept.otelgrpc](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/otelgrpc.md): OTelGRPC. OTelGRPC provides configuration settings for the gRPC open-telemetry.
+- [concept.otelhttp](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/otelhttp.md): OTelHTTP. OTelHTTP provides configuration settings for the HTTP open-telemetry.
+- [concept.otellog](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/otellog.md): OTelLog. OTelLog provides configuration settings for the open-telemetry logger.
+- [concept.oteltracing](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/oteltracing.md): OTelTracing. OTelTracing provides configuration settings for the open-telemetry tracer.
+- [concept.otlp](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/otlp.md): OTLP. OTLP contains specific configuration used by the OpenTelemetry Metrics exporter.
+- [concept.passiveserverhealthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/passiveserverhealthcheck.md): PassiveServerHealthCheck. Shared type referenced from configuration. See Go source for details.
+- [concept.prometheus](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/prometheus.md): Prometheus. Prometheus can contain specific configuration used by the Prometheus Metrics exporter.
+- [concept.providers](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/providers.md): Providers. Providers contains providers configuration.
+- [concept.proxyprotocol](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/proxyprotocol.md): ProxyProtocol. ProxyProtocol holds the PROXY Protocol configuration. More info: https://doc.traefik.io/traefik/v3.7/routing/services/#proxy-protocol
+- [concept.redirectentrypoint](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/redirectentrypoint.md): RedirectEntryPoint. RedirectEntryPoint is the definition of an entry point redirection.
+- [concept.redirections](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/redirections.md): Redirections. Redirections is a set of redirection for an entry point.
+- [concept.redis](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/redis.md): Redis. Redis holds the Redis configuration.
+- [concept.respondingtimeouts](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/respondingtimeouts.md): RespondingTimeouts. RespondingTimeouts contains timeout configurations for incoming requests to the Traefik instance.
+- [concept.responseforwarding](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/responseforwarding.md): ResponseForwarding. ResponseForwarding holds the response forwarding configuration.
+- [concept.routerobservabilityconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/routerobservabilityconfig.md): RouterObservabilityConfig. RouterObservabilityConfig holds the observability configuration for a router.
+- [concept.routertcptlsconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/routertcptlsconfig.md): RouterTCPTLSConfig. RouterTCPTLSConfig holds the TLS configuration for a router.
+- [concept.routertlsconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/routertlsconfig.md): RouterTLSConfig. RouterTLSConfig holds the TLS configuration for a router.
+- [concept.server](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/server.md): Server. Server holds the server configuration.
+- [concept.serverhealthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/serverhealthcheck.md): ServerHealthCheck. ServerHealthCheck holds the HealthCheck configuration.
+- [concept.serversloadbalancer](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/serversloadbalancer.md): ServersLoadBalancer. ServersLoadBalancer holds the ServersLoadBalancer configuration.
+- [concept.serverstransport](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/serverstransport.md): ServersTransport. ServersTransport options to configure communication between Traefik and the servers.
+- [concept.sourcecriterion](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/sourcecriterion.md): SourceCriterion. SourceCriterion defines what criterion is used to group requests as originating from a common source. If none are set, the default is to use the request's remote address field. All fields are mutually...
+- [concept.spiffe](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/spiffe.md): Spiffe. Spiffe holds the SPIFFE configuration.
+- [concept.spiffeclientconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/spiffeclientconfig.md): SpiffeClientConfig. SpiffeClientConfig defines the SPIFFE client configuration.
+- [concept.statsd](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/statsd.md): Statsd. Statsd contains address and metrics pushing interval configuration.
+- [concept.sticky](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/sticky.md): Sticky. Sticky holds the sticky configuration.
+- [concept.store](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/store.md): Store. Store holds the options for a given Store.
+- [concept.tcpconfiguration](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpconfiguration.md): TCPConfiguration. TCPConfiguration contains all the TCP configuration parameters.
+- [concept.tcpmiddleware](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpmiddleware.md): TCPMiddleware. TCPMiddleware holds the TCPMiddleware configuration.
+- [concept.tcpserver](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpserver.md): TCPServer. TCPServer holds a TCP Server configuration.
+- [concept.tcpserverhealthcheck](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpserverhealthcheck.md): TCPServerHealthCheck. TCPServerHealthCheck holds the HealthCheck configuration.
+- [concept.tcpserversloadbalancer](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpserversloadbalancer.md): TCPServersLoadBalancer. TCPServersLoadBalancer holds the LoadBalancerService configuration.
+- [concept.tcpserverstransport](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpserverstransport.md): TCPServersTransport. TCPServersTransport options to configure communication between Traefik and the servers.
+- [concept.tcpweightedroundrobin](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpweightedroundrobin.md): TCPWeightedRoundRobin. TCPWeightedRoundRobin is a weighted round robin tcp load-balancer of services.
+- [concept.tcpwrrservice](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tcpwrrservice.md): TCPWRRService. TCPWRRService is a reference to a tcp service load-balanced with weighted round robin.
+- [concept.tlsclientcertificateinfo](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsclientcertificateinfo.md): TLSClientCertificateInfo. TLSClientCertificateInfo holds the client TLS certificate info configuration.
+- [concept.tlsclientcertificateissuerdninfo](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsclientcertificateissuerdninfo.md): TLSClientCertificateIssuerDNInfo. TLSClientCertificateIssuerDNInfo holds the client TLS certificate distinguished name info configuration. cf https://tools.ietf.org/html/rfc3739
+- [concept.tlsclientcertificatesubjectdninfo](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsclientcertificatesubjectdninfo.md): TLSClientCertificateSubjectDNInfo. TLSClientCertificateSubjectDNInfo holds the client TLS certificate distinguished name info configuration. cf https://tools.ietf.org/html/rfc3739
+- [concept.tlsclientconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsclientconfig.md): TLSClientConfig. TLSClientConfig options to configure TLS communication between Traefik and the servers.
+- [concept.tlsconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsconfig.md): TLSConfig. TLSConfig is the default TLS configuration for all the routers associated to the concerned entry point.
+- [concept.tlsconfiguration](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tlsconfiguration.md): TLSConfiguration. TLSConfiguration contains all the configuration parameters of a TLS connection.
+- [concept.tracing](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/tracing.md): Tracing. Tracing holds the tracing configuration.
+- [concept.traefiklog](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/traefiklog.md): TraefikLog. TraefikLog holds the configuration settings for the traefik logger.
+- [concept.udpconfig](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpconfig.md): UDPConfig. UDPConfig is the UDP configuration of an entry point.
+- [concept.udpconfiguration](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpconfiguration.md): UDPConfiguration. UDPConfiguration contains all the UDP configuration parameters.
+- [concept.udpserver](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpserver.md): UDPServer. UDPServer defines a UDP server configuration.
+- [concept.udpserversloadbalancer](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpserversloadbalancer.md): UDPServersLoadBalancer. UDPServersLoadBalancer defines the configuration for a load-balancer of UDP servers.
+- [concept.udpweightedroundrobin](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpweightedroundrobin.md): UDPWeightedRoundRobin. UDPWeightedRoundRobin is a weighted round robin UDP load-balancer of services.
+- [concept.udpwrrservice](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/udpwrrservice.md): UDPWRRService. UDPWRRService is a reference to a UDP service load-balanced with weighted round robin.
+- [concept.weightedroundrobin](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/weightedroundrobin.md): WeightedRoundRobin. WeightedRoundRobin is a weighted round robin load-balancer of services.
+- [concept.wrrservice](https://raw.githubusercontent.com/traefik/reference/main/reference/oss/concepts/wrrservice.md): WRRService. WRRService is a reference to a service load-balanced with weighted round-robin.
+
