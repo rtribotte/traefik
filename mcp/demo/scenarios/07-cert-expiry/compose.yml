@@ -1,9 +1,0 @@
-# Scenario 07 — a TLS certificate about to expire.
-# A short-lived cert is loaded via the file provider (dynamic/tls.yml, copied
-# into config/dynamic by demo.sh). The certs dir is mounted so Traefik can read
-# it. Once loaded, the cert's expiry is exposed only as the Prometheus metric
-# traefik_tls_certs_not_after — the way to answer "is anything expiring soon?".
-services:
-  traefik:
-    volumes:
-      - ./certs:/certs:ro

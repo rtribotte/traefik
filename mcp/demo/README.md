@@ -13,27 +13,29 @@ demo/
   config/
     traefik.yml             static (install) configuration
     dynamic/                file-provider directory (watched)
-  scripts/gen-certs.sh      short-lived TLS cert for the audit scenario
+  scripts/gen-certs.sh      short-lived TLS cert for the security scenario
   demo.sh                   launch helper
   scenarios/
-    01-router-missing/      router in warning + router never created
-    02-service-5xx/         backend that goes down -> 502
-    03-security-audit/      public-no-TLS route + expiring cert
-    04-secured-route/       advisory config generation (no extra infra)
-    05-slow-backend/        slow backend, diagnosed from access-log durations
-    06-config-error/        unresolved refs, diagnosed from the app log
-    07-cert-expiry/         expiring cert, surfaced via the metrics endpoint
-    08-trace-latency/       slow request, found in the Tempo distributed traces
+    01-broken-route/        v2-syntax router fails to register -> diagnose,
+                            look up the v3 rule, fix, validate
+    02-security-posture/    public-no-TLS route + expiring cert -> audit,
+                            harden with the reference, validate
+    03-trace-latency/       slow request, found in the Tempo distributed traces
 ```
+
+The three scenarios each lean on a different evidence source — application log,
+runtime + metrics, distributed traces — and the first two close the loop through
+the embedded reference (look up the fix) and `validate_traefik_config` (prove it
+before applying).
 
 ## Usage
 
 ```bash
 ./demo.sh up                     # base stack only
-./demo.sh up 01-router-missing   # base + a scenario overlay
-./demo.sh ps  01-router-missing
+./demo.sh up 01-broken-route     # base + a scenario overlay
+./demo.sh ps  01-broken-route
 ./demo.sh logs
-./demo.sh down 01-router-missing
+./demo.sh down 01-broken-route
 ./demo.sh list                   # list scenarios
 ```
 
@@ -75,13 +77,16 @@ as* the Prometheus pull endpoint and the file logs, so two extra tools surface:
 These complement `get_metrics` (raw current scrape) and `tail_access_logs` (file
 tail) with history, aggregation and time-windowed queries.
 
-Three more tools need no live Traefik and are always available: `search_traefik_docs`
-searches the embedded Traefik configuration reference (from
-[github.com/traefik/reference](https://github.com/traefik/reference)) for the concept
-behind a question and returns its summary and documentation URL; `validate_static_config`
-and `validate_dynamic_config` check a YAML/JSON install or routing configuration against
-the official JSON Schemas and report each violation with its location — useful for vetting
-generated or hand-written configuration before applying it.
+Five more tools need no live Traefik and are always available, backed by the whole
+[github.com/traefik/reference](https://github.com/traefik/reference) catalogue vendored and
+embedded in the binary. `search_traefik_docs` finds the concept behind a question and returns
+its id; `get_traefik_concept` returns that concept's full field contract (types, defaults,
+descriptions); `get_traefik_schema` returns its JSON Schema; `get_traefik_doc` resolves its
+narrative documentation page. `validate_traefik_config` checks a YAML/JSON configuration
+against the official JSON Schemas by matching it to the right one in the registry — a whole
+traefik.yaml (static or dynamic), a CRD, an annotated manifest, or a single concept fragment —
+and reports each violation with its location, for vetting generated or hand-written
+configuration before applying it.
 
 Each scenario's README lists the prompts to try and what the assistant should
 conclude.

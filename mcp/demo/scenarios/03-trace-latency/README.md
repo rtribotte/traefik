@@ -1,4 +1,4 @@
-# Scenario 08 — "find the slow checkout request in the traces"
+# Scenario 03 — "find the slow checkout request in the traces"
 
 Nothing looks broken: `checkout.localhost` routes correctly, the backend
 (whoami) is UP and fast, and every request returns 200. Yet requests are slow,
@@ -14,9 +14,9 @@ service.
 ## Run
 
 ```bash
-./demo.sh up 08-trace-latency      # brings up the stack and runs the traffic
+./demo.sh up 03-trace-latency      # brings up the stack and runs the traffic
 
-./demo.sh traffic 08-trace-latency # replay the traffic any time
+./demo.sh traffic 03-trace-latency # replay the traffic any time
 ```
 
 `up` sends 20 requests once Traefik is ready; each is delayed a random amount by
@@ -47,5 +47,5 @@ plain in the trace.
 ## Reset
 
 ```bash
-./demo.sh down 08-trace-latency
+./demo.sh down 03-trace-latency
 ```

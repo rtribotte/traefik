@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Generate a self-signed cert that expires soon, so cert_expiry has something
-# to flag in the security-audit scenario. Default validity: 7 days.
+# Generate a self-signed cert that expires soon, so the security-posture scenario
+# has an expiring certificate to flag. Default validity: 7 days.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

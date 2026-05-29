@@ -1,9 +1,10 @@
-# Scenario 03 — security audit.
-# Two findings to surface:
+# Scenario 02 — security posture: audit, harden, validate.
+# Two findings to surface from the live runtime, then fix with the reference:
 #   - admin: a sensitive-looking service exposed on the plain HTTP entrypoint,
-#            no TLS, no auth middleware (public-no-TLS finding).
-#   - a short-lived TLS certificate mounted via the file provider, so cert_expiry
-#            flags it (run scripts/gen-certs.sh first).
+#            no TLS, no auth middleware (public-no-TLS finding from /api/rawdata).
+#   - a short-lived TLS certificate mounted via the file provider, whose expiry
+#            is exposed only as the Prometheus metric traefik_tls_certs_not_after
+#            (run scripts/gen-certs.sh first).
 services:
   traefik:
     volumes:
