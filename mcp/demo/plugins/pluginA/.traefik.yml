@@ -1,0 +1,5 @@
+displayName: Plugin A
+type: middleware
+import: github.com/traefik/traefik-mcp/plugins/pluginA
+summary: Custom request-processing middleware.
+testData: {}

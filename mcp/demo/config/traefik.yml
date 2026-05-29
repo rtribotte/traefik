@@ -56,8 +56,8 @@ tracing:
 experimental:
   otlpLogs: true
   localPlugins:
-    randomplugin:
-      moduleName: github.com/traefik/traefik-mcp/plugins/randomplugin
+    pluginA:
+      moduleName: github.com/traefik/traefik-mcp/plugins/pluginA
 
 providers:
   docker:

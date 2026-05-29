@@ -1,0 +1,8 @@
+# The pluginA middleware, referenced by the checkout router as pluginA@file. The
+# plugin takes no options and its name reveals nothing, so inspecting this
+# middleware tells you nothing about the latency it adds.
+http:
+  middlewares:
+    pluginA:
+      plugin:
+        pluginA: {}
