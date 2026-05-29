@@ -1,0 +1,17 @@
+# Scenario 04 — a high-priority catch-all router shadows a specific one.
+# The shop router is configured correctly (valid rule, healthy backend, status
+# enabled) yet shop.localhost serves the wrong content, because a catch-all
+# router with an explicit priority:1000 outranks it. Nothing is in an error
+# state, so the cause is not on the cheap surfaces (no parse error, no failed
+# router): it shows only when you compare the two routers' priorities and know
+# how v3 computes them.
+#
+# maintenance is the backend the catch-all points at. It carries no Traefik
+# labels, so it is not its own router; the file-provider catch-all references it
+# by URL. --name makes its response say "maintenance" so the shadowing is
+# visible in the body as well as in the access log's router/service name.
+services:
+  maintenance:
+    image: traefik/whoami
+    command:
+      - --name=maintenance

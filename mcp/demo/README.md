@@ -16,17 +16,24 @@ demo/
   scripts/gen-certs.sh      short-lived TLS cert for the security scenario
   demo.sh                   launch helper
   scenarios/
-    01-broken-route/        v2-syntax router fails to register -> diagnose,
-                            look up the v3 rule, fix, validate
-    02-security-posture/    public-no-TLS route + expiring cert -> audit,
-                            harden with the reference, validate
+    01-broken-route/        v2-syntax router fails to register -> read the parse
+                            error off the router, look up the v3 rule, fix, validate
+    02-security-posture/    public-no-TLS route + expiring cert -> audit with
+                            list_certificates, harden with the reference, validate
     03-trace-latency/       slow request, found in the Tempo distributed traces
+    04-shadowed-route/      valid router served by the wrong backend -> a
+                            high-priority catch-all wins; needs the reference on
+                            router priority, then validate
+    05-degraded-backend/    intermittent 502s while health says UP -> the failure
+                            rate and trend live in the metrics (query_metrics)
 ```
 
-The three scenarios each lean on a different evidence source — application log,
-runtime + metrics, distributed traces — and the first two close the loop through
-the embedded reference (look up the fix) and `validate_traefik_config` (prove it
-before applying).
+The scenarios each force a different evidence source — the application log
+(01), `list_certificates` (02), distributed traces (03), router priority +
+reference (04), metrics history (05) — past the point where reading a single
+router status or log line answers the question. The config-fault ones (01, 02,
+04) close the loop through the embedded reference (look up the fix) and
+`validate_traefik_config` (prove it before applying).
 
 ## Usage
 

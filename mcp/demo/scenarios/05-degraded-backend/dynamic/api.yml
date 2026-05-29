@@ -1,0 +1,26 @@
+# A service load-balanced across two servers, one of which is broken: the
+# second URL points at a port nothing listens on (whoami serves :80, not :81),
+# so every request routed there fails with 502 Bad Gateway. There is no health
+# check configured — the common case — so Traefik never takes the bad server out
+# of rotation and keeps round-robining onto it. About half the requests to
+# api.localhost fail, intermittently.
+#
+# The router and service are both enabled and not in error, and get_service_health
+# is blind here (server health is only populated when a health check is
+# configured). A bounded access-log tail shows a few scattered 502s but cannot
+# tell you the rate or whether it is steady or worsening. The failing proportion
+# and its trend live in the metrics: query_metrics over traefik_service_requests_total
+# by code shows ~half the api@file requests returning 502.
+http:
+  routers:
+    api:
+      rule: "Host(`api.localhost`)"
+      entrypoints:
+        - web
+      service: api
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+          - url: "http://whoami:81"

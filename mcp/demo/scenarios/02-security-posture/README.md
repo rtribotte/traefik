@@ -1,14 +1,16 @@
-# Scenario 02 — "is anything exposed?"
+# Scenario 02 — "is anything exposed, and is a cert about to expire?"
 
-The full hardening loop: **audit → harden → validate**. Surface the recurring,
-high-stakes findings from the live runtime, then use the embedded reference to
-write the fix and validate it before applying. There is no built-in Traefik
-audit today, so this composes what the server already has into one answer.
+The full hardening loop: **audit → harden → validate**. Detection here is easy —
+the findings are right there in the runtime — so the value is the second half:
+grounding each fix in the embedded reference and proving the hardened config
+well-formed with `validate_traefik_config` before you apply it. There is no
+built-in Traefik audit today, so this composes what the server already has into
+one answer.
 
 ## Run
 
 ```bash
-# generate a cert that expires in 7 days (so its expiry metric stands out)
+# generate a cert that expires in 7 days, so list_certificates flags it
 ./scripts/gen-certs.sh
 
 ./demo.sh up 02-security-posture
@@ -19,7 +21,13 @@ audit today, so this composes what the server already has into one answer.
 | Finding | Source the assistant reads |
 |---------|----------------------------|
 | `admin.localhost` exposed on plain HTTP — no TLS, no auth middleware | `/api/rawdata` / `list_routers` (public route on the `web` entrypoint, empty `tls`, no `middlewares`) |
-| TLS certificate expiring in <30 days | `get_metrics` → `traefik_tls_certs_not_after` (Unix timestamp per cert) |
+| TLS certificate expiring in <30 days | `list_certificates` (`status: warning`, `daysUntilExpiry`, the SANs and issuer) |
+
+`list_certificates` is the authoritative, live view: it reads Traefik's
+certificates API and returns each cert's validity window, the `status` Traefik
+itself computes (`warning` under 30 days, `expired` past `notAfter`) and a
+`daysUntilExpiry` — richer than the `traefik_tls_certs_not_after` metric, which
+carries only a CN and a Unix timestamp.
 
 ## Demo in Claude Desktop
 
@@ -29,19 +37,21 @@ Expected flow:
 
 1. **Audit (live).** The assistant scans the runtime for public routes on a plain
    HTTP entrypoint with no TLS and no auth (`admin`, and the base `whoami`), then
-   reads `traefik_tls_certs_not_after` from the metrics, converts the timestamp,
-   and flags the certificate expiring soonest.
-2. **Harden (reference).** `search_traefik_docs` for the fixes →
+   calls `list_certificates` and flags the one with `status: warning` (the
+   short-lived demo cert), reporting its `daysUntilExpiry`.
+2. **Harden (reference).** `search_traefik_docs` for each fix →
    `get_traefik_concept("http.middlewares.redirectscheme")` to force HTTPS,
    `get_traefik_concept("http.middlewares.basicauth")` to add authentication, and
    `get_traefik_concept("http.middlewares.headers")` for secure response headers.
+   Grounding here is the point: the exact field names, types and defaults come
+   from the reference, not from memory.
 3. **Author + validate.** The assistant writes a hardened dynamic config (TLS on
    the router + the auth/redirect/headers middlewares) and runs
    `validate_traefik_config` on it to prove it is well-formed against the official
    schema before you apply it — the server never writes config itself.
 
-> Point the MCP server at the metrics endpoint (the demo's `--prometheus.url` /
-> `get_metrics` already cover this) so the assistant can read the cert expiry.
+> `list_certificates` needs only `--traefik.api-url` (already set); the cert API
+> is part of the Traefik API the server reads.
 
 ## Reset
 

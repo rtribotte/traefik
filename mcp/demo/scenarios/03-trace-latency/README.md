@@ -29,10 +29,6 @@ ingestion before querying.
   look fine. Can you find a slow request in the traces and tell me where the
   time is going?"
 
-Or invoke the `diagnose` prompt with `problem: "checkout.localhost is slow"`,
-`target: "checkout"` — its latency path walks the access-log durations and the
-traces for you.
-
 Expected: the assistant inspects the router/service/middleware config and the
 backend health and finds nothing wrong — in particular the `pluginA`
 middleware has no options and its name says nothing, so the config gives no

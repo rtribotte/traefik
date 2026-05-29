@@ -1,0 +1,32 @@
+# Two routers on the web entrypoint, both valid and enabled:
+#   - shop matches Host(`shop.localhost`) and points at the (healthy) shop
+#     backend. Its priority is left implicit, so Traefik derives it from the
+#     rule length (~22).
+#   - catchall matches PathPrefix(`/`) — every path on every host — and is given
+#     an explicit priority of 1000, far above any rule-length default.
+# Because a higher priority wins, catchall outranks shop (and every other web
+# router) and shop.localhost is served the maintenance backend. Neither router
+# errors; the only evidence is the priority gap, which is why the fix needs the
+# reference (how v3 priority works) rather than just reading a status.
+http:
+  routers:
+    shop:
+      rule: "Host(`shop.localhost`)"
+      entrypoints:
+        - web
+      service: shop
+    catchall:
+      rule: "PathPrefix(`/`)"
+      priority: 1000
+      entrypoints:
+        - web
+      service: maintenance
+  services:
+    shop:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+    maintenance:
+      loadBalancer:
+        servers:
+          - url: "http://maintenance:80"

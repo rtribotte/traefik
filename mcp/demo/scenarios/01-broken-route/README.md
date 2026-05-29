@@ -32,9 +32,6 @@ the runtime, and `shop.localhost` 404s. Traefik logs the parse error; the `shop`
 - "shop.localhost returns 404 but I configured a router for it — what's wrong, and
   how do I fix it?"
 
-Or invoke the `diagnose` prompt with `problem: "shop.localhost returns 404"`,
-`target: "shop"` — its missing-route path runs the steps below in order.
-
 Expected flow:
 
 1. **Diagnose (live).** `get_router("shop@file")` shows `status: disabled` with the
