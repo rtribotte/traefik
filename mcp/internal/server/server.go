@@ -203,7 +203,7 @@ func New(name, version string, deps Deps) *mcp.Server {
 			"generated or hand-written configuration before applying it.",
 	}, validateConfig(deps.Reference))
 
-	//addPrompts(s)
+	addPrompts(s)
 
 	return s
 }
