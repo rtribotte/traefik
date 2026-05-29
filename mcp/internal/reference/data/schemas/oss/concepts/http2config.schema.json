@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/http2config.schema.json",
+  "title": "HTTP2Config",
+  "description": "HTTP2Config is the HTTP2 configuration of an entry point.",
+  "type": "object",
+  "properties": {
+    "maxConcurrentStreams": {
+      "default": 250,
+      "type": "integer"
+    },
+    "maxDecoderHeaderTableSize": {
+      "default": 4096,
+      "type": "integer"
+    },
+    "maxEncoderHeaderTableSize": {
+      "default": 4096,
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

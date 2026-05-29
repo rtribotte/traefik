@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/ldap.schema.json",
+  "title": "LDAP",
+  "description": "Configuration holds the LDAP Middleware configuration.",
+  "type": "object",
+  "properties": {
+    "attribute": {
+      "description": "Attribute is the LDAP object attribute used to form a bind DN when sending bind queries: <Attribute>=<Username>,<BaseDN> where the Username is extracted from the Authorization header in the request.",
+      "type": "string"
+    },
+    "baseDN": {
+      "description": "BaseDN is the base domain name that should be used for bind and search queries.",
+      "type": "string"
+    },
+    "forwardAuthorization": {
+      "description": "ForwardAuthorization determines whether the \"Authorization\" header should be forwarded or stripped from the request.",
+      "type": "boolean"
+    },
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "ForwardHeaders maps HTTP header names to LDAP attribute names for forwarding attributes as headers.",
+      "type": "object"
+    },
+    "forwardUsername": {
+      "description": "ForwardUsername determines whether a \"Username\" header should be added to the request, containing the value of the username used to authenticate to the LDAP server.",
+      "type": "boolean"
+    },
+    "forwardUsernameHeader": {
+      "description": "ForwardUsernameHeader sets the name of the header to use to forward the username.",
+      "type": "string"
+    },
+    "groups": {
+      "description": "Groups configuration for group extraction and forwarding.",
+      "type": "object"
+    },
+    "searchFilter": {
+      "description": "SearchFilter can be set to enable search and bind mode. When set, this value will be used to filter the results of a search query. Example of a search query: (&(objectClass=inetOrgPerson)(gidNumber=500)(uid=%s)). \"%s\" can be used as a placeholder that will be replaced by the Username.",
+      "type": "string"
+    },
+    "wwwAuthenticateHeader": {
+      "description": "WWWAuthenticateHeader determines whether a \"WWW-Authenticate\" header should be added to the request if it fails with a 401 Unauthorized status code in order to instruct the User-Agent he should try to authenticate. See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate for more information.",
+      "type": "boolean"
+    },
+    "wwwAuthenticateHeaderRealm": {
+      "description": "WWWAuthenticateHeaderRealm sets a realm in the \"WWW-Authenticate\" header.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

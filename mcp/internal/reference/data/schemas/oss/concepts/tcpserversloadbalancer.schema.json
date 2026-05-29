@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserversloadbalancer.schema.json",
+  "title": "TCPServersLoadBalancer",
+  "description": "TCPServersLoadBalancer holds the LoadBalancerService configuration.",
+  "type": "object",
+  "properties": {
+    "healthCheck": {
+      "description": "Healthcheck defines health checks for ExternalName services.",
+      "properties": {
+        "expect": {
+          "type": "string"
+        },
+        "interval": {
+          "default": "30s",
+          "description": "Interval defines the frequency of the health check calls for healthy targets. Default: 30s",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "port": {
+          "description": "Port defines the port of a Kubernetes Service. This can be a reference to a named port.",
+          "type": "integer"
+        },
+        "send": {
+          "type": "string"
+        },
+        "timeout": {
+          "default": "5s",
+          "description": "Timeout defines how much time the middleware is allowed to retry the request. The value of timeout should be provided in seconds or as a valid duration format, see https://pkg.go.dev/time#ParseDuration.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "unhealthyInterval": {
+          "description": "UnhealthyInterval defines the frequency of the health check calls for unhealthy targets. When UnhealthyInterval is not defined, it defaults to the Interval value. Default: 30s",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "proxyProtocol": {
+      "description": "ProxyProtocol holds the PROXY Protocol configuration.",
+      "properties": {
+        "version": {
+          "default": 2,
+          "description": "Version defines the PROXY Protocol version to use.",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "servers": {
+      "items": {
+        "properties": {
+          "address": {
+            "description": "Address defines the authentication server address.",
+            "type": "string"
+          },
+          "tls": {
+            "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "serversTransport": {
+      "description": "ServersTransport defines the name of ServersTransport resource to use. It allows to configure the transport between Traefik and your servers. Can only be used on a Kubernetes Service.",
+      "type": "string"
+    },
+    "terminationDelay": {
+      "description": "TerminationDelay, corresponds to the deadline that the proxy sets, after one of its connected peers indicates it has closed the writing capability of its connection, to close the reading capability as well, hence fully terminating the connection. It is a duration in milliseconds, defaulting to 100. A negative value means an infinite deadline (i.e. the reading capability is never closed).",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

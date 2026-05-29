@@ -1,0 +1,14 @@
+# Traefik configuration reference
+
+> Machine readable configuration surface for Traefik v3.7.0 and Traefik Hub v3.20.2. Per concept Markdown pages with rich frontmatter, plus parallel JSON Schemas. Generated from the Go source at https://github.com/traefik/reference.
+
+## Product indexes
+
+- [Traefik OSS configuration reference](https://doc.traefik.io/traefik/llms.txt): exhaustive list of OSS concepts (HTTP, TCP, UDP routers, services, middlewares, providers, CRDs, annotations, static configuration sections).
+- [Traefik Hub configuration reference](https://doc.traefik.io/traefik-hub/llms.txt): exhaustive list of Hub concepts (Hub middlewares, providers, CRDs, static configuration sections, developer portal REST endpoints).
+
+## Discovery
+
+- [Cross source index (INDEX.md)](https://raw.githubusercontent.com/traefik/reference/main/reference/INDEX.md): both products in one Markdown file, around ten thousand tokens, suitable for one shot system prompt stuffing.
+- [Schemas registry (INDEX.json)](https://raw.githubusercontent.com/traefik/reference/main/schemas/INDEX.json): catalogue of every JSON Schema with applicability rules (filename globs, Kubernetes kinds, annotation namespaces, concept ids).
+- [Concept to doc mapping (DOC_INDEX.json)](https://raw.githubusercontent.com/traefik/reference/main/reference/DOC_INDEX.json): machine readable mapping of every concept id to its narrative documentation page.

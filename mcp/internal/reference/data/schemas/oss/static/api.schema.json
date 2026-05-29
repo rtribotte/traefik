@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/api.schema.json",
+  "title": "API",
+  "description": "API holds the API configuration.",
+  "type": "object",
+  "properties": {
+    "basePath": {
+      "default": "/",
+      "type": "string"
+    },
+    "dashboard": {
+      "default": true,
+      "type": "boolean"
+    },
+    "dashboardName": {
+      "default": "",
+      "type": "string"
+    },
+    "debug": {
+      "type": "boolean"
+    },
+    "disableDashboardAd": {
+      "type": "boolean"
+    },
+    "insecure": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

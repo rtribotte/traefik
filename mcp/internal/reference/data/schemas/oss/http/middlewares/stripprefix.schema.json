@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/stripprefix.schema.json",
+  "title": "StripPrefix",
+  "description": "StripPrefix holds the strip prefix middleware configuration. This middleware removes the specified prefixes from the URL path. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/stripprefix/",
+  "type": "object",
+  "properties": {
+    "forceSlash": {
+      "type": "boolean"
+    },
+    "prefixes": {
+      "description": "Prefixes defines the prefixes to strip from the request URL.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

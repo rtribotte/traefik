@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslog.schema.json",
+  "title": "AccessLog",
+  "description": "AccessLog holds the configuration settings for the access logger (middlewares/accesslog).",
+  "type": "object",
+  "properties": {
+    "addInternals": {
+      "type": "boolean"
+    },
+    "bufferingSize": {
+      "type": "integer"
+    },
+    "dualOutput": {
+      "type": "boolean"
+    },
+    "fields": {
+      "default": {
+        "defaultMode": "keep",
+        "headers": {
+          "defaultMode": "drop"
+        }
+      },
+      "properties": {
+        "defaultMode": {
+          "default": "keep",
+          "type": "string"
+        },
+        "headers": {
+          "default": {
+            "defaultMode": "drop"
+          },
+          "description": "Headers defines custom headers to be sent to the health check endpoint.",
+          "properties": {
+            "defaultMode": {
+              "type": "string"
+            },
+            "names": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "names": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "filePath": {
+      "default": "",
+      "type": "string"
+    },
+    "filters": {
+      "default": {},
+      "properties": {
+        "minDuration": {
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "retryAttempts": {
+          "type": "boolean"
+        },
+        "statusCodes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "format": {
+      "default": "common",
+      "type": "string"
+    },
+    "otlp": {
+      "properties": {
+        "grpc": {
+          "properties": {
+            "endpoint": {
+              "default": "localhost:4317",
+              "type": "string"
+            },
+            "headers": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Headers defines custom headers to be sent to the health check endpoint.",
+              "type": "object"
+            },
+            "insecure": {
+              "type": "boolean"
+            },
+            "tls": {
+              "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+              "properties": {
+                "ca": {
+                  "type": "string"
+                },
+                "caOptional": {
+                  "type": "boolean"
+                },
+                "cert": {
+                  "type": "string"
+                },
+                "insecureSkipVerify": {
+                  "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+                  "type": "boolean"
+                },
+                "key": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "http": {
+          "default": {
+            "endpoint": "https://localhost:4318"
+          },
+          "properties": {
+            "endpoint": {
+              "default": "https://localhost:4318",
+              "type": "string"
+            },
+            "headers": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Headers defines custom headers to be sent to the health check endpoint.",
+              "type": "object"
+            },
+            "tls": {
+              "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+              "properties": {
+                "ca": {
+                  "type": "string"
+                },
+                "caOptional": {
+                  "type": "boolean"
+                },
+                "cert": {
+                  "type": "string"
+                },
+                "insecureSkipVerify": {
+                  "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+                  "type": "boolean"
+                },
+                "key": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "resourceAttributes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "serviceName": {
+          "default": "traefik",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

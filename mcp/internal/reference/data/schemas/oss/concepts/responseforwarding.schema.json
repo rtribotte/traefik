@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/responseforwarding.schema.json",
+  "title": "ResponseForwarding",
+  "description": "ResponseForwarding holds the response forwarding configuration.",
+  "type": "object",
+  "properties": {
+    "flushInterval": {
+      "default": "100ms",
+      "description": "FlushInterval defines the interval, in milliseconds, in between flushes to the client while copying the response body. A negative value means to flush immediately after each write to the client. This configuration is ignored when ReverseProxy recognizes a response as a streaming response; for such responses, writes are flushed to the client immediately. Default: 100ms",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

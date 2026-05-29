@@ -8,8 +8,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/traefik/traefik-mcp/internal/configschema"
-	"github.com/traefik/traefik-mcp/internal/rag"
+	"github.com/traefik/traefik-mcp/internal/reference"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 )
 
@@ -100,8 +99,8 @@ func TestServer_GatesToolsOnCapabilities(t *testing.T) {
 	assert.True(t, traceOnly["list_routers"])
 	assert.True(t, traceOnly["diagnose_5xx"])
 
-	// Validation and docs tools are capability-independent: always present.
-	for _, name := range []string{"validate_static_config", "validate_dynamic_config", "search_traefik_docs"} {
+	// Reference grounding and validation tools are capability-independent: always present.
+	for _, name := range []string{"search_traefik_docs", "get_traefik_concept", "get_traefik_schema", "get_traefik_doc", "validate_traefik_config"} {
 		assert.True(t, traceOnly[name], name)
 		assert.True(t, otlp[name], name)
 	}
@@ -145,13 +144,13 @@ func connectWith(t *testing.T, deps Deps) *mcp.ClientSession {
 	return session
 }
 
-func TestServer_ValidateDynamicConfig(t *testing.T) {
-	v, err := configschema.New()
+func TestServer_ValidateTraefikConfig(t *testing.T) {
+	cat, err := reference.New()
 	require.NoError(t, err)
-	session := connectWith(t, Deps{Target: newRawdataTarget(t), Validator: v})
+	session := connectWith(t, Deps{Target: newRawdataTarget(t), Reference: cat})
 
 	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{
-		Name: "validate_dynamic_config",
+		Name: "validate_traefik_config",
 		Arguments: map[string]any{
 			"config": "http:\n  services:\n    s:\n      loadBalancer:\n        servers: \"not-an-array\"\n",
 		},
@@ -159,16 +158,17 @@ func TestServer_ValidateDynamicConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, res.IsError)
 
-	var out validateConfigOutput
+	var out reference.Validation
 	require.NoError(t, json.Unmarshal(mustJSON(t, res.StructuredContent), &out))
 	assert.False(t, out.Valid)
-	assert.NotEmpty(t, out.Problems)
+	require.NotEmpty(t, out.Docs)
+	assert.NotEmpty(t, out.Docs[0].Problems)
 }
 
 func TestServer_SearchTraefikDocs(t *testing.T) {
-	r, err := rag.NewEmbedded()
+	cat, err := reference.New()
 	require.NoError(t, err)
-	session := connectWith(t, Deps{Target: newRawdataTarget(t), Retriever: r})
+	session := connectWith(t, Deps{Target: newRawdataTarget(t), Reference: cat})
 
 	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{
 		Name:      "search_traefik_docs",
@@ -181,6 +181,23 @@ func TestServer_SearchTraefikDocs(t *testing.T) {
 	require.NoError(t, json.Unmarshal(mustJSON(t, res.StructuredContent), &out))
 	require.NotEmpty(t, out.Results)
 	assert.Contains(t, out.Results[0].ID, "forwardauth")
+}
+
+func TestServer_GetTraefikConcept(t *testing.T) {
+	cat, err := reference.New()
+	require.NoError(t, err)
+	session := connectWith(t, Deps{Target: newRawdataTarget(t), Reference: cat})
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name:      "get_traefik_concept",
+		Arguments: map[string]any{"id": "http.middlewares.forwardauth"},
+	})
+	require.NoError(t, err)
+	require.False(t, res.IsError)
+
+	var out conceptOutput
+	require.NoError(t, json.Unmarshal(mustJSON(t, res.StructuredContent), &out))
+	assert.Contains(t, out.Markdown, "id: http.middlewares.forwardauth")
 }
 
 func mustJSON(t *testing.T, v any) []byte {

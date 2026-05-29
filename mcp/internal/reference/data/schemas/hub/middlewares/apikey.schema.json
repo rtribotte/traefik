@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/apikey.schema.json",
+  "title": "APIKey",
+  "description": "Configuration holds the API Key middleware configuration.",
+  "type": "object",
+  "properties": {
+    "keySource": {
+      "type": "object"
+    },
+    "secretNonBase64Encoded": {
+      "type": "boolean"
+    },
+    "secretValues": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

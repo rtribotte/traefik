@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/udp/routers.schema.json",
+  "title": "UDPRouter",
+  "description": "UDPRouter defines the configuration for an UDP router.",
+  "type": "object",
+  "properties": {
+    "entryPoints": {
+      "description": "EntryPoints defines the list of entry point names to bind to. Entry points have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/entrypoints/ Default: all.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "service": {
+      "description": "Service defines the reference to a Kubernetes Service that will serve the error page. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/errorpages/#service",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/clienttls.schema.json",
+  "title": "ClientTLS",
+  "description": "ClientTLS holds TLS specific configurations as client CA, Cert and Key can be either path or file contents. TODO: remove this struct when CAOptional option will be removed.",
+  "type": "object",
+  "properties": {
+    "ca": {
+      "type": "string"
+    },
+    "caOptional": {
+      "type": "boolean"
+    },
+    "cert": {
+      "type": "string"
+    },
+    "insecureSkipVerify": {
+      "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+      "type": "boolean"
+    },
+    "key": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

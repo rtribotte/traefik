@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/opa.schema.json",
+  "title": "OPA",
+  "description": "Configuration holds the OPA middleware configuration.",
+  "type": "object",
+  "properties": {
+    "allow": {
+      "description": "Allow holds an expression that defines if the request is authorized.",
+      "type": "string"
+    },
+    "bundlePath": {
+      "type": "string"
+    },
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "ForwardHeaders defines headers that should be added to the request and populated with the result of a given expression, for example: {\"HeaderName\":\"expressionToEvaluate\"}",
+      "type": "object"
+    },
+    "policy": {
+      "description": "Path or content of the policy.",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

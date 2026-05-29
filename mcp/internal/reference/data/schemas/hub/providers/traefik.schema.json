@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/traefik.schema.json",
+  "title": "Traefik",
+  "description": "Provider wraps Traefik's internal provider to handle distributed ACME challenges. It extends Traefik's internal provider functionality by handling both standard and distributed ACME HTTP challenges. This provider should be used instead of Traefik's internal provider when distributed ACME is required.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

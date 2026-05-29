@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/forwardedheaders.schema.json",
+  "title": "ForwardedHeaders",
+  "description": "ForwardedHeaders Trust client forwarding headers.",
+  "type": "object",
+  "properties": {
+    "connection": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "insecure": {
+      "type": "boolean"
+    },
+    "notAppendXForwardedFor": {
+      "type": "boolean"
+    },
+    "trustedIPs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

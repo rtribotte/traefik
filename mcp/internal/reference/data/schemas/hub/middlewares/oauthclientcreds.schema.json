@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/oauthclientcreds.schema.json",
+  "title": "OAuthClientCreds",
+  "description": "Configuration holds the configuration for the OAuth client credentials middleware.",
+  "type": "object",
+  "properties": {
+    "audience": {
+      "type": "string"
+    },
+    "claims": {
+      "description": "Claims defines an expression to perform validation on the access token. For example: Equals(`grp`, `admin`) && Equals(`scope`, `deploy`)",
+      "type": "string"
+    },
+    "clientConfig": {
+      "type": "object"
+    },
+    "clientID": {
+      "type": "string"
+    },
+    "clientSecret": {
+      "type": "string"
+    },
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "ForwardHeaders defines headers that should be added to the request and populated with values extracted from the access token.",
+      "type": "object"
+    },
+    "scopes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "store": {
+      "type": "object"
+    },
+    "url": {
+      "type": "string"
+    },
+    "usernameClaim": {
+      "description": "UsernameClaim defines the claim used to set the clientUsername in the accessLog.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

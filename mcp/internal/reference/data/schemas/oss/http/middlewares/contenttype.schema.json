@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/contenttype.schema.json",
+  "title": "ContentType",
+  "description": "ContentType holds the content-type middleware configuration. This middleware exists to enable the correct behavior until at least the default one can be changed in a future version.",
+  "type": "object",
+  "properties": {
+    "autoDetect": {
+      "description": "AutoDetect specifies whether to let the `Content-Type` header, if it has not been set by the backend, be automatically set to a value derived from the contents of the response.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

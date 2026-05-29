@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/clientauth.schema.json",
+  "title": "ClientAuth",
+  "description": "ClientAuth defines the parameters of the client authentication part of the TLS connection, if any.",
+  "type": "object",
+  "properties": {
+    "caFiles": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "clientAuthType": {
+      "description": "ClientAuthType defines the client authentication type to apply. The available values are: \"NoClientCert\", \"RequestClientCert\", \"VerifyClientCertIfGiven\" and \"RequireAndVerifyClientCert\".",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

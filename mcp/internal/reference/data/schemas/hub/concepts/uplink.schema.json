@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplink.schema.json",
+  "title": "Uplink",
+  "description": "Uplink represents an inter-cluster service advertisement. A child cluster declares an Uplink to advertise to a parent cluster that it can handle a particular workload. This advertisement gets automatically materialized into a service on the parent layer. The parent can then route traffic to the advertised workload.",
+  "type": "object",
+  "properties": {
+    "entryPoints": {
+      "description": "EntryPoints lists the uplink entrypoint names associated with this uplink. If not specified, defaults to all uplink entrypoints marked as default, or all uplink entrypoints if none are explicitly marked.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "healthCheck": {
+      "description": "HealthCheck configures the active health check on the load balancer service generated for this uplink.",
+      "type": "object"
+    },
+    "passiveHealthCheck": {
+      "description": "PassiveHealthCheck configures the passive health check on the load balancer service generated for this uplink.",
+      "type": "object"
+    },
+    "weight": {
+      "description": "Weight is used for load balancing across multiple clusters referencing the same uplink. Higher weights receive proportionally more traffic.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

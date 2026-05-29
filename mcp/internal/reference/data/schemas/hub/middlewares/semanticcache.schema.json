@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/semanticcache.schema.json",
+  "title": "SemanticCache",
+  "description": "Config holds the config for semantic cache middleware.",
+  "type": "object",
+  "properties": {
+    "allowBypass": {
+      "type": "boolean"
+    },
+    "contentTemplate": {
+      "type": "string"
+    },
+    "readOnly": {
+      "type": "boolean"
+    },
+    "ttl": {
+      "type": "integer"
+    },
+    "vectorDB": {
+      "type": "object"
+    },
+    "vectorizer": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

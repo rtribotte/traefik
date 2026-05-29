@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/certandstores.schema.json",
+  "title": "CertAndStores",
+  "description": "CertAndStores allows mapping a TLS certificate to a list of entry points.",
+  "type": "object",
+  "properties": {
+    "certFile": {
+      "type": "string"
+    },
+    "keyFile": {
+      "type": "string"
+    },
+    "stores": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/healthcheck.schema.json",
+  "title": "HealthCheck",
+  "description": "HealthCheck controls healthcheck awareness and propagation at the services level.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

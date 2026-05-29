@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/forwardingtimeouts.schema.json",
+  "title": "ForwardingTimeouts",
+  "description": "ForwardingTimeouts contains timeout configurations for forwarding requests to the backend servers.",
+  "type": "object",
+  "properties": {
+    "dialTimeout": {
+      "default": "30s",
+      "description": "DialTimeout is the amount of time to wait until a connection to a backend server can be established.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "idleConnTimeout": {
+      "default": "1m30s",
+      "description": "IdleConnTimeout is the maximum period for which an idle HTTP keep-alive connection will remain open before closing itself.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "pingTimeout": {
+      "default": "15s",
+      "description": "PingTimeout is the timeout after which the HTTP/2 connection will be closed if a response to ping is not received.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "readIdleTimeout": {
+      "description": "ReadIdleTimeout is the timeout after which a health check using ping frame will be carried out if no frame is received on the HTTP/2 connection.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "responseHeaderTimeout": {
+      "description": "ResponseHeaderTimeout is the amount of time to wait for a server's response headers after fully writing the request (including its body, if any).",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

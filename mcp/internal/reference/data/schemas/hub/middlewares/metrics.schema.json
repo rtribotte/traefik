@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/metrics.schema.json",
+  "title": "Metrics",
+  "description": "Configuration configures an API Management metrics handler.",
+  "type": "object",
+  "properties": {
+    "apiName": {
+      "type": "string"
+    },
+    "apiNamespace": {
+      "type": "string"
+    },
+    "apiVersionName": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

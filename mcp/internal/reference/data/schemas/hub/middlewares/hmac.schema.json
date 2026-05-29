@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hmac.schema.json",
+  "title": "HMAC",
+  "description": "Configuration holds the HMAC Authentication Middleware configuration.",
+  "type": "object",
+  "properties": {
+    "enforcedHeaders": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "keys": {
+      "description": "TODO: redactor should handle slices of struct.",
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "validateDigest": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

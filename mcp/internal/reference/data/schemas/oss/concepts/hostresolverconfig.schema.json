@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/hostresolverconfig.schema.json",
+  "title": "HostResolverConfig",
+  "description": "HostResolverConfig contain configuration for CNAME Flattening.",
+  "type": "object",
+  "properties": {
+    "cnameFlattening": {
+      "default": false,
+      "type": "boolean"
+    },
+    "resolvConfig": {
+      "default": "/etc/resolv.conf",
+      "type": "string"
+    },
+    "resolvDepth": {
+      "default": 5,
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

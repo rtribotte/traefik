@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/domain.schema.json",
+  "title": "Domain",
+  "description": "Domain holds a domain name with SANs.",
+  "type": "object",
+  "properties": {
+    "main": {
+      "description": "Main defines the main domain name.",
+      "type": "string"
+    },
+    "sans": {
+      "description": "SANs defines the subject alternative domain names.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

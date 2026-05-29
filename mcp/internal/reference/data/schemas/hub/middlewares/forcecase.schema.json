@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/forcecase.schema.json",
+  "title": "ForceCase",
+  "description": "Configuration holds the Force Case middleware configuration.",
+  "type": "object",
+  "properties": {
+    "headers": {
+      "description": "Headers is the list of headers on which to force case.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

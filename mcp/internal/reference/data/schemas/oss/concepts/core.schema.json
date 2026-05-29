@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/core.schema.json",
+  "title": "Core",
+  "description": "Core configures Traefik core behavior.",
+  "type": "object",
+  "properties": {
+    "defaultRuleSyntax": {
+      "default": "v3",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

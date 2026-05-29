@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/options.schema.json",
+  "title": "Options",
+  "description": "Options configures TLS for an entry point.",
+  "type": "object",
+  "properties": {
+    "alpnProtocols": {
+      "default": [
+        "h2",
+        "http/1.1",
+        "acme-tls/1"
+      ],
+      "description": "ALPNProtocols defines the list of supported application level protocols for the TLS handshake, in order of preference. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-certificates/#certificates-stores#alpn-protocols",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "cipherSuites": {
+      "default": [
+        "TLS_AES_128_GCM_SHA256",
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+        "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+        "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+        "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+        "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+        "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+        "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+        "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+        "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+        "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+        "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+      ],
+      "description": "CipherSuites defines the cipher suites to use when contacting backend servers.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "clientAuth": {
+      "description": "ClientAuth defines the server's policy for TLS Client Authentication.",
+      "properties": {
+        "caFiles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "clientAuthType": {
+          "description": "ClientAuthType defines the client authentication type to apply. The available values are: \"NoClientCert\", \"RequestClientCert\", \"VerifyClientCertIfGiven\" and \"RequireAndVerifyClientCert\".",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "curvePreferences": {
+      "description": "CurvePreferences defines the preferred elliptic curves. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-certificates/#certificates-stores#curve-preferences",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "disableSessionTickets": {
+      "description": "DisableSessionTickets disables TLS session resumption via session tickets.",
+      "type": "boolean"
+    },
+    "maxVersion": {
+      "description": "MaxVersion defines the maximum TLS version to use when contacting backend servers.",
+      "type": "string"
+    },
+    "minVersion": {
+      "description": "MinVersion defines the minimum TLS version to use when contacting backend servers.",
+      "type": "string"
+    },
+    "preferServerCipherSuites": {
+      "description": "PreferServerCipherSuites defines whether the server chooses a cipher suite among his own instead of among the client's. It is enabled automatically when minVersion or maxVersion is set.",
+      "type": "boolean"
+    },
+    "sniStrict": {
+      "description": "SniStrict defines whether Traefik allows connections from clients connections that do not specify a server_name extension.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

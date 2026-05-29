@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/rest.schema.json",
+  "title": "Provider",
+  "description": "Provider is a provider.Provider implementation that provides a Rest API.",
+  "type": "object",
+  "properties": {
+    "insecure": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

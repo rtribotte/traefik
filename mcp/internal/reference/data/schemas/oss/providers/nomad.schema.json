@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/nomad.schema.json",
+  "title": "ProviderBuilder",
+  "description": "ProviderBuilder is responsible for constructing namespaced instances of the Nomad provider.",
+  "type": "object",
+  "properties": {
+    "allowEmptyServices": {
+      "type": "boolean"
+    },
+    "constraints": {
+      "type": "string"
+    },
+    "defaultRule": {
+      "type": "string"
+    },
+    "endpoint": {
+      "type": "object"
+    },
+    "exposedByDefault": {
+      "default": true,
+      "type": "boolean"
+    },
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "prefix": {
+      "description": "Prefix is the string to add before the current path in the requested URL. It should include a leading slash (/).",
+      "type": "string"
+    },
+    "refreshInterval": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "throttleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "watch": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

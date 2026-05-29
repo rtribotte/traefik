@@ -1,0 +1,610 @@
+{
+  "description": "Mapping of reference concept ids to narrative documentation paths. doc_path is relative to traefik/docs/content/ for source=oss, hub-doc/docs/ for source=hub.",
+  "entries": [
+    {
+      "concept_id": "annotations.gateway-service",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/gateway-api.md"
+    },
+    {
+      "concept_id": "annotations.ingress",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/ingress.md"
+    },
+    {
+      "concept_id": "annotations.ingress-nginx",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/ingress-nginx.md"
+    },
+    {
+      "concept_id": "crd.accesscontrolpolicy",
+      "source": "hub",
+      "doc_path": "authentication-authorization/access-overview.md"
+    },
+    {
+      "concept_id": "crd.api",
+      "source": "hub",
+      "doc_path": "api-management/api.md"
+    },
+    {
+      "concept_id": "crd.apiauth",
+      "source": "hub",
+      "doc_path": "api-management/api-auth.md"
+    },
+    {
+      "concept_id": "crd.apibundle",
+      "source": "hub",
+      "doc_path": "api-management/api-bundle.md"
+    },
+    {
+      "concept_id": "crd.apicatalogitem",
+      "source": "hub",
+      "doc_path": "api-management/api-catalogitem.md"
+    },
+    {
+      "concept_id": "crd.apiplan",
+      "source": "hub",
+      "doc_path": "api-management/api-plans.md"
+    },
+    {
+      "concept_id": "crd.apiportal",
+      "source": "hub",
+      "doc_path": "api-management/api-portal.md"
+    },
+    {
+      "concept_id": "crd.apiportalauth",
+      "source": "hub",
+      "doc_path": "api-management/api-portal-auth.md"
+    },
+    {
+      "concept_id": "crd.apiratelimit",
+      "source": "hub",
+      "doc_path": "api-management/api-rate-limit.md"
+    },
+    {
+      "concept_id": "crd.apiversion",
+      "source": "hub",
+      "doc_path": "api-management/api-version.md"
+    },
+    {
+      "concept_id": "crd.contentitem",
+      "source": "hub",
+      "doc_path": "api-management/content-item.md"
+    },
+    {
+      "concept_id": "crd.ingressroute",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/http/ingressroute.md"
+    },
+    {
+      "concept_id": "crd.ingressroutetcp",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/tcp/ingressroutetcp.md"
+    },
+    {
+      "concept_id": "crd.ingressrouteudp",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/udp/ingressrouteudp.md"
+    },
+    {
+      "concept_id": "crd.managedapplication",
+      "source": "hub",
+      "doc_path": "api-management/managed-applications.md"
+    },
+    {
+      "concept_id": "crd.managedsubscription",
+      "source": "hub",
+      "doc_path": "api-management/managed-subscription.md"
+    },
+    {
+      "concept_id": "crd.middleware",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/http/middleware.md"
+    },
+    {
+      "concept_id": "crd.middlewaretcp",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/tcp/middlewaretcp.md"
+    },
+    {
+      "concept_id": "crd.serverstransport",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/http/serverstransport.md"
+    },
+    {
+      "concept_id": "crd.serverstransporttcp",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/tcp/serverstransporttcp.md"
+    },
+    {
+      "concept_id": "crd.tlsoption",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/tls/tlsoption.md"
+    },
+    {
+      "concept_id": "crd.tlsstore",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/tls/tlsstore.md"
+    },
+    {
+      "concept_id": "crd.traefikservice",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/kubernetes/crd/http/traefikservice.md"
+    },
+    {
+      "concept_id": "crd.uplink",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/kubernetes/http/ref-uplink.md"
+    },
+    {
+      "concept_id": "http.middlewares.addprefix",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/addprefix.md"
+    },
+    {
+      "concept_id": "http.middlewares.basicauth",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/basicauth.md"
+    },
+    {
+      "concept_id": "http.middlewares.buffering",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/buffering.md"
+    },
+    {
+      "concept_id": "http.middlewares.chain",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/chain.md"
+    },
+    {
+      "concept_id": "http.middlewares.circuitbreaker",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/circuitbreaker.md"
+    },
+    {
+      "concept_id": "http.middlewares.compress",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/compress.md"
+    },
+    {
+      "concept_id": "http.middlewares.contenttype",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/contenttype.md"
+    },
+    {
+      "concept_id": "http.middlewares.digestauth",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/digestauth.md"
+    },
+    {
+      "concept_id": "http.middlewares.encodedcharacters",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/encodedcharacters.md"
+    },
+    {
+      "concept_id": "http.middlewares.errors",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/errorpages.md"
+    },
+    {
+      "concept_id": "http.middlewares.forwardauth",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/forwardauth.md"
+    },
+    {
+      "concept_id": "http.middlewares.grpcweb",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/grpcweb.md"
+    },
+    {
+      "concept_id": "http.middlewares.headers",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/headers.md"
+    },
+    {
+      "concept_id": "http.middlewares.inflightreq",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/inflightreq.md"
+    },
+    {
+      "concept_id": "http.middlewares.ipallowlist",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/ipallowlist.md"
+    },
+    {
+      "concept_id": "http.middlewares.passtlsclientcert",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/passtlsclientcert.md"
+    },
+    {
+      "concept_id": "http.middlewares.ratelimit",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/ratelimit.md"
+    },
+    {
+      "concept_id": "http.middlewares.redirectregex",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/redirectregex.md"
+    },
+    {
+      "concept_id": "http.middlewares.redirectscheme",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/redirectscheme.md"
+    },
+    {
+      "concept_id": "http.middlewares.replacepath",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/replacepath.md"
+    },
+    {
+      "concept_id": "http.middlewares.replacepathregex",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/replacepathregex.md"
+    },
+    {
+      "concept_id": "http.middlewares.retry",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/retry.md"
+    },
+    {
+      "concept_id": "http.middlewares.stripprefix",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/stripprefix.md"
+    },
+    {
+      "concept_id": "http.middlewares.stripprefixregex",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/http/middlewares/stripprefixregex.md"
+    },
+    {
+      "concept_id": "hub.middlewares.apikey",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/apikey.md"
+    },
+    {
+      "concept_id": "hub.middlewares.basicauth",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/basicauth.md"
+    },
+    {
+      "concept_id": "hub.middlewares.cache",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/cache.md"
+    },
+    {
+      "concept_id": "hub.middlewares.chatcompletion",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/chat-completion.md"
+    },
+    {
+      "concept_id": "hub.middlewares.contentguard",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/content-guard.md"
+    },
+    {
+      "concept_id": "hub.middlewares.coraza",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/coraza.md"
+    },
+    {
+      "concept_id": "hub.middlewares.distributedratelimit",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/distributedratelimit.md"
+    },
+    {
+      "concept_id": "hub.middlewares.forcecase",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/forcecase.md"
+    },
+    {
+      "concept_id": "hub.middlewares.hmac",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/hmac.md"
+    },
+    {
+      "concept_id": "hub.middlewares.hubapikey",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/apikey.md"
+    },
+    {
+      "concept_id": "hub.middlewares.hubldap",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/ldap.md"
+    },
+    {
+      "concept_id": "hub.middlewares.jwt",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/jwt.md"
+    },
+    {
+      "concept_id": "hub.middlewares.ldap",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/ldap.md"
+    },
+    {
+      "concept_id": "hub.middlewares.llmguard",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/llm-guard.md"
+    },
+    {
+      "concept_id": "hub.middlewares.mcp",
+      "source": "hub",
+      "doc_path": "mcp-gateway/mcp.md"
+    },
+    {
+      "concept_id": "hub.middlewares.oauthclientcreds",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/oauth-client-creds.md"
+    },
+    {
+      "concept_id": "hub.middlewares.oauthintro",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/oauth-introspection.md"
+    },
+    {
+      "concept_id": "hub.middlewares.oidc",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/oidc.md"
+    },
+    {
+      "concept_id": "hub.middlewares.opa",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/opa.md"
+    },
+    {
+      "concept_id": "hub.middlewares.plan",
+      "source": "hub",
+      "doc_path": "api-management/api-plans.md"
+    },
+    {
+      "concept_id": "hub.middlewares.queryparam",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/routing/http/middlewares/query-param.md"
+    },
+    {
+      "concept_id": "hub.middlewares.responsesapi",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/responses-api.md"
+    },
+    {
+      "concept_id": "hub.middlewares.semanticcache",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/semantic-cache.md"
+    },
+    {
+      "concept_id": "hub.middlewares.tokenratelimit",
+      "source": "hub",
+      "doc_path": "ai-gateway/middlewares/token-rate-limit.md"
+    },
+    {
+      "concept_id": "hub.providers.consulcatalogenterprise",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/providers/consul-catalog-enterprise.md"
+    },
+    {
+      "concept_id": "hub.providers.kubernetescrd",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/providers/kubernetes-crd.md"
+    },
+    {
+      "concept_id": "hub.providers.multicluster",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/providers/multicluster.md"
+    },
+    {
+      "concept_id": "hub.providers.nutanixprismcentral",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/providers/nutanix-prism-central.md"
+    },
+    {
+      "concept_id": "hub.static.aigateway",
+      "source": "hub",
+      "doc_path": "ai-gateway/overview.md"
+    },
+    {
+      "concept_id": "hub.static.apimanagement",
+      "source": "hub",
+      "doc_path": "api-management/apim-overview.md"
+    },
+    {
+      "concept_id": "hub.static.mcpgateway",
+      "source": "hub",
+      "doc_path": "mcp-gateway/mcp.md"
+    },
+    {
+      "concept_id": "hub.static.providers",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/providers/overview.md"
+    },
+    {
+      "concept_id": "hub.static.tracing",
+      "source": "hub",
+      "doc_path": "api-gateway/reference/install/observability/tracing.md"
+    },
+    {
+      "concept_id": "provider.consul",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kv/consul.md"
+    },
+    {
+      "concept_id": "provider.consulcatalog",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/hashicorp/consul-catalog.md"
+    },
+    {
+      "concept_id": "provider.docker",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/docker.md"
+    },
+    {
+      "concept_id": "provider.ecs",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/others/ecs.md"
+    },
+    {
+      "concept_id": "provider.etcd",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kv/etcd.md"
+    },
+    {
+      "concept_id": "provider.file",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/others/file.md"
+    },
+    {
+      "concept_id": "provider.http",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/others/http.md"
+    },
+    {
+      "concept_id": "provider.knative",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kubernetes/knative.md"
+    },
+    {
+      "concept_id": "provider.kubernetescrd",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kubernetes/kubernetes-crd.md"
+    },
+    {
+      "concept_id": "provider.kubernetesgateway",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kubernetes/kubernetes-gateway.md"
+    },
+    {
+      "concept_id": "provider.kubernetesingress",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kubernetes/kubernetes-ingress.md"
+    },
+    {
+      "concept_id": "provider.kubernetesingressnginx",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx.md"
+    },
+    {
+      "concept_id": "provider.nomad",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/hashicorp/nomad.md"
+    },
+    {
+      "concept_id": "provider.redis",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kv/redis.md"
+    },
+    {
+      "concept_id": "provider.swarm",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/swarm.md"
+    },
+    {
+      "concept_id": "provider.zookeeper",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/kv/zk.md"
+    },
+    {
+      "concept_id": "static.accesslog",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/observability/logs-and-accesslogs.md"
+    },
+    {
+      "concept_id": "static.api",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/api-dashboard.md"
+    },
+    {
+      "concept_id": "static.certificatesresolvers",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/tls/certificate-resolvers/overview.md"
+    },
+    {
+      "concept_id": "static.entrypoints",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/entrypoints.md"
+    },
+    {
+      "concept_id": "static.experimental",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/experimental/plugins.md"
+    },
+    {
+      "concept_id": "static.log",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/observability/logs-and-accesslogs.md"
+    },
+    {
+      "concept_id": "static.metrics",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/observability/metrics.md"
+    },
+    {
+      "concept_id": "static.ocsp",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/tls/ocsp.md"
+    },
+    {
+      "concept_id": "static.ping",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/observability/healthcheck.md"
+    },
+    {
+      "concept_id": "static.providers",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/providers/overview.md"
+    },
+    {
+      "concept_id": "static.spiffe",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/tls/spiffe.md"
+    },
+    {
+      "concept_id": "static.tracing",
+      "source": "oss",
+      "doc_path": "reference/install-configuration/observability/tracing.md"
+    },
+    {
+      "concept_id": "tcp.middlewares.inflightconn",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/tcp/middlewares/inflightconn.md"
+    },
+    {
+      "concept_id": "tcp.middlewares.ipallowlist",
+      "source": "oss",
+      "doc_path": "reference/routing-configuration/tcp/middlewares/ipallowlist.md"
+    }
+  ],
+  "exceptions": [
+    "crd.aiservice",
+    "http.middlewares.ipwhitelist",
+    "hub.middlewares.metrics",
+    "hub.providers.hub",
+    "hub.providers.microcks",
+    "hub.providers.traefik",
+    "hub.rest.createapikey",
+    "hub.rest.createapplication",
+    "hub.rest.deleteapikey",
+    "hub.rest.deleteapplication",
+    "hub.rest.deleteselfservicesubscription",
+    "hub.rest.getapispec",
+    "hub.rest.getapiversionspec",
+    "hub.rest.getcontent",
+    "hub.rest.getportal",
+    "hub.rest.listapikeys",
+    "hub.rest.listapplications",
+    "hub.rest.suspendapikey",
+    "hub.rest.updateapplication",
+    "hub.rest.upsertselfservicesubscriptions",
+    "hub.static",
+    "hub.static.experimental",
+    "hub.static.pluginregistry",
+    "hub.static.redis",
+    "provider.rest",
+    "static",
+    "static.core",
+    "static.global",
+    "static.hostresolver",
+    "static.serverstransport",
+    "static.tcpserverstransport",
+    "tcp.middlewares.ipwhitelist"
+  ],
+  "schema_version": 1
+}

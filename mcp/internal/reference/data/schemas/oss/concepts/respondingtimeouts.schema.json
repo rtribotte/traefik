@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/respondingtimeouts.schema.json",
+  "title": "RespondingTimeouts",
+  "description": "RespondingTimeouts contains timeout configurations for incoming requests to the Traefik instance.",
+  "type": "object",
+  "properties": {
+    "idleTimeout": {
+      "default": "3m0s",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "readTimeout": {
+      "default": "1m0s",
+      "description": "ReadTimeout defines the timeout for socket read operations. Default value is 3 seconds.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "writeTimeout": {
+      "description": "WriteTimeout defines the timeout for socket write operations. Default value is 3 seconds.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

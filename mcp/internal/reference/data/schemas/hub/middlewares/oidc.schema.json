@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/oidc.schema.json",
+  "title": "OIDC",
+  "description": "Configuration holds the configuration for the OIDC middleware.",
+  "type": "object",
+  "properties": {
+    "authParams": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "backchannelLogoutSessionsRequired": {
+      "type": "boolean"
+    },
+    "backchannelLogoutUrl": {
+      "type": "string"
+    },
+    "claims": {
+      "description": "Claims defines an expression to perform validation on the ID token. For example: Equals(`grp`, `admin`) && Equals(`scope`, `deploy`)",
+      "type": "string"
+    },
+    "clientConfig": {
+      "type": "object"
+    },
+    "clientId": {
+      "type": "string"
+    },
+    "clientSecret": {
+      "type": "string"
+    },
+    "csrf": {
+      "description": "CSRF defines whether the CSRF protection is enabled.",
+      "type": "object"
+    },
+    "disableAuthRedirectionPaths": {
+      "description": "DisableAuthRedirectionPaths disables the automatic redirection to the identity provider when no valid session is found for requests matching this set of path prefixes. It makes the middleware respond with a 401 instead of trying to initialize a new authorization code flow.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "disableIssuerCheck": {
+      "description": "DisableIssuerCheck determines whether the issuer value check between the middleware configuration, the discovery endpoint, and the token's issuer is bypassed.",
+      "type": "boolean"
+    },
+    "disableLogin": {
+      "type": "boolean"
+    },
+    "discoveryParams": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Map of arbitrary query parameters to be added to the openid-configuration well-known URI during the discovery mechanism.",
+      "type": "object"
+    },
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "ForwardHeaders defines headers that should be added to the request and populated with values extracted from the ID token.",
+      "type": "object"
+    },
+    "issuer": {
+      "type": "string"
+    },
+    "loginUrl": {
+      "type": "string"
+    },
+    "logoutUrl": {
+      "type": "string"
+    },
+    "pkce": {
+      "description": "PKCE determines whether Proof Key for Code Exchange is enabled for the authorization code flow. When enabled, uses S256 challenge method.",
+      "type": "boolean"
+    },
+    "postLoginRedirectUrl": {
+      "type": "string"
+    },
+    "postLogoutRedirectUrl": {
+      "type": "string"
+    },
+    "redirectUrl": {
+      "type": "string"
+    },
+    "scopes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "secret": {
+      "type": "object"
+    },
+    "session": {
+      "type": "object"
+    },
+    "sessionKey": {
+      "type": "string"
+    },
+    "stateCookie": {
+      "type": "object"
+    },
+    "trustedIssuer": {
+      "description": "TrustedIssuer allows discovery to work when the issuer_url reported by upstream is mismatched with the discovery URL.",
+      "type": "string"
+    },
+    "usernameClaim": {
+      "description": "UsernameClaim defines the claim used to set the clientUsername in the accessLog.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

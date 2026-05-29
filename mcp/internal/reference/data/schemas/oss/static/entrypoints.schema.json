@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/entrypoints.schema.json",
+  "title": "EntryPoint",
+  "description": "EntryPoint holds the entry point configuration.",
+  "type": "object",
+  "properties": {
+    "address": {
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    },
+    "allowACMEByPass": {
+      "type": "boolean"
+    },
+    "asDefault": {
+      "type": "boolean"
+    },
+    "forwardedHeaders": {
+      "default": {},
+      "properties": {
+        "connection": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "insecure": {
+          "type": "boolean"
+        },
+        "notAppendXForwardedFor": {
+          "type": "boolean"
+        },
+        "trustedIPs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "http": {
+      "default": {
+        "maxHeaderBytes": 1048576,
+        "sanitizePath": true
+      },
+      "properties": {
+        "encodeQuerySemicolons": {
+          "type": "boolean"
+        },
+        "encodedCharacters": {
+          "properties": {
+            "allowEncodedBackSlash": {
+              "description": "AllowEncodedBackSlash defines whether requests with encoded back slash characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedHash": {
+              "description": "AllowEncodedHash defines whether requests with encoded hash characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedNullCharacter": {
+              "description": "AllowEncodedNullCharacter defines whether requests with encoded null characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedPercent": {
+              "description": "AllowEncodedPercent defines whether requests with encoded percent characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedQuestionMark": {
+              "description": "AllowEncodedQuestionMark defines whether requests with encoded question mark characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedSemicolon": {
+              "description": "AllowEncodedSemicolon defines whether requests with encoded semicolon characters in the path are allowed.",
+              "type": "boolean"
+            },
+            "allowEncodedSlash": {
+              "description": "AllowEncodedSlash defines whether requests with encoded slash characters in the path are allowed.",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "maxHeaderBytes": {
+          "default": 1048576,
+          "type": "integer"
+        },
+        "middlewares": {
+          "description": "Middlewares is the list of MiddlewareRef which composes the chain.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "redirections": {
+          "properties": {
+            "entryPoint": {
+              "properties": {
+                "permanent": {
+                  "default": true,
+                  "description": "Permanent defines whether the redirection is permanent (308).",
+                  "type": "boolean"
+                },
+                "priority": {
+                  "default": 9223372036854775807,
+                  "description": "Priority defines the router's priority. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/rules-and-priority/#priority",
+                  "type": "integer"
+                },
+                "scheme": {
+                  "default": "https",
+                  "description": "Scheme defines the scheme to use for the request to the upstream Kubernetes Service. It defaults to https when Kubernetes Service port is 443, http otherwise.",
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "sanitizePath": {
+          "default": true,
+          "type": "boolean"
+        },
+        "tls": {
+          "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+          "properties": {
+            "certResolver": {
+              "description": "CertResolver defines the name of the certificate resolver to use. Cert resolvers have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/certificate-resolvers/acme/",
+              "type": "string"
+            },
+            "domains": {
+              "description": "Domains defines the list of domains that will be used to issue certificates. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-certificates/#domains",
+              "items": {
+                "properties": {
+                  "main": {
+                    "description": "Main defines the main domain name.",
+                    "type": "string"
+                  },
+                  "sans": {
+                    "description": "SANs defines the subject alternative domain names.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "options": {
+              "description": "Options defines the reference to a TLSOption, that specifies the parameters of the TLS connection. If not defined, the `default` TLSOption is used. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-options/",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "http2": {
+      "default": {
+        "maxConcurrentStreams": 250,
+        "maxDecoderHeaderTableSize": 4096,
+        "maxEncoderHeaderTableSize": 4096
+      },
+      "properties": {
+        "maxConcurrentStreams": {
+          "default": 250,
+          "type": "integer"
+        },
+        "maxDecoderHeaderTableSize": {
+          "default": 4096,
+          "type": "integer"
+        },
+        "maxEncoderHeaderTableSize": {
+          "default": 4096,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "http3": {
+      "properties": {
+        "advertisedPort": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "observability": {
+      "description": "Observability defines the observability configuration for a router. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/observability/",
+      "properties": {
+        "accessLogs": {
+          "default": true,
+          "description": "AccessLogs enables access logs for this router.",
+          "type": "boolean"
+        },
+        "metrics": {
+          "default": true,
+          "description": "Metrics enables metrics for this router.",
+          "type": "boolean"
+        },
+        "traceVerbosity": {
+          "default": "minimal",
+          "description": "TraceVerbosity defines the verbosity level of the tracing for this router.",
+          "type": "string"
+        },
+        "tracing": {
+          "default": true,
+          "description": "Tracing enables tracing for this router.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "proxyProtocol": {
+      "description": "ProxyProtocol holds the PROXY Protocol configuration.",
+      "properties": {
+        "insecure": {
+          "type": "boolean"
+        },
+        "trustedIPs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "reusePort": {
+      "type": "boolean"
+    },
+    "transport": {
+      "default": {
+        "lifeCycle": {
+          "graceTimeOut": "10s"
+        },
+        "respondingTimeouts": {
+          "idleTimeout": "3m0s",
+          "readTimeout": "1m0s"
+        }
+      },
+      "properties": {
+        "keepAliveMaxRequests": {
+          "type": "integer"
+        },
+        "keepAliveMaxTime": {
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "lifeCycle": {
+          "default": {
+            "graceTimeOut": "10s"
+          },
+          "properties": {
+            "graceTimeOut": {
+              "default": "10s",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "requestAcceptGraceTimeout": {
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "respondingTimeouts": {
+          "default": {
+            "idleTimeout": "3m0s",
+            "readTimeout": "1m0s"
+          },
+          "properties": {
+            "idleTimeout": {
+              "default": "3m0s",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "readTimeout": {
+              "default": "1m0s",
+              "description": "ReadTimeout defines the timeout for socket read operations. Default value is 3 seconds.",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "writeTimeout": {
+              "description": "WriteTimeout defines the timeout for socket write operations. Default value is 3 seconds.",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "udp": {
+      "default": {
+        "timeout": "3s"
+      },
+      "properties": {
+        "timeout": {
+          "default": "3s",
+          "description": "Timeout defines how much time the middleware is allowed to retry the request. The value of timeout should be provided in seconds or as a valid duration format, see https://pkg.go.dev/time#ParseDuration.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

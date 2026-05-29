@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/consul.schema.json",
+  "title": "ProviderBuilder",
+  "description": "ProviderBuilder is responsible for constructing namespaced instances of the Consul provider.",
+  "type": "object",
+  "properties": {
+    "endpoints": {
+      "description": "Endpoints contains either a single address or a seed list of host:port addresses. Default value is [\"localhost:6379\"].",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "rootKey": {
+      "default": "traefik",
+      "type": "string"
+    },
+    "tls": {
+      "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+      "properties": {
+        "ca": {
+          "type": "string"
+        },
+        "caOptional": {
+          "type": "boolean"
+        },
+        "cert": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+          "type": "boolean"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

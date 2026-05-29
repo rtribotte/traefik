@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesIngress.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "allowEmptyServices": {
+      "type": "boolean"
+    },
+    "allowExternalNameServices": {
+      "type": "boolean"
+    },
+    "certAuthFilePath": {
+      "type": "string"
+    },
+    "disableClusterScopeResources": {
+      "type": "boolean"
+    },
+    "disableIngressClassLookup": {
+      "type": "boolean"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "ingressClass": {
+      "type": "string"
+    },
+    "ingressEndpoint": {
+      "type": "object"
+    },
+    "labelSelector": {
+      "type": "string"
+    },
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "nativeLBByDefault": {
+      "type": "boolean"
+    },
+    "strictPrefixMatching": {
+      "type": "boolean"
+    },
+    "throttleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

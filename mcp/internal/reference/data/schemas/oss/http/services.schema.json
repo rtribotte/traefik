@@ -1,0 +1,392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/services.schema.json",
+  "title": "Service",
+  "description": "Service holds a service configuration (can only be of one type at the same time).",
+  "type": "object",
+  "properties": {
+    "failover": {
+      "description": "Failover defines the Failover service configuration.",
+      "properties": {
+        "errors": {
+          "description": "Errors defines which errors should trigger the use of the fallback service.",
+          "properties": {
+            "maxRequestBodyBytes": {
+              "default": -1,
+              "description": "MaxRequestBodyBytes defines the maximum size allowed for the body of the request. Default value is -1, which means unlimited size.",
+              "type": "integer"
+            },
+            "status": {
+              "description": "Status defines the list of status code ranges for which the fallback service should be used.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "fallback": {
+          "description": "Fallback defines the fallback service to use when the main service returns an error.",
+          "type": "string"
+        },
+        "healthCheck": {
+          "description": "Healthcheck defines health checks for ExternalName services.",
+          "type": "object"
+        },
+        "service": {
+          "description": "Service defines the main service to use.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "highestRandomWeight": {
+      "description": "HighestRandomWeight defines the highest random weight service configuration.",
+      "properties": {
+        "healthCheck": {
+          "description": "HealthCheck enables automatic self-healthcheck for this service, i.e. whenever one of its children is reported as down, this service becomes aware of it, and takes it into account (i.e. it ignores the down child) when running the load-balancing algorithm. In addition, if the parent of this service also has HealthCheck enabled, this service reports to its parent any status change.",
+          "type": "object"
+        },
+        "services": {
+          "description": "Services defines the list of Kubernetes Service and/or TraefikService to load-balance, with weight.",
+          "items": {
+            "properties": {
+              "name": {
+                "description": "Name defines the name of the referenced IngressRoute resource.",
+                "type": "string"
+              },
+              "weight": {
+                "default": 1,
+                "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "loadBalancer": {
+      "properties": {
+        "healthCheck": {
+          "description": "HealthCheck enables regular active checks of the responsiveness of the children servers of this load-balancer. To propagate status changes (e.g. all servers of this service are down) upwards, HealthCheck must also be enabled on the parent(s) of this service.",
+          "properties": {
+            "followRedirects": {
+              "default": true,
+              "description": "FollowRedirects defines whether redirects should be followed during the health check calls. Default: true",
+              "type": "boolean"
+            },
+            "headers": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Headers defines custom headers to be sent to the health check endpoint.",
+              "type": "object"
+            },
+            "hostname": {
+              "description": "Hostname defines the value of hostname in the Host header of the health check request.",
+              "type": "string"
+            },
+            "interval": {
+              "default": "30s",
+              "description": "Interval defines the frequency of the health check calls for healthy targets. Default: 30s",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "method": {
+              "description": "Method defines the healthcheck method.",
+              "type": "string"
+            },
+            "mode": {
+              "default": "http",
+              "description": "Mode defines the health check mode. If defined to grpc, will use the gRPC health check protocol to probe the server. Default: http",
+              "type": "string"
+            },
+            "path": {
+              "description": "Path defines the server URL path for the health check endpoint.",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port defines the server URL port for the health check endpoint.",
+              "type": "integer"
+            },
+            "scheme": {
+              "description": "Scheme replaces the server URL scheme for the health check endpoint.",
+              "type": "string"
+            },
+            "status": {
+              "description": "Status defines the expected HTTP status code of the response to the health check request.",
+              "type": "integer"
+            },
+            "timeout": {
+              "default": "5s",
+              "description": "Timeout defines the maximum duration Traefik will wait for a health check request before considering the server unhealthy. Default: 5s",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "unhealthyInterval": {
+              "description": "UnhealthyInterval defines the frequency of the health check calls for unhealthy targets. When UnhealthyInterval is not defined, it defaults to the Interval value. Default: 30s",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "passHostHeader": {
+          "default": true,
+          "description": "PassHostHeader defines whether the client Host header is forwarded to the upstream Kubernetes Service. By default, passHostHeader is true.",
+          "type": "boolean"
+        },
+        "passiveHealthCheck": {
+          "description": "PassiveHealthCheck enables passive health checks for children servers of this load-balancer.",
+          "properties": {
+            "failureWindow": {
+              "default": "10s",
+              "description": "FailureWindow defines the time window during which the failed attempts must occur for the server to be marked as unhealthy. It also defines for how long the server will be considered unhealthy.",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            },
+            "maxFailedAttempts": {
+              "default": 1,
+              "description": "MaxFailedAttempts is the number of consecutive failed attempts allowed within the failure window before marking the server as unhealthy.",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "responseForwarding": {
+          "default": {
+            "flushInterval": "100ms"
+          },
+          "description": "ResponseForwarding defines how Traefik forwards the response from the upstream Kubernetes Service to the client.",
+          "properties": {
+            "flushInterval": {
+              "default": "100ms",
+              "description": "FlushInterval defines the interval, in milliseconds, in between flushes to the client while copying the response body. A negative value means to flush immediately after each write to the client. This configuration is ignored when ReverseProxy recognizes a response as a streaming response; for such responses, writes are flushed to the client immediately. Default: 100ms",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "servers": {
+          "items": {
+            "properties": {
+              "preservePath": {
+                "type": "boolean"
+              },
+              "url": {
+                "type": "string"
+              },
+              "weight": {
+                "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "serversTransport": {
+          "description": "ServersTransport defines the name of ServersTransport resource to use. It allows to configure the transport between Traefik and your servers. Can only be used on a Kubernetes Service.",
+          "type": "string"
+        },
+        "sticky": {
+          "description": "Sticky defines the sticky sessions configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/load-balancing/service/#sticky-sessions",
+          "properties": {
+            "cookie": {
+              "description": "Cookie defines the sticky cookie configuration.",
+              "properties": {
+                "domain": {
+                  "description": "Domain defines the host to which the cookie will be sent. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#domaindomain-value",
+                  "type": "string"
+                },
+                "httpOnly": {
+                  "description": "HTTPOnly defines whether the cookie can be accessed by client-side APIs, such as JavaScript.",
+                  "type": "boolean"
+                },
+                "maxAge": {
+                  "description": "MaxAge defines the number of seconds until the cookie expires. When set to a negative number, the cookie expires immediately. When set to zero, the cookie never expires.",
+                  "type": "integer"
+                },
+                "name": {
+                  "description": "Name defines the Cookie name.",
+                  "type": "string"
+                },
+                "path": {
+                  "default": "/",
+                  "description": "Path defines the path that must exist in the requested URL for the browser to send the Cookie header. When not provided the cookie will be sent on every request to the domain. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#pathpath-value",
+                  "type": "string"
+                },
+                "sameSite": {
+                  "description": "SameSite defines the same site policy. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite",
+                  "type": "string"
+                },
+                "secure": {
+                  "description": "Secure defines whether the cookie can only be transmitted over an encrypted connection (i.e. HTTPS).",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "strategy": {
+          "default": "wrr",
+          "description": "Strategy defines the load balancing strategy between the servers. Supported values are: wrr (Weighed round-robin), p2c (Power of two choices), hrw (Highest Random Weight), and leasttime (Least-Time). RoundRobin value is deprecated and supported for backward compatibility. TODO: when the deprecated RoundRobin value will be removed, set the default kubebuilder value to wrr.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "middlewares": {
+      "description": "Middlewares is the list of MiddlewareRef which composes the chain.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "mirroring": {
+      "description": "Mirroring defines the Mirroring service configuration.",
+      "properties": {
+        "healthCheck": {
+          "description": "Healthcheck defines health checks for ExternalName services.",
+          "type": "object"
+        },
+        "maxBodySize": {
+          "default": -1,
+          "description": "MaxBodySize defines the maximum size allowed for the body of the request. If the body is larger, the request is not mirrored. Default value is -1, which means unlimited size.",
+          "type": "integer"
+        },
+        "mirrorBody": {
+          "default": true,
+          "description": "MirrorBody defines whether the body of the request should be mirrored. Default value is true.",
+          "type": "boolean"
+        },
+        "mirrors": {
+          "description": "Mirrors defines the list of mirrors where Traefik will duplicate the traffic.",
+          "items": {
+            "properties": {
+              "name": {
+                "description": "Name defines the name of the referenced IngressRoute resource.",
+                "type": "string"
+              },
+              "percent": {
+                "description": "Percent defines the part of the traffic to mirror. Supported values: 0 to 100.",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "service": {
+          "description": "Service defines the reference to a Kubernetes Service that will serve the error page. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/errorpages/#service",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "weighted": {
+      "description": "Weighted defines the Weighted Round Robin configuration.",
+      "properties": {
+        "healthCheck": {
+          "description": "HealthCheck enables automatic self-healthcheck for this service, i.e. whenever one of its children is reported as down, this service becomes aware of it, and takes it into account (i.e. it ignores the down child) when running the load-balancing algorithm. In addition, if the parent of this service also has HealthCheck enabled, this service reports to its parent any status change.",
+          "type": "object"
+        },
+        "services": {
+          "description": "Services defines the list of Kubernetes Service and/or TraefikService to load-balance, with weight.",
+          "items": {
+            "properties": {
+              "name": {
+                "description": "Name defines the name of the referenced IngressRoute resource.",
+                "type": "string"
+              },
+              "weight": {
+                "default": 1,
+                "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "sticky": {
+          "description": "Sticky defines whether sticky sessions are enabled. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/traefikservice/#stickiness-and-load-balancing",
+          "properties": {
+            "cookie": {
+              "description": "Cookie defines the sticky cookie configuration.",
+              "properties": {
+                "domain": {
+                  "description": "Domain defines the host to which the cookie will be sent. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#domaindomain-value",
+                  "type": "string"
+                },
+                "httpOnly": {
+                  "description": "HTTPOnly defines whether the cookie can be accessed by client-side APIs, such as JavaScript.",
+                  "type": "boolean"
+                },
+                "maxAge": {
+                  "description": "MaxAge defines the number of seconds until the cookie expires. When set to a negative number, the cookie expires immediately. When set to zero, the cookie never expires.",
+                  "type": "integer"
+                },
+                "name": {
+                  "description": "Name defines the Cookie name.",
+                  "type": "string"
+                },
+                "path": {
+                  "default": "/",
+                  "description": "Path defines the path that must exist in the requested URL for the browser to send the Cookie header. When not provided the cookie will be sent on every request to the domain. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#pathpath-value",
+                  "type": "string"
+                },
+                "sameSite": {
+                  "description": "SameSite defines the same site policy. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite",
+                  "type": "string"
+                },
+                "secure": {
+                  "description": "Secure defines whether the cookie can only be transmitted over an encrypted connection (i.e. HTTPS).",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "loadBalancer"
+      ]
+    },
+    {
+      "required": [
+        "mirroring"
+      ]
+    },
+    {
+      "required": [
+        "weighted"
+      ]
+    },
+    {
+      "required": [
+        "failover"
+      ]
+    },
+    {
+      "required": [
+        "highestRandomWeight"
+      ]
+    }
+  ],
+  "additionalProperties": false
+}

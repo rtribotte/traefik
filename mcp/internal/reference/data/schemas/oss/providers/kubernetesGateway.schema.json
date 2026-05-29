@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesGateway.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "certAuthFilePath": {
+      "type": "string"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "experimentalChannel": {
+      "type": "boolean"
+    },
+    "labelSelector": {
+      "type": "string"
+    },
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "nativeLBByDefault": {
+      "type": "boolean"
+    },
+    "statusAddress": {
+      "type": "object"
+    },
+    "throttleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

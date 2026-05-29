@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsclientcertificatesubjectdninfo.schema.json",
+  "title": "TLSClientCertificateSubjectDNInfo",
+  "description": "TLSClientCertificateSubjectDNInfo holds the client TLS certificate distinguished name info configuration. cf https://tools.ietf.org/html/rfc3739",
+  "type": "object",
+  "properties": {
+    "commonName": {
+      "description": "CommonName defines whether to add the organizationalUnit information into the subject.",
+      "type": "boolean"
+    },
+    "country": {
+      "description": "Country defines whether to add the country information into the subject.",
+      "type": "boolean"
+    },
+    "domainComponent": {
+      "description": "DomainComponent defines whether to add the domainComponent information into the subject.",
+      "type": "boolean"
+    },
+    "locality": {
+      "description": "Locality defines whether to add the locality information into the subject.",
+      "type": "boolean"
+    },
+    "organization": {
+      "description": "Organization defines whether to add the organization information into the subject.",
+      "type": "boolean"
+    },
+    "organizationalUnit": {
+      "description": "OrganizationalUnit defines whether to add the organizationalUnit information into the subject.",
+      "type": "boolean"
+    },
+    "province": {
+      "description": "Province defines whether to add the province information into the subject.",
+      "type": "boolean"
+    },
+    "serialNumber": {
+      "description": "SerialNumber defines whether to add the serialNumber information into the subject.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

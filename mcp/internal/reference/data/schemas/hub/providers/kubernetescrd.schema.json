@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/kubernetescrd.schema.json",
+  "title": "KubernetesCRD",
+  "description": "Provider wraps the kubernetescrd provider and adds Uplink CRD support. It watches Uplink resources and populates the http.uplinks part of the dynamic configuration.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

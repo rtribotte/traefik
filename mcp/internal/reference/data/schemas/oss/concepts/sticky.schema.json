@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/sticky.schema.json",
+  "title": "Sticky",
+  "description": "Sticky holds the sticky configuration.",
+  "type": "object",
+  "properties": {
+    "cookie": {
+      "description": "Cookie defines the sticky cookie configuration.",
+      "properties": {
+        "domain": {
+          "description": "Domain defines the host to which the cookie will be sent. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#domaindomain-value",
+          "type": "string"
+        },
+        "httpOnly": {
+          "description": "HTTPOnly defines whether the cookie can be accessed by client-side APIs, such as JavaScript.",
+          "type": "boolean"
+        },
+        "maxAge": {
+          "description": "MaxAge defines the number of seconds until the cookie expires. When set to a negative number, the cookie expires immediately. When set to zero, the cookie never expires.",
+          "type": "integer"
+        },
+        "name": {
+          "description": "Name defines the Cookie name.",
+          "type": "string"
+        },
+        "path": {
+          "default": "/",
+          "description": "Path defines the path that must exist in the requested URL for the browser to send the Cookie header. When not provided the cookie will be sent on every request to the domain. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#pathpath-value",
+          "type": "string"
+        },
+        "sameSite": {
+          "description": "SameSite defines the same site policy. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite",
+          "type": "string"
+        },
+        "secure": {
+          "description": "Secure defines whether the cookie can only be transmitted over an encrypted connection (i.e. HTTPS).",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

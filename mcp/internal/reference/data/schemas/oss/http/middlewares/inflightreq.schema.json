@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/inflightreq.schema.json",
+  "title": "InFlightReq",
+  "description": "InFlightReq holds the in-flight request middleware configuration. This middleware limits the number of requests being processed and served concurrently. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/inflightreq/",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "description": "Amount defines the maximum amount of allowed simultaneous in-flight request. The middleware responds with HTTP 429 Too Many Requests if there are already amount requests in progress (based on the same sourceCriterion strategy).",
+      "type": "integer"
+    },
+    "sourceCriterion": {
+      "description": "SourceCriterion defines what criterion is used to group requests as originating from a common source. If several strategies are defined at the same time, an error will be raised. If none are set, the default is to use the requestHost. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/inflightreq/#sourcecriterion",
+      "properties": {
+        "ipStrategy": {
+          "properties": {
+            "depth": {
+              "description": "Depth tells Traefik to use the X-Forwarded-For header and take the IP located at the depth position (starting from the right).",
+              "type": "integer"
+            },
+            "excludedIPs": {
+              "description": "ExcludedIPs configures Traefik to scan the X-Forwarded-For header and select the first IP not in the list.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "ipv6Subnet": {
+              "description": "IPv6Subnet configures Traefik to consider all IPv6 addresses from the defined subnet as originating from the same IP. Applies to RemoteAddrStrategy and DepthStrategy.",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "requestHeaderName": {
+          "description": "RequestHeaderName defines the name of the header used to group incoming requests.",
+          "type": "string"
+        },
+        "requestHost": {
+          "description": "RequestHost defines whether to consider the request Host as the source.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

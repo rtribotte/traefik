@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/cache.schema.json",
+  "title": "Cache",
+  "description": "Configuration holds the Cache Middleware configuration.",
+  "type": "object",
+  "properties": {
+    "disableCacheStatusHeader": {
+      "type": "boolean"
+    },
+    "excludedResponseCodes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "maxStale": {
+      "type": "integer"
+    },
+    "maxTtl": {
+      "type": "integer"
+    },
+    "store": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

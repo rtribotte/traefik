@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslogfields.schema.json",
+  "title": "AccessLogFields",
+  "description": "AccessLogFields holds configuration for access log fields.",
+  "type": "object",
+  "properties": {
+    "defaultMode": {
+      "default": "keep",
+      "type": "string"
+    },
+    "headers": {
+      "default": {
+        "defaultMode": "drop"
+      },
+      "description": "Headers defines custom headers to be sent to the health check endpoint.",
+      "properties": {
+        "defaultMode": {
+          "type": "string"
+        },
+        "names": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "names": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

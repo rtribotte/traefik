@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/certificate.schema.json",
+  "title": "Certificate",
+  "description": "Certificate holds a SSL cert/key pair Certs and Key could be either a file path, or the file content itself.",
+  "type": "object",
+  "properties": {
+    "certFile": {
+      "type": "string"
+    },
+    "keyFile": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

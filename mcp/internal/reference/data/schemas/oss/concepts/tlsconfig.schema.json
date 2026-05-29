@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsconfig.schema.json",
+  "title": "TLSConfig",
+  "description": "TLSConfig is the default TLS configuration for all the routers associated to the concerned entry point.",
+  "type": "object",
+  "properties": {
+    "certResolver": {
+      "description": "CertResolver defines the name of the certificate resolver to use. Cert resolvers have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/certificate-resolvers/acme/",
+      "type": "string"
+    },
+    "domains": {
+      "description": "Domains defines the list of domains that will be used to issue certificates. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-certificates/#domains",
+      "items": {
+        "properties": {
+          "main": {
+            "description": "Main defines the main domain name.",
+            "type": "string"
+          },
+          "sans": {
+            "description": "SANs defines the subject alternative domain names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "options": {
+      "description": "Options defines the reference to a TLSOption, that specifies the parameters of the TLS connection. If not defined, the `default` TLSOption is used. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-options/",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/queryparam.schema.json",
+  "title": "QueryParam",
+  "description": "Configuration holds the QueryParam middleware configuration.",
+  "type": "object",
+  "properties": {
+    "append": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "remove": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "rename": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "set": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -13,10 +13,9 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/traefik/traefik-mcp/internal/configschema"
 	"github.com/traefik/traefik-mcp/internal/loki"
 	"github.com/traefik/traefik-mcp/internal/prom"
-	"github.com/traefik/traefik-mcp/internal/rag"
+	"github.com/traefik/traefik-mcp/internal/reference"
 	"github.com/traefik/traefik-mcp/internal/server"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
@@ -58,16 +57,11 @@ func main() {
 
 	caps := detectCapabilities(*appLog)
 
-	validator, err := configschema.New()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "traefik-mcp: config validation disabled: %v\n", err)
-	}
-
-	var retriever rag.Retriever
-	if r, err := rag.NewEmbedded(); err != nil {
-		fmt.Fprintf(os.Stderr, "traefik-mcp: documentation search disabled: %v\n", err)
+	var ref *reference.Catalogue
+	if r, err := reference.New(); err != nil {
+		fmt.Fprintf(os.Stderr, "traefik-mcp: reference grounding and validation disabled: %v\n", err)
 	} else {
-		retriever = r
+		ref = r
 	}
 
 	srv := server.New("traefik-mcp", version, server.Deps{
@@ -78,8 +72,7 @@ func main() {
 		Loki:          lokiClient,
 		Prom:          promClient,
 		Caps:          caps,
-		Validator:     validator,
-		Retriever:     retriever,
+		Reference:     ref,
 	})
 
 	if err := srv.Run(ctx, &mcp.StdioTransport{}); err != nil {

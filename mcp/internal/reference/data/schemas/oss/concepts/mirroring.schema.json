@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/mirroring.schema.json",
+  "title": "Mirroring",
+  "description": "Mirroring holds the Mirroring configuration.",
+  "type": "object",
+  "properties": {
+    "healthCheck": {
+      "description": "Healthcheck defines health checks for ExternalName services.",
+      "type": "object"
+    },
+    "maxBodySize": {
+      "default": -1,
+      "description": "MaxBodySize defines the maximum size allowed for the body of the request. If the body is larger, the request is not mirrored. Default value is -1, which means unlimited size.",
+      "type": "integer"
+    },
+    "mirrorBody": {
+      "default": true,
+      "description": "MirrorBody defines whether the body of the request should be mirrored. Default value is true.",
+      "type": "boolean"
+    },
+    "mirrors": {
+      "description": "Mirrors defines the list of mirrors where Traefik will duplicate the traffic.",
+      "items": {
+        "properties": {
+          "name": {
+            "description": "Name defines the name of the referenced IngressRoute resource.",
+            "type": "string"
+          },
+          "percent": {
+            "description": "Percent defines the part of the traffic to mirror. Supported values: 0 to 100.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "service": {
+      "description": "Service defines the reference to a Kubernetes Service that will serve the error page. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/errorpages/#service",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

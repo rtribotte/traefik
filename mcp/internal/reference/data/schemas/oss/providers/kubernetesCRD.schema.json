@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesCRD.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "allowCrossNamespace": {
+      "type": "boolean"
+    },
+    "allowEmptyServices": {
+      "type": "boolean"
+    },
+    "allowExternalNameServices": {
+      "type": "boolean"
+    },
+    "certAuthFilePath": {
+      "type": "string"
+    },
+    "disableClusterScopeResources": {
+      "type": "boolean"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "ingressClass": {
+      "type": "string"
+    },
+    "labelSelector": {
+      "type": "string"
+    },
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "nativeLBByDefault": {
+      "type": "boolean"
+    },
+    "throttleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

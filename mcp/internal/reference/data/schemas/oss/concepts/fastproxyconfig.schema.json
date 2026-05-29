@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/fastproxyconfig.schema.json",
+  "title": "FastProxyConfig",
+  "description": "FastProxyConfig holds the FastProxy configuration.",
+  "type": "object",
+  "properties": {
+    "debug": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

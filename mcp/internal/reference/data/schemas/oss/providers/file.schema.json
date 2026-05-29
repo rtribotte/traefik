@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/file.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "debugLogGeneratedTemplate": {
+      "type": "boolean"
+    },
+    "directory": {
+      "type": "string"
+    },
+    "filename": {
+      "default": "",
+      "type": "string"
+    },
+    "watch": {
+      "default": true,
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

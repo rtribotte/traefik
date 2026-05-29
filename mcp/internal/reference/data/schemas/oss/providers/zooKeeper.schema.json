@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/zooKeeper.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "endpoints": {
+      "description": "Endpoints contains either a single address or a seed list of host:port addresses. Default value is [\"localhost:6379\"].",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "password": {
+      "description": "Password defines the password to connect to the Redis server.",
+      "type": "string"
+    },
+    "rootKey": {
+      "default": "traefik",
+      "type": "string"
+    },
+    "username": {
+      "description": "Username defines the username to connect to the Redis server.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

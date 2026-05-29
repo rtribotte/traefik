@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/sourcecriterion.schema.json",
+  "title": "SourceCriterion",
+  "description": "SourceCriterion defines what criterion is used to group requests as originating from a common source. If none are set, the default is to use the request's remote address field. All fields are mutually exclusive.",
+  "type": "object",
+  "properties": {
+    "ipStrategy": {
+      "properties": {
+        "depth": {
+          "description": "Depth tells Traefik to use the X-Forwarded-For header and take the IP located at the depth position (starting from the right).",
+          "type": "integer"
+        },
+        "excludedIPs": {
+          "description": "ExcludedIPs configures Traefik to scan the X-Forwarded-For header and select the first IP not in the list.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "ipv6Subnet": {
+          "description": "IPv6Subnet configures Traefik to consider all IPv6 addresses from the defined subnet as originating from the same IP. Applies to RemoteAddrStrategy and DepthStrategy.",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "requestHeaderName": {
+      "description": "RequestHeaderName defines the name of the header used to group incoming requests.",
+      "type": "string"
+    },
+    "requestHost": {
+      "description": "RequestHost defines whether to consider the request Host as the source.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

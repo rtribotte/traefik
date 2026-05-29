@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/mcpgateway.schema.json",
+  "title": "MCPGateway",
+  "description": "MCPGateway holds the MCP gateway configuration.",
+  "type": "object",
+  "properties": {
+    "maxRequestBodySize": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

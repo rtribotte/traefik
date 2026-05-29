@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/addprefix.schema.json",
+  "title": "AddPrefix",
+  "description": "AddPrefix holds the add prefix middleware configuration. This middleware updates the path of a request before forwarding it. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/addprefix/",
+  "type": "object",
+  "properties": {
+    "prefix": {
+      "description": "Prefix is the string to add before the current path in the requested URL. It should include a leading slash (/).",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

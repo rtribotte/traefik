@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/basicauth.schema.json",
+  "title": "BasicAuth",
+  "description": "Config configures a basic auth ACP handler.",
+  "type": "object",
+  "properties": {
+    "forwardUsernameHeader": {
+      "type": "string"
+    },
+    "realm": {
+      "type": "string"
+    },
+    "stripAuthorizationHeader": {
+      "type": "boolean"
+    },
+    "users": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

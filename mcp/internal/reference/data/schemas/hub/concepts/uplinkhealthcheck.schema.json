@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplinkhealthcheck.schema.json",
+  "title": "UplinkHealthCheck",
+  "description": "UplinkHealthCheck mirrors Traefik's ServerHealthCheck. Based-On: https://github.com/traefik/traefik/blob/master/pkg/config/dynamic/http_config.go",
+  "type": "object",
+  "properties": {
+    "followRedirects": {
+      "type": "boolean"
+    },
+    "headers": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "hostname": {
+      "type": "string"
+    },
+    "interval": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "port": {
+      "type": "integer"
+    },
+    "scheme": {
+      "type": "string"
+    },
+    "status": {
+      "type": "integer"
+    },
+    "timeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "unhealthyInterval": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

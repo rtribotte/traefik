@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/multicluster.schema.json",
+  "title": "MultiCluster",
+  "description": "Provider is the multicluster provider.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

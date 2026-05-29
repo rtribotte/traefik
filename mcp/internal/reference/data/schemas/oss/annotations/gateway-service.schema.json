@@ -1,0 +1,41 @@
+{
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/annotations/gateway-service.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Validates that any traefik.* or nginx.ingress.kubernetes.io/* annotation on this Kubernetes Service manifest is one of the keys Traefik v3.7.0 actually reads via the GatewayServiceAnnotations surface.",
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "kind": {
+      "const": "Service"
+    },
+    "metadata": {
+      "properties": {
+        "annotations": {
+          "propertyNames": {
+            "anyOf": [
+              {
+                "not": {
+                  "pattern": "^(traefik\\.|nginx\\.ingress\\.kubernetes\\.io/)"
+                }
+              },
+              {
+                "enum": [
+                  "traefik.io/service.nativelb"
+                ]
+              }
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "title": "Kubernetes Service with GatewayServiceAnnotations",
+  "type": "object"
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/buffering.schema.json",
+  "title": "Buffering",
+  "description": "Buffering holds the buffering middleware configuration. This middleware retries or limits the size of requests that can be forwarded to backends. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/buffering/#maxrequestbodybytes",
+  "type": "object",
+  "properties": {
+    "disableRequestBuffer": {
+      "description": "Only configurable via code, not via configuration files.",
+      "type": "boolean"
+    },
+    "disableResponseBuffer": {
+      "type": "boolean"
+    },
+    "maxRequestBodyBytes": {
+      "description": "MaxRequestBodyBytes defines the maximum allowed body size for the request (in bytes). If the request exceeds the allowed size, it is not forwarded to the service, and the client gets a 413 (Request Entity Too Large) response. Default: 0 (no maximum).",
+      "type": "integer"
+    },
+    "maxResponseBodyBytes": {
+      "description": "MaxResponseBodyBytes defines the maximum allowed response size from the service (in bytes). If the response exceeds the allowed size, it is not forwarded to the client. The client gets a 500 (Internal Server Error) response instead. Default: 0 (no maximum).",
+      "type": "integer"
+    },
+    "memRequestBodyBytes": {
+      "description": "MemRequestBodyBytes defines the threshold (in bytes) from which the request will be buffered on disk instead of in memory. Default: 1048576 (1Mi).",
+      "type": "integer"
+    },
+    "memResponseBodyBytes": {
+      "description": "MemResponseBodyBytes defines the threshold (in bytes) from which the response will be buffered on disk instead of in memory. Default: 1048576 (1Mi).",
+      "type": "integer"
+    },
+    "retryExpression": {
+      "description": "RetryExpression defines the retry conditions. It is a logical combination of functions with operators AND (&&) and OR (||). More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/buffering/#retryexpression",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

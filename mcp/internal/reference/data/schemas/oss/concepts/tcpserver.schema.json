@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserver.schema.json",
+  "title": "TCPServer",
+  "description": "TCPServer holds a TCP Server configuration.",
+  "type": "object",
+  "properties": {
+    "address": {
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    },
+    "tls": {
+      "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

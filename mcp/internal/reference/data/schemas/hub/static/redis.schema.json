@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/redis.schema.json",
+  "title": "Config",
+  "description": "Config is the Redis configuration.",
+  "type": "object",
+  "properties": {
+    "cluster": {
+      "type": "object"
+    },
+    "database": {
+      "type": "integer"
+    },
+    "endpoints": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "password": {
+      "type": "string"
+    },
+    "protocol": {
+      "type": "integer"
+    },
+    "sentinel": {
+      "type": "object"
+    },
+    "timeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "tls": {
+      "type": "object"
+    },
+    "unstableResp3": {
+      "type": "boolean"
+    },
+    "username": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

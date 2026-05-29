@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/passiveserverhealthcheck.schema.json",
+  "title": "PassiveServerHealthCheck",
+  "description": "Shared type referenced from configuration. See Go source for details.",
+  "type": "object",
+  "properties": {
+    "failureWindow": {
+      "default": "10s",
+      "description": "FailureWindow defines the time window during which the failed attempts must occur for the server to be marked as unhealthy. It also defines for how long the server will be considered unhealthy.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "maxFailedAttempts": {
+      "default": 1,
+      "description": "MaxFailedAttempts is the number of consecutive failed attempts allowed within the failure window before marking the server as unhealthy.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

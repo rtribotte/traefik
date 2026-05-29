@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/mirrorservice.schema.json",
+  "title": "MirrorService",
+  "description": "MirrorService holds the MirrorService configuration.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name defines the name of the referenced IngressRoute resource.",
+      "type": "string"
+    },
+    "percent": {
+      "description": "Percent defines the part of the traffic to mirror. Supported values: 0 to 100.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

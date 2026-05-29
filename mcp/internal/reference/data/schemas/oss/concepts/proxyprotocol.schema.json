@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/proxyprotocol.schema.json",
+  "title": "ProxyProtocol",
+  "description": "ProxyProtocol holds the PROXY Protocol configuration. More info: https://doc.traefik.io/traefik/v3.7/routing/services/#proxy-protocol",
+  "type": "object",
+  "properties": {
+    "version": {
+      "default": 2,
+      "description": "Version defines the PROXY Protocol version to use.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

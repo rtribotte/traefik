@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpconfiguration.schema.json",
+  "title": "UDPConfiguration",
+  "description": "UDPConfiguration contains all the UDP configuration parameters.",
+  "type": "object",
+  "properties": {
+    "routers": {
+      "properties": {
+        "entryPoints": {
+          "description": "EntryPoints defines the list of entry point names to bind to. Entry points have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/entrypoints/ Default: all.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "service": {
+          "description": "Service defines the reference to a Kubernetes Service that will serve the error page. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/errorpages/#service",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "services": {
+      "description": "Services defines the list of Kubernetes Service and/or TraefikService to load-balance, with weight.",
+      "properties": {
+        "loadBalancer": {
+          "properties": {
+            "servers": {
+              "items": {
+                "properties": {
+                  "address": {
+                    "description": "Address defines the authentication server address.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "weighted": {
+          "description": "Weighted defines the Weighted Round Robin configuration.",
+          "properties": {
+            "services": {
+              "description": "Services defines the list of Kubernetes Service and/or TraefikService to load-balance, with weight.",
+              "items": {
+                "properties": {
+                  "name": {
+                    "description": "Name defines the name of the referenced IngressRoute resource.",
+                    "type": "string"
+                  },
+                  "weight": {
+                    "default": 1,
+                    "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

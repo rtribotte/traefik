@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/apimanagement.schema.json",
+  "title": "APIManagement",
+  "description": "APIManagement holds the API management configuration.",
+  "type": "object",
+  "properties": {
+    "admission": {
+      "type": "object"
+    },
+    "apiKey": {
+      "type": "object"
+    },
+    "openApi": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

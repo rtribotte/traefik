@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/server.schema.json",
+  "title": "Server",
+  "description": "Server holds the server configuration.",
+  "type": "object",
+  "properties": {
+    "preservePath": {
+      "type": "boolean"
+    },
+    "url": {
+      "type": "string"
+    },
+    "weight": {
+      "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/redis.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "db": {
+      "description": "DB defines the Redis database that will be selected after connecting to the server.",
+      "type": "integer"
+    },
+    "endpoints": {
+      "description": "Endpoints contains either a single address or a seed list of host:port addresses. Default value is [\"localhost:6379\"].",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "password": {
+      "description": "Password defines the password to connect to the Redis server.",
+      "type": "string"
+    },
+    "rootKey": {
+      "default": "traefik",
+      "type": "string"
+    },
+    "sentinel": {
+      "type": "object"
+    },
+    "tls": {
+      "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+      "properties": {
+        "ca": {
+          "type": "string"
+        },
+        "caOptional": {
+          "type": "boolean"
+        },
+        "cert": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+          "type": "boolean"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "username": {
+      "description": "Username defines the username to connect to the Redis server.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/frontmatter.schema.json",
+  "title": "Traefik reference frontmatter",
+  "description": "YAML frontmatter at the top of every reference/**/*.md file.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "name",
+    "id",
+    "source",
+    "traefik_version",
+    "extracted_from",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "middleware-http",
+        "middleware-tcp",
+        "middleware-hub",
+        "router-http",
+        "router-tcp",
+        "router-udp",
+        "service-http",
+        "service-tcp",
+        "service-udp",
+        "tls-option",
+        "tls-store",
+        "tls-certificate-resolver",
+        "provider",
+        "provider-hub",
+        "static-section",
+        "static-section-hub",
+        "crd",
+        "kubernetes-core",
+        "concept",
+        "label-namespace",
+        "plugin",
+        "ingress-annotations",
+        "ingress-nginx-annotations",
+        "gateway-service-annotations",
+        "rest-endpoint"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["oss", "hub", "gateway-api", "k8s-core"],
+      "description": "Upstream the node was extracted from. Required in schema v2."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)*$"
+    },
+    "traefik_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)?$"
+    },
+    "extracted_from": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "since": { "type": "string" },
+    "deprecated": { "type": "boolean" },
+    "deprecated_since": { "type": "string" },
+    "replaced_by": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "related": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/field" }
+    },
+    "variants": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "representations": { "$ref": "#/$defs/representations" }
+  },
+  "$defs": {
+    "relation": {
+      "type": "object",
+      "required": ["id", "relation"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "relation": { "type": "string" }
+      }
+    },
+    "field": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "go_name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "boolean",
+            "integer",
+            "number",
+            "duration",
+            "array",
+            "object"
+          ]
+        },
+        "items": { "type": "string" },
+        "go_type": { "type": "string" },
+        "type_ref": { "type": "string" },
+        "required": { "type": "boolean" },
+        "default": {},
+        "enum": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "examples": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "description": { "type": "string" },
+        "since": { "type": "string" },
+        "deprecated": { "type": "boolean" },
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/field" }
+        }
+      }
+    },
+    "representations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "yaml_path": { "type": "string" },
+        "toml_path": { "type": "string" },
+        "label_prefix": { "type": "string" },
+        "crd": { "$ref": "#/$defs/crd" },
+        "openapi": { "$ref": "#/$defs/openapi" }
+      }
+    },
+    "openapi": {
+      "type": "object",
+      "required": ["path", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "method": { "type": "string" },
+        "tag": { "type": "string" }
+      }
+    },
+    "crd": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "spec_path"],
+      "additionalProperties": false,
+      "properties": {
+        "apiVersion": { "type": "string" },
+        "kind": { "type": "string" },
+        "spec_path": { "type": "string" }
+      }
+    }
+  }
+}

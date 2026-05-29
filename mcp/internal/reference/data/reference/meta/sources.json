@@ -1,0 +1,21 @@
+{
+  "generator_version": "0.4.0",
+  "schema_version": 1,
+  "sources": {
+    "hub": {
+      "name": "Traefik Hub",
+      "repo": "github.com/traefik/traefik-hub",
+      "version": "v3.20.2"
+    },
+    "hub-crds": {
+      "name": "Hub CRDs",
+      "repo": "github.com/traefik/hub-crds",
+      "version": "v1.29.0"
+    },
+    "oss": {
+      "name": "Traefik",
+      "repo": "github.com/traefik/traefik",
+      "version": "v3.7.0"
+    }
+  }
+}

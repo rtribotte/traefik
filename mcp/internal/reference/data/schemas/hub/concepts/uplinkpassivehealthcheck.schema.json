@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplinkpassivehealthcheck.schema.json",
+  "title": "UplinkPassiveHealthCheck",
+  "description": "UplinkPassiveHealthCheck mirrors Traefik's PassiveServerHealthCheck. Based-On: https://github.com/traefik/traefik/blob/master/pkg/config/dynamic/http_config.go",
+  "type": "object",
+  "properties": {
+    "failureWindow": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "maxFailedAttempts": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/providers.schema.json",
+  "title": "Providers",
+  "description": "Provider configuration. One sub-key per enabled provider.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

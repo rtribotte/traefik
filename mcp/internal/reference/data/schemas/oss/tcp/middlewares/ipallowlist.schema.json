@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/ipallowlist.schema.json",
+  "title": "TCPIPAllowList",
+  "description": "TCPIPAllowList holds the TCP IPAllowList middleware configuration. This middleware limits allowed requests based on the client IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/tcp/ipallowlist/",
+  "type": "object",
+  "properties": {
+    "sourceRange": {
+      "description": "SourceRange defines the allowed IPs (or ranges of allowed IPs by using CIDR notation).",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/pluginregistry.schema.json",
+  "title": "PluginRegistry",
+  "description": "PluginRegistry holds the plugin registry configuration.",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

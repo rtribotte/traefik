@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/prometheus.schema.json",
+  "title": "Prometheus",
+  "description": "Prometheus can contain specific configuration used by the Prometheus Metrics exporter.",
+  "type": "object",
+  "properties": {
+    "addEntryPointsLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addRoutersLabels": {
+      "type": "boolean"
+    },
+    "addServicesLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "buckets": {
+      "default": [
+        0.1,
+        0.3,
+        1.2,
+        5
+      ],
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "entryPoint": {
+      "default": "traefik",
+      "type": "string"
+    },
+    "headerLabels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "manualRouting": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

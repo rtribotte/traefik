@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/forwardauth.schema.json",
+  "title": "ForwardAuth",
+  "description": "ForwardAuth holds the forward auth middleware configuration. This middleware delegates the request authentication to a Service. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/forwardauth/",
+  "type": "object",
+  "properties": {
+    "addAuthCookiesToResponse": {
+      "description": "AddAuthCookiesToResponse defines the list of cookies to copy from the authentication server response to the response.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "address": {
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    },
+    "authRequestHeaders": {
+      "description": "AuthRequestHeaders defines the list of the headers to copy from the request to the authentication server. If not set or empty then all request headers are passed.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "authResponseHeaders": {
+      "description": "AuthResponseHeaders defines the list of headers to copy from the authentication server response and set on forwarded request, replacing any existing conflicting headers.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "authResponseHeadersRegex": {
+      "description": "AuthResponseHeadersRegex defines the regex to match headers to copy from the authentication server response and set on forwarded request, after stripping all headers that match the regex. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/forwardauth/#authresponseheadersregex",
+      "type": "string"
+    },
+    "authSigninURL": {
+      "description": "AuthSigninURL specifies the URL to redirect to when the authentication server returns 401 Unauthorized.",
+      "type": "string"
+    },
+    "forwardBody": {
+      "description": "ForwardBody defines whether to send the request body to the authentication server.",
+      "type": "boolean"
+    },
+    "headerField": {
+      "description": "HeaderField defines a header field to store the authenticated user. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/forwardauth/#headerfield",
+      "type": "string"
+    },
+    "maxBodySize": {
+      "default": -1,
+      "description": "MaxBodySize defines the maximum body size in bytes allowed to be forwarded to the authentication server.",
+      "type": "integer"
+    },
+    "maxResponseBodySize": {
+      "description": "MaxResponseBodySize defines the maximum body size in bytes allowed in the response from the authentication server.",
+      "type": "integer"
+    },
+    "preserveLocationHeader": {
+      "description": "PreserveLocationHeader defines whether to forward the Location header to the client as is or prefix it with the domain name of the authentication server.",
+      "type": "boolean"
+    },
+    "preserveRequestMethod": {
+      "description": "PreserveRequestMethod defines whether to preserve the original request method while forwarding the request to the authentication server.",
+      "type": "boolean"
+    },
+    "tls": {
+      "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+      "properties": {
+        "ca": {
+          "type": "string"
+        },
+        "caOptional": {
+          "type": "boolean"
+        },
+        "cert": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+          "type": "boolean"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "trustForwardHeader": {
+      "description": "TrustForwardHeader defines whether to trust (ie: forward) all X-Forwarded-* headers.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

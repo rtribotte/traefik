@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/influxdb2.schema.json",
+  "title": "InfluxDB2",
+  "description": "InfluxDB2 contains address, token and metrics pushing interval configuration.",
+  "type": "object",
+  "properties": {
+    "addEntryPointsLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addRoutersLabels": {
+      "type": "boolean"
+    },
+    "addServicesLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "additionalLabels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "address": {
+      "default": "http://localhost:8086",
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    },
+    "bucket": {
+      "type": "string"
+    },
+    "org": {
+      "type": "string"
+    },
+    "pushInterval": {
+      "default": "10s",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

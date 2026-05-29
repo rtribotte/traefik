@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/ipwhitelist.schema.json",
+  "title": "TCPIPWhiteList",
+  "description": "TCPIPWhiteList holds the TCP IPWhiteList middleware configuration.",
+  "type": "object",
+  "properties": {
+    "sourceRange": {
+      "description": "SourceRange defines the allowed IPs (or ranges of allowed IPs by using CIDR notation).",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

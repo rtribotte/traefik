@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpserversloadbalancer.schema.json",
+  "title": "UDPServersLoadBalancer",
+  "description": "UDPServersLoadBalancer defines the configuration for a load-balancer of UDP servers.",
+  "type": "object",
+  "properties": {
+    "servers": {
+      "items": {
+        "properties": {
+          "address": {
+            "description": "Address defines the authentication server address.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,2440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/INDEX.json",
+  "version": "v3.7.0",
+  "schema_base_url": "https://raw.githubusercontent.com/traefik/reference/main/schemas/",
+  "schemas": [
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/backendtlspolicy.json",
+      "path": "external/gateway-api/backendtlspolicy.json",
+      "title": "BackendTLSPolicy",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "BackendTLSPolicy"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/gateway.json",
+      "path": "external/gateway-api/gateway.json",
+      "title": "Gateway",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "Gateway"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/gatewayclass.json",
+      "path": "external/gateway-api/gatewayclass.json",
+      "title": "GatewayClass",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "GatewayClass"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/grpcroute.json",
+      "path": "external/gateway-api/grpcroute.json",
+      "title": "GRPCRoute",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "GRPCRoute"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/httproute.json",
+      "path": "external/gateway-api/httproute.json",
+      "title": "HTTPRoute",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "HTTPRoute"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/referencegrant.json",
+      "path": "external/gateway-api/referencegrant.json",
+      "title": "ReferenceGrant",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "ReferenceGrant"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1beta1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/tcproute.json",
+      "path": "external/gateway-api/tcproute.json",
+      "title": "TCPRoute",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "TCPRoute"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1alpha2"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/tlsroute.json",
+      "path": "external/gateway-api/tlsroute.json",
+      "title": "TLSRoute",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "TLSRoute"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1alpha2"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/gateway-api/udproute.json",
+      "path": "external/gateway-api/udproute.json",
+      "title": "UDPRoute",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "UDPRoute"
+      ],
+      "api_versions": [
+        "gateway.networking.k8s.io/v1alpha2"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/k8s-core/endpoints.json",
+      "path": "external/k8s-core/endpoints.json",
+      "title": "Endpoints",
+      "scope": "kubernetes-core",
+      "kinds": [
+        "Endpoints"
+      ],
+      "api_versions": [
+        "v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/k8s-core/endpointslice.json",
+      "path": "external/k8s-core/endpointslice.json",
+      "title": "EndpointSlice",
+      "scope": "kubernetes-core",
+      "kinds": [
+        "EndpointSlice"
+      ],
+      "api_versions": [
+        "discovery.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/k8s-core/ingress.json",
+      "path": "external/k8s-core/ingress.json",
+      "title": "Ingress",
+      "scope": "kubernetes-core",
+      "kinds": [
+        "Ingress"
+      ],
+      "api_versions": [
+        "networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/k8s-core/ingressclass.json",
+      "path": "external/k8s-core/ingressclass.json",
+      "title": "IngressClass",
+      "scope": "kubernetes-core",
+      "kinds": [
+        "IngressClass"
+      ],
+      "api_versions": [
+        "networking.k8s.io/v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/external/k8s-core/service.json",
+      "path": "external/k8s-core/service.json",
+      "title": "Service",
+      "scope": "kubernetes-core",
+      "kinds": [
+        "Service"
+      ],
+      "api_versions": [
+        "v1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/frontmatter.schema.json",
+      "path": "frontmatter.schema.json",
+      "title": "Traefik reference frontmatter",
+      "scope": "meta-frontmatter"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/api/devportal.openapi.json",
+      "path": "hub/api/devportal.openapi.json",
+      "title": "Traefik Hub developer portal OpenAPI bundle",
+      "source": "hub",
+      "scope": "traefik-hub-rest-bundle"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplink.schema.json",
+      "path": "hub/concepts/uplink.schema.json",
+      "title": "Uplink",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.concept.uplink",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplinkhealthcheck.schema.json",
+      "path": "hub/concepts/uplinkhealthcheck.schema.json",
+      "title": "UplinkHealthCheck",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.concept.uplinkhealthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/concepts/uplinkpassivehealthcheck.schema.json",
+      "path": "hub/concepts/uplinkpassivehealthcheck.schema.json",
+      "title": "UplinkPassiveHealthCheck",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.concept.uplinkpassivehealthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/accesscontrolpolicy.schema.json",
+      "path": "hub/crd/accesscontrolpolicy.schema.json",
+      "title": "AccessControlPolicy",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "AccessControlPolicy"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/aiservice.schema.json",
+      "path": "hub/crd/aiservice.schema.json",
+      "title": "AIService",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "AIService"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/api.schema.json",
+      "path": "hub/crd/api.schema.json",
+      "title": "API",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "API"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiauth.schema.json",
+      "path": "hub/crd/apiauth.schema.json",
+      "title": "APIAuth",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIAuth"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apibundle.schema.json",
+      "path": "hub/crd/apibundle.schema.json",
+      "title": "APIBundle",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIBundle"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apicatalogitem.schema.json",
+      "path": "hub/crd/apicatalogitem.schema.json",
+      "title": "APICatalogItem",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APICatalogItem"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiplan.schema.json",
+      "path": "hub/crd/apiplan.schema.json",
+      "title": "APIPlan",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIPlan"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiportal.schema.json",
+      "path": "hub/crd/apiportal.schema.json",
+      "title": "APIPortal",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIPortal"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiportalauth.schema.json",
+      "path": "hub/crd/apiportalauth.schema.json",
+      "title": "APIPortalAuth",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIPortalAuth"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiratelimit.schema.json",
+      "path": "hub/crd/apiratelimit.schema.json",
+      "title": "APIRateLimit",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIRateLimit"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/apiversion.schema.json",
+      "path": "hub/crd/apiversion.schema.json",
+      "title": "APIVersion",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "APIVersion"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/contentitem.schema.json",
+      "path": "hub/crd/contentitem.schema.json",
+      "title": "ContentItem",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "ContentItem"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/managedapplication.schema.json",
+      "path": "hub/crd/managedapplication.schema.json",
+      "title": "ManagedApplication",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "ManagedApplication"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/managedsubscription.schema.json",
+      "path": "hub/crd/managedsubscription.schema.json",
+      "title": "ManagedSubscription",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "ManagedSubscription"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/crd/uplink.schema.json",
+      "path": "hub/crd/uplink.schema.json",
+      "title": "Uplink",
+      "source": "hub",
+      "scope": "traefik-hub-crd",
+      "kinds": [
+        "Uplink"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/apikey.schema.json",
+      "path": "hub/middlewares/apikey.schema.json",
+      "title": "APIKey",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.apikey",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/basicauth.schema.json",
+      "path": "hub/middlewares/basicauth.schema.json",
+      "title": "BasicAuth",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.basicauth",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/cache.schema.json",
+      "path": "hub/middlewares/cache.schema.json",
+      "title": "Cache",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.cache",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/chatcompletion.schema.json",
+      "path": "hub/middlewares/chatcompletion.schema.json",
+      "title": "ChatCompletion",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.chatcompletion",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/contentguard.schema.json",
+      "path": "hub/middlewares/contentguard.schema.json",
+      "title": "ContentGuard",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.contentguard",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/coraza.schema.json",
+      "path": "hub/middlewares/coraza.schema.json",
+      "title": "Coraza",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.coraza",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/distributedratelimit.schema.json",
+      "path": "hub/middlewares/distributedratelimit.schema.json",
+      "title": "DistributedRateLimit",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.distributedratelimit",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/forcecase.schema.json",
+      "path": "hub/middlewares/forcecase.schema.json",
+      "title": "ForceCase",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.forcecase",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hmac.schema.json",
+      "path": "hub/middlewares/hmac.schema.json",
+      "title": "HMAC",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.hmac",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hubapikey.schema.json",
+      "path": "hub/middlewares/hubapikey.schema.json",
+      "title": "HubAPIKey",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.hubapikey",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hubldap.schema.json",
+      "path": "hub/middlewares/hubldap.schema.json",
+      "title": "HubLDAP",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.hubldap",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/jwt.schema.json",
+      "path": "hub/middlewares/jwt.schema.json",
+      "title": "JWT",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.jwt",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/ldap.schema.json",
+      "path": "hub/middlewares/ldap.schema.json",
+      "title": "LDAP",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.ldap",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/llmguard.schema.json",
+      "path": "hub/middlewares/llmguard.schema.json",
+      "title": "LLMGuard",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.llmguard",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/mcp.schema.json",
+      "path": "hub/middlewares/mcp.schema.json",
+      "title": "MCP",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.mcp",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/metrics.schema.json",
+      "path": "hub/middlewares/metrics.schema.json",
+      "title": "Metrics",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.metrics",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/oauthclientcreds.schema.json",
+      "path": "hub/middlewares/oauthclientcreds.schema.json",
+      "title": "OAuthClientCreds",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.oauthclientcreds",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/oauthintro.schema.json",
+      "path": "hub/middlewares/oauthintro.schema.json",
+      "title": "OAuthIntrospection",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.oauthintro",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/oidc.schema.json",
+      "path": "hub/middlewares/oidc.schema.json",
+      "title": "OIDC",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.oidc",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/opa.schema.json",
+      "path": "hub/middlewares/opa.schema.json",
+      "title": "OPA",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.opa",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/plan.schema.json",
+      "path": "hub/middlewares/plan.schema.json",
+      "title": "Plan",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.plan",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/queryparam.schema.json",
+      "path": "hub/middlewares/queryparam.schema.json",
+      "title": "QueryParam",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.queryparam",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/responsesapi.schema.json",
+      "path": "hub/middlewares/responsesapi.schema.json",
+      "title": "ResponsesAPI",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.responsesapi",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/semanticcache.schema.json",
+      "path": "hub/middlewares/semanticcache.schema.json",
+      "title": "SemanticCache",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.semanticcache",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/tokenratelimit.schema.json",
+      "path": "hub/middlewares/tokenratelimit.schema.json",
+      "title": "TokenRateLimit",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.middlewares.tokenratelimit",
+      "concept_kind": "middleware-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/consulcatalogenterprise.schema.json",
+      "path": "hub/providers/consulcatalogenterprise.schema.json",
+      "title": "ConsulCatalogEnterprise",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.consulcatalogenterprise",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/hub.schema.json",
+      "path": "hub/providers/hub.schema.json",
+      "title": "Hub",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.hub",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/kubernetescrd.schema.json",
+      "path": "hub/providers/kubernetescrd.schema.json",
+      "title": "KubernetesCRD",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.kubernetescrd",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/microcks.schema.json",
+      "path": "hub/providers/microcks.schema.json",
+      "title": "Microcks",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.microcks",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/multicluster.schema.json",
+      "path": "hub/providers/multicluster.schema.json",
+      "title": "MultiCluster",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.multicluster",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/nutanixprismcentral.schema.json",
+      "path": "hub/providers/nutanixprismcentral.schema.json",
+      "title": "NutanixPrismCentral",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.nutanixprismcentral",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/traefik.schema.json",
+      "path": "hub/providers/traefik.schema.json",
+      "title": "Traefik",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.providers.traefik",
+      "concept_kind": "provider-hub"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/aigateway.schema.json",
+      "path": "hub/static/aigateway.schema.json",
+      "title": "AIGateway",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.aigateway",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/apimanagement.schema.json",
+      "path": "hub/static/apimanagement.schema.json",
+      "title": "APIManagement",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.apimanagement",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/experimental.schema.json",
+      "path": "hub/static/experimental.schema.json",
+      "title": "Experimental",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.experimental",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/mcpgateway.schema.json",
+      "path": "hub/static/mcpgateway.schema.json",
+      "title": "MCPGateway",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.mcpgateway",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/pluginregistry.schema.json",
+      "path": "hub/static/pluginregistry.schema.json",
+      "title": "PluginRegistry",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.pluginregistry",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/providers.schema.json",
+      "path": "hub/static/providers.schema.json",
+      "title": "Providers",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.providers",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/redis.schema.json",
+      "path": "hub/static/redis.schema.json",
+      "title": "Config",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.redis",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/tracing.schema.json",
+      "path": "hub/static/tracing.schema.json",
+      "title": "Tracing",
+      "source": "hub",
+      "scope": "traefik-hub-fragment",
+      "concept_id": "hub.static.tracing",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/annotations/gateway-service.schema.json",
+      "path": "oss/annotations/gateway-service.schema.json",
+      "title": "Kubernetes manifest with GatewayServiceAnnotations",
+      "scope": "kubernetes-manifest",
+      "kinds": [
+        "Service"
+      ],
+      "annotation_namespaces": [
+        "traefik.io/"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/annotations/ingress-nginx.schema.json",
+      "path": "oss/annotations/ingress-nginx.schema.json",
+      "title": "Kubernetes manifest with IngressNGINXAnnotations",
+      "scope": "kubernetes-manifest",
+      "kinds": [
+        "Ingress"
+      ],
+      "annotation_namespaces": [
+        "nginx.ingress.kubernetes.io/"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/annotations/ingress.schema.json",
+      "path": "oss/annotations/ingress.schema.json",
+      "title": "Kubernetes manifest with TraefikIngressAnnotations",
+      "scope": "kubernetes-manifest",
+      "kinds": [
+        "Ingress",
+        "Service"
+      ],
+      "annotation_namespaces": [
+        "traefik.ingress.kubernetes.io/"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslog.schema.json",
+      "path": "oss/concepts/accesslog.schema.json",
+      "title": "AccessLog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.accesslog",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslogfields.schema.json",
+      "path": "oss/concepts/accesslogfields.schema.json",
+      "title": "AccessLogFields",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.accesslogfields",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslogfilters.schema.json",
+      "path": "oss/concepts/accesslogfilters.schema.json",
+      "title": "AccessLogFilters",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.accesslogfilters",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/api.schema.json",
+      "path": "oss/concepts/api.schema.json",
+      "title": "API",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.api",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/certandstores.schema.json",
+      "path": "oss/concepts/certandstores.schema.json",
+      "title": "CertAndStores",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.certandstores",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/certificate.schema.json",
+      "path": "oss/concepts/certificate.schema.json",
+      "title": "Certificate",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.certificate",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/certificateresolver.schema.json",
+      "path": "oss/concepts/certificateresolver.schema.json",
+      "title": "CertificateResolver",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.certificateresolver",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/clientauth.schema.json",
+      "path": "oss/concepts/clientauth.schema.json",
+      "title": "ClientAuth",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.clientauth",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/clienttls.schema.json",
+      "path": "oss/concepts/clienttls.schema.json",
+      "title": "ClientTLS",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.clienttls",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/configuration.schema.json",
+      "path": "oss/concepts/configuration.schema.json",
+      "title": "Configuration",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.configuration",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/cookie.schema.json",
+      "path": "oss/concepts/cookie.schema.json",
+      "title": "Cookie",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.cookie",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/core.schema.json",
+      "path": "oss/concepts/core.schema.json",
+      "title": "Core",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.core",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/datadog.schema.json",
+      "path": "oss/concepts/datadog.schema.json",
+      "title": "Datadog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.datadog",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/domain.schema.json",
+      "path": "oss/concepts/domain.schema.json",
+      "title": "Domain",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.domain",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/entrypointstransport.schema.json",
+      "path": "oss/concepts/entrypointstransport.schema.json",
+      "title": "EntryPointsTransport",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.entrypointstransport",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/experimental.schema.json",
+      "path": "oss/concepts/experimental.schema.json",
+      "title": "Experimental",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.experimental",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/failover.schema.json",
+      "path": "oss/concepts/failover.schema.json",
+      "title": "Failover",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.failover",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/failovererror.schema.json",
+      "path": "oss/concepts/failovererror.schema.json",
+      "title": "FailoverError",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.failovererror",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/fastproxyconfig.schema.json",
+      "path": "oss/concepts/fastproxyconfig.schema.json",
+      "title": "FastProxyConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.fastproxyconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/fieldheaders.schema.json",
+      "path": "oss/concepts/fieldheaders.schema.json",
+      "title": "FieldHeaders",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.fieldheaders",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/forwardedheaders.schema.json",
+      "path": "oss/concepts/forwardedheaders.schema.json",
+      "title": "ForwardedHeaders",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.forwardedheaders",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/forwardingtimeouts.schema.json",
+      "path": "oss/concepts/forwardingtimeouts.schema.json",
+      "title": "ForwardingTimeouts",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.forwardingtimeouts",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/generatedcert.schema.json",
+      "path": "oss/concepts/generatedcert.schema.json",
+      "title": "GeneratedCert",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.generatedcert",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/global.schema.json",
+      "path": "oss/concepts/global.schema.json",
+      "title": "Global",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.global",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/handler.schema.json",
+      "path": "oss/concepts/handler.schema.json",
+      "title": "Handler",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.handler",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/healthcheck.schema.json",
+      "path": "oss/concepts/healthcheck.schema.json",
+      "title": "HealthCheck",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.healthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/highestrandomweight.schema.json",
+      "path": "oss/concepts/highestrandomweight.schema.json",
+      "title": "HighestRandomWeight",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.highestrandomweight",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/hostresolverconfig.schema.json",
+      "path": "oss/concepts/hostresolverconfig.schema.json",
+      "title": "HostResolverConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.hostresolverconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/hrwservice.schema.json",
+      "path": "oss/concepts/hrwservice.schema.json",
+      "title": "HRWService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.hrwservice",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/http2config.schema.json",
+      "path": "oss/concepts/http2config.schema.json",
+      "title": "HTTP2Config",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.http2config",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/http3config.schema.json",
+      "path": "oss/concepts/http3config.schema.json",
+      "title": "HTTP3Config",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.http3config",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/httpconfig.schema.json",
+      "path": "oss/concepts/httpconfig.schema.json",
+      "title": "HTTPConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.httpconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/httpconfiguration.schema.json",
+      "path": "oss/concepts/httpconfiguration.schema.json",
+      "title": "HTTPConfiguration",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.httpconfiguration",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/influxdb2.schema.json",
+      "path": "oss/concepts/influxdb2.schema.json",
+      "title": "InfluxDB2",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.influxdb2",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/ipstrategy.schema.json",
+      "path": "oss/concepts/ipstrategy.schema.json",
+      "title": "IPStrategy",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.ipstrategy",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/lifecycle.schema.json",
+      "path": "oss/concepts/lifecycle.schema.json",
+      "title": "LifeCycle",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.lifecycle",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/metrics.schema.json",
+      "path": "oss/concepts/metrics.schema.json",
+      "title": "Metrics",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.metrics",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/middleware.schema.json",
+      "path": "oss/concepts/middleware.schema.json",
+      "title": "Middleware",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.middleware",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/mirroring.schema.json",
+      "path": "oss/concepts/mirroring.schema.json",
+      "title": "Mirroring",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.mirroring",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/mirrorservice.schema.json",
+      "path": "oss/concepts/mirrorservice.schema.json",
+      "title": "MirrorService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.mirrorservice",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/model.schema.json",
+      "path": "oss/concepts/model.schema.json",
+      "title": "Model",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.model",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/observabilityconfig.schema.json",
+      "path": "oss/concepts/observabilityconfig.schema.json",
+      "title": "ObservabilityConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.observabilityconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/ocspconfig.schema.json",
+      "path": "oss/concepts/ocspconfig.schema.json",
+      "title": "OCSPConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.ocspconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/options.schema.json",
+      "path": "oss/concepts/options.schema.json",
+      "title": "Options",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.options",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/otelgrpc.schema.json",
+      "path": "oss/concepts/otelgrpc.schema.json",
+      "title": "OTelGRPC",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.otelgrpc",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/otelhttp.schema.json",
+      "path": "oss/concepts/otelhttp.schema.json",
+      "title": "OTelHTTP",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.otelhttp",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/otellog.schema.json",
+      "path": "oss/concepts/otellog.schema.json",
+      "title": "OTelLog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.otellog",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/oteltracing.schema.json",
+      "path": "oss/concepts/oteltracing.schema.json",
+      "title": "OTelTracing",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.oteltracing",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/otlp.schema.json",
+      "path": "oss/concepts/otlp.schema.json",
+      "title": "OTLP",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.otlp",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/passiveserverhealthcheck.schema.json",
+      "path": "oss/concepts/passiveserverhealthcheck.schema.json",
+      "title": "PassiveServerHealthCheck",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.passiveserverhealthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/prometheus.schema.json",
+      "path": "oss/concepts/prometheus.schema.json",
+      "title": "Prometheus",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.prometheus",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/providers.schema.json",
+      "path": "oss/concepts/providers.schema.json",
+      "title": "Providers",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.providers",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/proxyprotocol.schema.json",
+      "path": "oss/concepts/proxyprotocol.schema.json",
+      "title": "ProxyProtocol",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.proxyprotocol",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/redirectentrypoint.schema.json",
+      "path": "oss/concepts/redirectentrypoint.schema.json",
+      "title": "RedirectEntryPoint",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.redirectentrypoint",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/redirections.schema.json",
+      "path": "oss/concepts/redirections.schema.json",
+      "title": "Redirections",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.redirections",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/redis.schema.json",
+      "path": "oss/concepts/redis.schema.json",
+      "title": "Redis",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.redis",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/respondingtimeouts.schema.json",
+      "path": "oss/concepts/respondingtimeouts.schema.json",
+      "title": "RespondingTimeouts",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.respondingtimeouts",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/responseforwarding.schema.json",
+      "path": "oss/concepts/responseforwarding.schema.json",
+      "title": "ResponseForwarding",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.responseforwarding",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/routerobservabilityconfig.schema.json",
+      "path": "oss/concepts/routerobservabilityconfig.schema.json",
+      "title": "RouterObservabilityConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.routerobservabilityconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/routertcptlsconfig.schema.json",
+      "path": "oss/concepts/routertcptlsconfig.schema.json",
+      "title": "RouterTCPTLSConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.routertcptlsconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/routertlsconfig.schema.json",
+      "path": "oss/concepts/routertlsconfig.schema.json",
+      "title": "RouterTLSConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.routertlsconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/server.schema.json",
+      "path": "oss/concepts/server.schema.json",
+      "title": "Server",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.server",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/serverhealthcheck.schema.json",
+      "path": "oss/concepts/serverhealthcheck.schema.json",
+      "title": "ServerHealthCheck",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.serverhealthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/serversloadbalancer.schema.json",
+      "path": "oss/concepts/serversloadbalancer.schema.json",
+      "title": "ServersLoadBalancer",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.serversloadbalancer",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/serverstransport.schema.json",
+      "path": "oss/concepts/serverstransport.schema.json",
+      "title": "ServersTransport",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.serverstransport",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/sourcecriterion.schema.json",
+      "path": "oss/concepts/sourcecriterion.schema.json",
+      "title": "SourceCriterion",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.sourcecriterion",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/spiffe.schema.json",
+      "path": "oss/concepts/spiffe.schema.json",
+      "title": "Spiffe",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.spiffe",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/spiffeclientconfig.schema.json",
+      "path": "oss/concepts/spiffeclientconfig.schema.json",
+      "title": "SpiffeClientConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.spiffeclientconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/statsd.schema.json",
+      "path": "oss/concepts/statsd.schema.json",
+      "title": "Statsd",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.statsd",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/sticky.schema.json",
+      "path": "oss/concepts/sticky.schema.json",
+      "title": "Sticky",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.sticky",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/store.schema.json",
+      "path": "oss/concepts/store.schema.json",
+      "title": "Store",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.store",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpconfiguration.schema.json",
+      "path": "oss/concepts/tcpconfiguration.schema.json",
+      "title": "TCPConfiguration",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpconfiguration",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpmiddleware.schema.json",
+      "path": "oss/concepts/tcpmiddleware.schema.json",
+      "title": "TCPMiddleware",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpmiddleware",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserver.schema.json",
+      "path": "oss/concepts/tcpserver.schema.json",
+      "title": "TCPServer",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpserver",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserverhealthcheck.schema.json",
+      "path": "oss/concepts/tcpserverhealthcheck.schema.json",
+      "title": "TCPServerHealthCheck",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpserverhealthcheck",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserversloadbalancer.schema.json",
+      "path": "oss/concepts/tcpserversloadbalancer.schema.json",
+      "title": "TCPServersLoadBalancer",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpserversloadbalancer",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpserverstransport.schema.json",
+      "path": "oss/concepts/tcpserverstransport.schema.json",
+      "title": "TCPServersTransport",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpserverstransport",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpweightedroundrobin.schema.json",
+      "path": "oss/concepts/tcpweightedroundrobin.schema.json",
+      "title": "TCPWeightedRoundRobin",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpweightedroundrobin",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tcpwrrservice.schema.json",
+      "path": "oss/concepts/tcpwrrservice.schema.json",
+      "title": "TCPWRRService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tcpwrrservice",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsclientcertificateinfo.schema.json",
+      "path": "oss/concepts/tlsclientcertificateinfo.schema.json",
+      "title": "TLSClientCertificateInfo",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsclientcertificateinfo",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsclientcertificateissuerdninfo.schema.json",
+      "path": "oss/concepts/tlsclientcertificateissuerdninfo.schema.json",
+      "title": "TLSClientCertificateIssuerDNInfo",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsclientcertificateissuerdninfo",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsclientcertificatesubjectdninfo.schema.json",
+      "path": "oss/concepts/tlsclientcertificatesubjectdninfo.schema.json",
+      "title": "TLSClientCertificateSubjectDNInfo",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsclientcertificatesubjectdninfo",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsclientconfig.schema.json",
+      "path": "oss/concepts/tlsclientconfig.schema.json",
+      "title": "TLSClientConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsclientconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsconfig.schema.json",
+      "path": "oss/concepts/tlsconfig.schema.json",
+      "title": "TLSConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tlsconfiguration.schema.json",
+      "path": "oss/concepts/tlsconfiguration.schema.json",
+      "title": "TLSConfiguration",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tlsconfiguration",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/tracing.schema.json",
+      "path": "oss/concepts/tracing.schema.json",
+      "title": "Tracing",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.tracing",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/traefiklog.schema.json",
+      "path": "oss/concepts/traefiklog.schema.json",
+      "title": "TraefikLog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.traefiklog",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpconfig.schema.json",
+      "path": "oss/concepts/udpconfig.schema.json",
+      "title": "UDPConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpconfig",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpconfiguration.schema.json",
+      "path": "oss/concepts/udpconfiguration.schema.json",
+      "title": "UDPConfiguration",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpconfiguration",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpserver.schema.json",
+      "path": "oss/concepts/udpserver.schema.json",
+      "title": "UDPServer",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpserver",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpserversloadbalancer.schema.json",
+      "path": "oss/concepts/udpserversloadbalancer.schema.json",
+      "title": "UDPServersLoadBalancer",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpserversloadbalancer",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpweightedroundrobin.schema.json",
+      "path": "oss/concepts/udpweightedroundrobin.schema.json",
+      "title": "UDPWeightedRoundRobin",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpweightedroundrobin",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpwrrservice.schema.json",
+      "path": "oss/concepts/udpwrrservice.schema.json",
+      "title": "UDPWRRService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.udpwrrservice",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/weightedroundrobin.schema.json",
+      "path": "oss/concepts/weightedroundrobin.schema.json",
+      "title": "WeightedRoundRobin",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.weightedroundrobin",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/wrrservice.schema.json",
+      "path": "oss/concepts/wrrservice.schema.json",
+      "title": "WRRService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "concept.wrrservice",
+      "concept_kind": "concept"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/ingressroute.schema.json",
+      "path": "oss/crd/ingressroute.schema.json",
+      "title": "IngressRoute",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "IngressRoute"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/ingressroutetcp.schema.json",
+      "path": "oss/crd/ingressroutetcp.schema.json",
+      "title": "IngressRouteTCP",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "IngressRouteTCP"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/ingressrouteudp.schema.json",
+      "path": "oss/crd/ingressrouteudp.schema.json",
+      "title": "IngressRouteUDP",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "IngressRouteUDP"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/middleware.schema.json",
+      "path": "oss/crd/middleware.schema.json",
+      "title": "Middleware",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "Middleware"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/middlewaretcp.schema.json",
+      "path": "oss/crd/middlewaretcp.schema.json",
+      "title": "MiddlewareTCP",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "MiddlewareTCP"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/serverstransport.schema.json",
+      "path": "oss/crd/serverstransport.schema.json",
+      "title": "ServersTransport",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "ServersTransport"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/serverstransporttcp.schema.json",
+      "path": "oss/crd/serverstransporttcp.schema.json",
+      "title": "ServersTransportTCP",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "ServersTransportTCP"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/tlsoption.schema.json",
+      "path": "oss/crd/tlsoption.schema.json",
+      "title": "TLSOption",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "TLSOption"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/tlsstore.schema.json",
+      "path": "oss/crd/tlsstore.schema.json",
+      "title": "TLSStore",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "TLSStore"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/crd/traefikservice.schema.json",
+      "path": "oss/crd/traefikservice.schema.json",
+      "title": "TraefikService",
+      "source": "oss",
+      "scope": "kubernetes-crd",
+      "kinds": [
+        "TraefikService"
+      ],
+      "api_versions": [
+        "traefik.io/v1alpha1"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/dynamic.schema.json",
+      "path": "oss/dynamic.schema.json",
+      "title": "Traefik dynamic configuration",
+      "scope": "traefik-file",
+      "filename_globs": [
+        "traefik.yaml",
+        "traefik.yml",
+        "config.yaml",
+        "config.yml",
+        "dynamic.yaml",
+        "dynamic.yml"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/addprefix.schema.json",
+      "path": "oss/http/middlewares/addprefix.schema.json",
+      "title": "AddPrefix",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.addprefix",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/basicauth.schema.json",
+      "path": "oss/http/middlewares/basicauth.schema.json",
+      "title": "BasicAuth",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.basicauth",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/buffering.schema.json",
+      "path": "oss/http/middlewares/buffering.schema.json",
+      "title": "Buffering",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.buffering",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/chain.schema.json",
+      "path": "oss/http/middlewares/chain.schema.json",
+      "title": "Chain",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.chain",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/circuitbreaker.schema.json",
+      "path": "oss/http/middlewares/circuitbreaker.schema.json",
+      "title": "CircuitBreaker",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.circuitbreaker",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/compress.schema.json",
+      "path": "oss/http/middlewares/compress.schema.json",
+      "title": "Compress",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.compress",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/contenttype.schema.json",
+      "path": "oss/http/middlewares/contenttype.schema.json",
+      "title": "ContentType",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.contenttype",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/digestauth.schema.json",
+      "path": "oss/http/middlewares/digestauth.schema.json",
+      "title": "DigestAuth",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.digestauth",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/encodedcharacters.schema.json",
+      "path": "oss/http/middlewares/encodedcharacters.schema.json",
+      "title": "EncodedCharacters",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.encodedcharacters",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/errors.schema.json",
+      "path": "oss/http/middlewares/errors.schema.json",
+      "title": "ErrorPage",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.errors",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/forwardauth.schema.json",
+      "path": "oss/http/middlewares/forwardauth.schema.json",
+      "title": "ForwardAuth",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.forwardauth",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/grpcweb.schema.json",
+      "path": "oss/http/middlewares/grpcweb.schema.json",
+      "title": "GrpcWeb",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.grpcweb",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/headers.schema.json",
+      "path": "oss/http/middlewares/headers.schema.json",
+      "title": "Headers",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.headers",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/inflightreq.schema.json",
+      "path": "oss/http/middlewares/inflightreq.schema.json",
+      "title": "InFlightReq",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.inflightreq",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/ipallowlist.schema.json",
+      "path": "oss/http/middlewares/ipallowlist.schema.json",
+      "title": "IPAllowList",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.ipallowlist",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/ipwhitelist.schema.json",
+      "path": "oss/http/middlewares/ipwhitelist.schema.json",
+      "title": "IPWhiteList",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.ipwhitelist",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/passtlsclientcert.schema.json",
+      "path": "oss/http/middlewares/passtlsclientcert.schema.json",
+      "title": "PassTLSClientCert",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.passtlsclientcert",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/ratelimit.schema.json",
+      "path": "oss/http/middlewares/ratelimit.schema.json",
+      "title": "RateLimit",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.ratelimit",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/redirectregex.schema.json",
+      "path": "oss/http/middlewares/redirectregex.schema.json",
+      "title": "RedirectRegex",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.redirectregex",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/redirectscheme.schema.json",
+      "path": "oss/http/middlewares/redirectscheme.schema.json",
+      "title": "RedirectScheme",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.redirectscheme",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/replacepath.schema.json",
+      "path": "oss/http/middlewares/replacepath.schema.json",
+      "title": "ReplacePath",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.replacepath",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/replacepathregex.schema.json",
+      "path": "oss/http/middlewares/replacepathregex.schema.json",
+      "title": "ReplacePathRegex",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.replacepathregex",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/retry.schema.json",
+      "path": "oss/http/middlewares/retry.schema.json",
+      "title": "Retry",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.retry",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/stripprefix.schema.json",
+      "path": "oss/http/middlewares/stripprefix.schema.json",
+      "title": "StripPrefix",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.stripprefix",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/stripprefixregex.schema.json",
+      "path": "oss/http/middlewares/stripprefixregex.schema.json",
+      "title": "StripPrefixRegex",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.middlewares.stripprefixregex",
+      "concept_kind": "middleware-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/routers.schema.json",
+      "path": "oss/http/routers.schema.json",
+      "title": "Router",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.routers",
+      "concept_kind": "router-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/services.schema.json",
+      "path": "oss/http/services.schema.json",
+      "title": "Service",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "http.services",
+      "concept_kind": "service-http"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/consul.schema.json",
+      "path": "oss/providers/consul.schema.json",
+      "title": "ProviderBuilder",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.consul",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/consulCatalog.schema.json",
+      "path": "oss/providers/consulCatalog.schema.json",
+      "title": "ProviderBuilder",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.consulcatalog",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/docker.schema.json",
+      "path": "oss/providers/docker.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.docker",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/ecs.schema.json",
+      "path": "oss/providers/ecs.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.ecs",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/etcd.schema.json",
+      "path": "oss/providers/etcd.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.etcd",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/file.schema.json",
+      "path": "oss/providers/file.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.file",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/http.schema.json",
+      "path": "oss/providers/http.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.http",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/knative.schema.json",
+      "path": "oss/providers/knative.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.knative",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesCRD.schema.json",
+      "path": "oss/providers/kubernetesCRD.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.kubernetescrd",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesGateway.schema.json",
+      "path": "oss/providers/kubernetesGateway.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.kubernetesgateway",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesIngress.schema.json",
+      "path": "oss/providers/kubernetesIngress.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.kubernetesingress",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesIngressNGINX.schema.json",
+      "path": "oss/providers/kubernetesIngressNGINX.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.kubernetesingressnginx",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/nomad.schema.json",
+      "path": "oss/providers/nomad.schema.json",
+      "title": "ProviderBuilder",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.nomad",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/redis.schema.json",
+      "path": "oss/providers/redis.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.redis",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/rest.schema.json",
+      "path": "oss/providers/rest.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.rest",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/swarm.schema.json",
+      "path": "oss/providers/swarm.schema.json",
+      "title": "SwarmProvider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.swarm",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/zooKeeper.schema.json",
+      "path": "oss/providers/zooKeeper.schema.json",
+      "title": "Provider",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "provider.zookeeper",
+      "concept_kind": "provider"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static.schema.json",
+      "path": "oss/static.schema.json",
+      "title": "Traefik static configuration",
+      "scope": "traefik-file",
+      "filename_globs": [
+        "traefik.yaml",
+        "traefik.yml",
+        "static.yaml",
+        "static.yml"
+      ]
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/accesslog.schema.json",
+      "path": "oss/static/accesslog.schema.json",
+      "title": "AccessLog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.accesslog",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/api.schema.json",
+      "path": "oss/static/api.schema.json",
+      "title": "API",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.api",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/certificatesresolvers.schema.json",
+      "path": "oss/static/certificatesresolvers.schema.json",
+      "title": "CertificateResolver",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.certificatesresolvers",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/core.schema.json",
+      "path": "oss/static/core.schema.json",
+      "title": "Core",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.core",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/entrypoints.schema.json",
+      "path": "oss/static/entrypoints.schema.json",
+      "title": "EntryPoint",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.entrypoints",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/experimental.schema.json",
+      "path": "oss/static/experimental.schema.json",
+      "title": "Experimental",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.experimental",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/global.schema.json",
+      "path": "oss/static/global.schema.json",
+      "title": "Global",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.global",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/hostresolver.schema.json",
+      "path": "oss/static/hostresolver.schema.json",
+      "title": "HostResolverConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.hostresolver",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/log.schema.json",
+      "path": "oss/static/log.schema.json",
+      "title": "TraefikLog",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.log",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/metrics.schema.json",
+      "path": "oss/static/metrics.schema.json",
+      "title": "Metrics",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.metrics",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/ocsp.schema.json",
+      "path": "oss/static/ocsp.schema.json",
+      "title": "OCSPConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.ocsp",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/ping.schema.json",
+      "path": "oss/static/ping.schema.json",
+      "title": "Handler",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.ping",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/providers.schema.json",
+      "path": "oss/static/providers.schema.json",
+      "title": "Providers",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.providers",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/serverstransport.schema.json",
+      "path": "oss/static/serverstransport.schema.json",
+      "title": "ServersTransport",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.serverstransport",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/spiffe.schema.json",
+      "path": "oss/static/spiffe.schema.json",
+      "title": "SpiffeClientConfig",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.spiffe",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/tcpserverstransport.schema.json",
+      "path": "oss/static/tcpserverstransport.schema.json",
+      "title": "TCPServersTransport",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.tcpserverstransport",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/tracing.schema.json",
+      "path": "oss/static/tracing.schema.json",
+      "title": "Tracing",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "static.tracing",
+      "concept_kind": "static-section"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/inflightconn.schema.json",
+      "path": "oss/tcp/middlewares/inflightconn.schema.json",
+      "title": "TCPInFlightConn",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tcp.middlewares.inflightconn",
+      "concept_kind": "middleware-tcp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/ipallowlist.schema.json",
+      "path": "oss/tcp/middlewares/ipallowlist.schema.json",
+      "title": "TCPIPAllowList",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tcp.middlewares.ipallowlist",
+      "concept_kind": "middleware-tcp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/ipwhitelist.schema.json",
+      "path": "oss/tcp/middlewares/ipwhitelist.schema.json",
+      "title": "TCPIPWhiteList",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tcp.middlewares.ipwhitelist",
+      "concept_kind": "middleware-tcp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/routers.schema.json",
+      "path": "oss/tcp/routers.schema.json",
+      "title": "TCPRouter",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tcp.routers",
+      "concept_kind": "router-tcp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/services.schema.json",
+      "path": "oss/tcp/services.schema.json",
+      "title": "TCPService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tcp.services",
+      "concept_kind": "service-tcp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tls.schema.json",
+      "path": "oss/tls.schema.json",
+      "title": "TLS",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "tls",
+      "concept_kind": "tls-option"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/udp/routers.schema.json",
+      "path": "oss/udp/routers.schema.json",
+      "title": "UDPRouter",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "udp.routers",
+      "concept_kind": "router-udp"
+    },
+    {
+      "id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/udp/services.schema.json",
+      "path": "oss/udp/services.schema.json",
+      "title": "UDPService",
+      "source": "oss",
+      "scope": "traefik-fragment",
+      "concept_id": "udp.services",
+      "concept_kind": "service-udp"
+    }
+  ]
+}

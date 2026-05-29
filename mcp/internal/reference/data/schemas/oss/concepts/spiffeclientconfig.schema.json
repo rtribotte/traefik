@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/spiffeclientconfig.schema.json",
+  "title": "SpiffeClientConfig",
+  "description": "SpiffeClientConfig defines the SPIFFE client configuration.",
+  "type": "object",
+  "properties": {
+    "workloadAPIAddr": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

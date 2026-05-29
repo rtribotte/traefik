@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/retry.schema.json",
+  "title": "Retry",
+  "description": "Retry holds the retry middleware configuration. This middleware reissues requests a given number of times to a backend server if that server does not reply. As soon as the server answers, the middleware stops retrying, regardless of the response status. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/retry/",
+  "type": "object",
+  "properties": {
+    "attempts": {
+      "description": "Attempts defines how many times the request should be retried.",
+      "type": "integer"
+    },
+    "disableRetryOnNetworkError": {
+      "description": "DisableRetryOnNetworkError defines whether to disable the retry if an error occurs when transmitting the request to the server.",
+      "type": "boolean"
+    },
+    "initialInterval": {
+      "description": "InitialInterval defines the first wait time in the exponential backoff series. The maximum interval is calculated as twice the initialInterval. If unspecified, requests will be retried immediately. The value of initialInterval should be provided in seconds or as a valid duration format, see https://pkg.go.dev/time#ParseDuration.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "maxRequestBodyBytes": {
+      "default": 2097152,
+      "description": "MaxRequestBodyBytes defines the maximum size for the request body.",
+      "type": "integer"
+    },
+    "retryNonIdempotentMethod": {
+      "description": "RetryNonIdempotentMethod activates the retry for non-idempotent methods (POST, LOCK, PATCH)",
+      "type": "boolean"
+    },
+    "status": {
+      "description": "Status defines the range of HTTP status codes to retry on.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "timeout": {
+      "description": "Timeout defines how much time the middleware is allowed to retry the request.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/digestauth.schema.json",
+  "title": "DigestAuth",
+  "description": "DigestAuth holds the digest auth middleware configuration. This middleware restricts access to your services to known users. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/digestauth/",
+  "type": "object",
+  "properties": {
+    "headerField": {
+      "description": "HeaderField defines a header field to store the authenticated user. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/basicauth/#headerfield",
+      "type": "string"
+    },
+    "realm": {
+      "description": "Realm allows the protected resources on a server to be partitioned into a set of protection spaces, each with its own authentication scheme. Default: traefik.",
+      "type": "string"
+    },
+    "removeHeader": {
+      "description": "RemoveHeader defines whether to remove the authorization header before forwarding the request to the backend.",
+      "type": "boolean"
+    },
+    "users": {
+      "description": "Users defines the authorized users. Each user should be declared using the name:realm:encoded-password format.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "usersFile": {
+      "description": "UsersFile is the path to an external file that contains the authorized users for the middleware.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

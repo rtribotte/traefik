@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpserver.schema.json",
+  "title": "UDPServer",
+  "description": "UDPServer defines a UDP server configuration.",
+  "type": "object",
+  "properties": {
+    "address": {
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

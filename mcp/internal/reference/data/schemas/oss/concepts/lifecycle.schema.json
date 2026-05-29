@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/lifecycle.schema.json",
+  "title": "LifeCycle",
+  "description": "LifeCycle contains configurations relevant to the lifecycle (such as the shutdown phase) of Traefik.",
+  "type": "object",
+  "properties": {
+    "graceTimeOut": {
+      "default": "10s",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "requestAcceptGraceTimeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

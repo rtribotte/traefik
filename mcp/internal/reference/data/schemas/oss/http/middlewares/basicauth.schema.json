@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/basicauth.schema.json",
+  "title": "BasicAuth",
+  "description": "BasicAuth holds the basic auth middleware configuration. This middleware restricts access to your services to known users. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/basicauth/",
+  "type": "object",
+  "properties": {
+    "headerField": {
+      "description": "HeaderField defines a header field to store the authenticated user. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/basicauth/#headerfield",
+      "type": "string"
+    },
+    "realm": {
+      "description": "Realm allows the protected resources on a server to be partitioned into a set of protection spaces, each with its own authentication scheme. Default: traefik.",
+      "type": "string"
+    },
+    "removeHeader": {
+      "description": "RemoveHeader sets the removeHeader option to true to remove the authorization header before forwarding the request to your service. Default: false.",
+      "type": "boolean"
+    },
+    "users": {
+      "description": "Users is an array of authorized users. Each user must be declared using the name:hashed-password format. Tip: Use htpasswd to generate the passwords.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "usersFile": {
+      "description": "UsersFile is the path to an external file that contains the authorized users.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

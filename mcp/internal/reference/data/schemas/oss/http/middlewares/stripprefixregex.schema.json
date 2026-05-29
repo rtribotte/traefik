@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/stripprefixregex.schema.json",
+  "title": "StripPrefixRegex",
+  "description": "StripPrefixRegex holds the strip prefix regex middleware configuration. This middleware removes the matching prefixes from the URL path. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/stripprefixregex/",
+  "type": "object",
+  "properties": {
+    "regex": {
+      "description": "Regex defines the regular expression to match the path prefix from the request URL.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

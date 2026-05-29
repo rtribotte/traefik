@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/static/ping.schema.json",
+  "title": "Handler",
+  "description": "Handler expose ping routes.",
+  "type": "object",
+  "properties": {
+    "entryPoint": {
+      "default": "traefik",
+      "type": "string"
+    },
+    "manualRouting": {
+      "type": "boolean"
+    },
+    "terminatingStatusCode": {
+      "default": 503,
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

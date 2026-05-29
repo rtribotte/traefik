@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/fieldheaders.schema.json",
+  "title": "FieldHeaders",
+  "description": "FieldHeaders holds configuration for access log headers.",
+  "type": "object",
+  "properties": {
+    "defaultMode": {
+      "type": "string"
+    },
+    "names": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

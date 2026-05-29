@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hubldap.schema.json",
+  "title": "HubLDAP",
+  "description": "Configuration holds the configuration for the Hub LDAP middleware.",
+  "type": "object",
+  "properties": {
+    "loginUrl": {
+      "description": "URL configuration.",
+      "type": "string"
+    },
+    "logoutUrl": {
+      "type": "string"
+    },
+    "portalLogoUrl": {
+      "description": "Portal configuration.",
+      "type": "string"
+    },
+    "portalTitle": {
+      "type": "string"
+    },
+    "session": {
+      "description": "Session configuration",
+      "type": "object"
+    },
+    "sessionKey": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

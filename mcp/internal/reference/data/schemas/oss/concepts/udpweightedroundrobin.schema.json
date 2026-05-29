@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/udpweightedroundrobin.schema.json",
+  "title": "UDPWeightedRoundRobin",
+  "description": "UDPWeightedRoundRobin is a weighted round robin UDP load-balancer of services.",
+  "type": "object",
+  "properties": {
+    "services": {
+      "description": "Services defines the list of Kubernetes Service and/or TraefikService to load-balance, with weight.",
+      "items": {
+        "properties": {
+          "name": {
+            "description": "Name defines the name of the referenced IngressRoute resource.",
+            "type": "string"
+          },
+          "weight": {
+            "default": 1,
+            "description": "Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

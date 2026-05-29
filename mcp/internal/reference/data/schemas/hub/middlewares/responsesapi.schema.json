@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/responsesapi.schema.json",
+  "title": "ResponsesAPI",
+  "description": "Config holds the ResponsesAPI Middleware configuration.",
+  "type": "object",
+  "properties": {
+    "allowModelOverride": {
+      "type": "boolean"
+    },
+    "allowParamsOverride": {
+      "type": "boolean"
+    },
+    "instructions": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

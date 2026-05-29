@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/microcks.schema.json",
+  "title": "Microcks",
+  "description": "Provider is a provider.Provider implementation that queries a Microcks instance for service configurations.",
+  "type": "object",
+  "properties": {
+    "auth": {
+      "type": "object"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "pollInterval": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "pollTimeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "tls": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

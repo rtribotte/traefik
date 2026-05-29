@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/serverstransport.schema.json",
+  "title": "ServersTransport",
+  "description": "ServersTransport options to configure communication between Traefik and the servers.",
+  "type": "object",
+  "properties": {
+    "certificates": {
+      "description": "Certificates is a list of secret names, each secret holding a key/certificate pair to add to the store.",
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "cipherSuites": {
+      "description": "CipherSuites defines the cipher suites to use when contacting backend servers.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "disableHTTP2": {
+      "description": "DisableHTTP2 disables HTTP/2 for connections with backend servers.",
+      "type": "boolean"
+    },
+    "forwardingTimeouts": {
+      "description": "ForwardingTimeouts defines the timeouts for requests forwarded to the backend servers.",
+      "properties": {
+        "dialTimeout": {
+          "default": "30s",
+          "description": "DialTimeout is the amount of time to wait until a connection to a backend server can be established.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "idleConnTimeout": {
+          "default": "1m30s",
+          "description": "IdleConnTimeout is the maximum period for which an idle HTTP keep-alive connection will remain open before closing itself.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "pingTimeout": {
+          "default": "15s",
+          "description": "PingTimeout is the timeout after which the HTTP/2 connection will be closed if a response to ping is not received.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "readIdleTimeout": {
+          "description": "ReadIdleTimeout is the timeout after which a health check using ping frame will be carried out if no frame is received on the HTTP/2 connection.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "responseHeaderTimeout": {
+          "description": "ResponseHeaderTimeout is the amount of time to wait for a server's response headers after fully writing the request (including its body, if any).",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "insecureSkipVerify": {
+      "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+      "type": "boolean"
+    },
+    "maxIdleConnsPerHost": {
+      "description": "MaxIdleConnsPerHost controls the maximum idle (keep-alive) to keep per-host.",
+      "type": "integer"
+    },
+    "maxVersion": {
+      "description": "MaxVersion defines the maximum TLS version to use when contacting backend servers.",
+      "type": "string"
+    },
+    "minVersion": {
+      "description": "MinVersion defines the minimum TLS version to use when contacting backend servers.",
+      "type": "string"
+    },
+    "peerCertURI": {
+      "description": "PeerCertURI defines the peer cert URI used to match against SAN URI during the peer certificate verification.",
+      "type": "string"
+    },
+    "rootCAs": {
+      "description": "RootCAs defines a list of CA certificate Secrets or ConfigMaps used to validate server certificates.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "serverName": {
+      "description": "ServerName defines the server name used to contact the server.",
+      "type": "string"
+    },
+    "spiffe": {
+      "description": "Spiffe defines the SPIFFE configuration.",
+      "properties": {
+        "ids": {
+          "description": "IDs defines the allowed SPIFFE IDs (takes precedence over the SPIFFE TrustDomain).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "trustDomain": {
+          "description": "TrustDomain defines the allowed SPIFFE trust domain.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/otlp.schema.json",
+  "title": "OTLP",
+  "description": "OTLP contains specific configuration used by the OpenTelemetry Metrics exporter.",
+  "type": "object",
+  "properties": {
+    "addEntryPointsLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addRoutersLabels": {
+      "type": "boolean"
+    },
+    "addServicesLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "explicitBoundaries": {
+      "default": [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.075,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        2.5,
+        5,
+        7.5,
+        10
+      ],
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "grpc": {
+      "properties": {
+        "endpoint": {
+          "default": "localhost:4317",
+          "type": "string"
+        },
+        "headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Headers defines custom headers to be sent to the health check endpoint.",
+          "type": "object"
+        },
+        "insecure": {
+          "type": "boolean"
+        },
+        "tls": {
+          "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+          "properties": {
+            "ca": {
+              "type": "string"
+            },
+            "caOptional": {
+              "type": "boolean"
+            },
+            "cert": {
+              "type": "string"
+            },
+            "insecureSkipVerify": {
+              "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "http": {
+      "default": {
+        "endpoint": "https://localhost:4318"
+      },
+      "properties": {
+        "endpoint": {
+          "default": "https://localhost:4318",
+          "type": "string"
+        },
+        "headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Headers defines custom headers to be sent to the health check endpoint.",
+          "type": "object"
+        },
+        "tls": {
+          "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+          "properties": {
+            "ca": {
+              "type": "string"
+            },
+            "caOptional": {
+              "type": "boolean"
+            },
+            "cert": {
+              "type": "string"
+            },
+            "insecureSkipVerify": {
+              "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "pushInterval": {
+      "default": "10s",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "resourceAttributes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "serviceName": {
+      "default": "traefik",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

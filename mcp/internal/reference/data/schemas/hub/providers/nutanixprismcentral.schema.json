@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/nutanixprismcentral.schema.json",
+  "title": "NutanixPrismCentral",
+  "description": "Provider is the Nutanix Prism Central provider implementation.",
+  "type": "object",
+  "properties": {
+    "allowedVPCs": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "apiKey": {
+      "type": "string"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "filename": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "pollInterval": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "pollTimeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "serviceNameCategoryKey": {
+      "default": "TraefikServiceName",
+      "type": "string"
+    },
+    "tls": {
+      "type": "object"
+    },
+    "username": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

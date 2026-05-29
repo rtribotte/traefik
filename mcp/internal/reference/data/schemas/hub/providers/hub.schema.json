@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/hub.schema.json",
+  "title": "Hub",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "APIMgtMetrics": {
+      "type": "boolean"
+    },
+    "InstanceID": {
+      "type": "string"
+    },
+    "entryPoints": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

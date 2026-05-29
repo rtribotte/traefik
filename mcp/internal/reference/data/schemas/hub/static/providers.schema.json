@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/static/providers.schema.json",
+  "title": "Providers",
+  "description": "Providers contains providers configuration.",
+  "type": "object",
+  "properties": {
+    "consulCatalogEnterprise": {
+      "type": "object"
+    },
+    "microcks": {
+      "type": "object"
+    },
+    "multicluster": {
+      "type": "object"
+    },
+    "nutanixPrismCentral": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

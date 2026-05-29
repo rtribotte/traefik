@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/http3config.schema.json",
+  "title": "HTTP3Config",
+  "description": "HTTP3Config is the HTTP3 configuration of an entry point.",
+  "type": "object",
+  "properties": {
+    "advertisedPort": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

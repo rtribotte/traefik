@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/hubapikey.schema.json",
+  "title": "HubAPIKey",
+  "description": "Configuration configures an API Key handler.",
+  "type": "object",
+  "properties": {
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "keySource": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/coraza.schema.json",
+  "title": "Coraza",
+  "description": "Configuration holds the Coraza middleware configuration.",
+  "type": "object",
+  "properties": {
+    "crsEnabled": {
+      "description": "CRSEnabled coreruleset configs added to coraza.",
+      "type": "boolean"
+    },
+    "directives": {
+      "description": "Directives parses the directives from the given string and adds them to the WAF.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "txId": {
+      "description": "TxID is only for the ingress-nginx provider. It should not be documented.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

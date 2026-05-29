@@ -4,10 +4,9 @@ package server
 
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/traefik/traefik-mcp/internal/configschema"
 	"github.com/traefik/traefik-mcp/internal/loki"
 	"github.com/traefik/traefik-mcp/internal/prom"
-	"github.com/traefik/traefik-mcp/internal/rag"
+	"github.com/traefik/traefik-mcp/internal/reference"
 	"github.com/traefik/traefik-mcp/internal/staticconf"
 	"github.com/traefik/traefik-mcp/internal/tempo"
 	"github.com/traefik/traefik-mcp/internal/traefik"
@@ -31,12 +30,11 @@ type Deps struct {
 	// Prom queries metrics Traefik ships over OTLP. Nil disables the metrics
 	// query tool at call time with a helpful error.
 	Prom *prom.Client
-	// Validator validates static and dynamic configuration against the embedded
-	// JSON Schemas. Nil disables the validation tools at call time.
-	Validator *configschema.Validator
-	// Retriever searches the embedded Traefik reference corpus. Nil disables the
-	// documentation search tool at call time.
-	Retriever rag.Retriever
+	// Reference is the embedded Traefik configuration reference
+	// (github.com/traefik/reference). It backs the grounding tools (search,
+	// concept, schema, doc) and schema validation. Nil disables those tools at
+	// call time with a helpful error.
+	Reference *reference.Catalogue
 	// Caps are the observability capabilities deduced from Traefik's static
 	// configuration. When set, data-source-backed tools (metrics, traces, logs)
 	// are registered only if the matching source is configured. Nil means the
@@ -163,31 +161,49 @@ func New(name, version string, deps Deps) *mcp.Server {
 	}
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name: "validate_static_config",
-		Description: "Validate Traefik static (install) configuration — the traefik.yaml/.toml with " +
-			"entryPoints, providers, log, metrics, tracing, certificatesResolvers, etc. — against the " +
-			"official JSON Schema. Accepts YAML or JSON and returns each violation with its location. " +
-			"Use it before applying generated or hand-written install configuration.",
-	}, validateConfig(deps.Validator, configschema.Static))
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name: "validate_dynamic_config",
-		Description: "Validate Traefik dynamic (routing) configuration — http/tcp/udp routers, services, " +
-			"middlewares and tls — against the official JSON Schema. Accepts YAML or JSON and returns each " +
-			"violation with its location. Use it before applying generated or hand-written routing " +
-			"configuration to a file provider.",
-	}, validateConfig(deps.Validator, configschema.Dynamic))
-
-	mcp.AddTool(s, &mcp.Tool{
 		Name: "search_traefik_docs",
 		Description: "Search the Traefik configuration reference (github.com/traefik/reference) for the " +
 			"concept behind a question — middlewares, routers, services, providers, CRDs, annotations and " +
-			"static configuration sections — returning each match's concept id, summary and canonical " +
-			"documentation URL. Use it to find how a feature is configured or which option to set, for " +
-			"both Traefik Proxy (oss) and Traefik Hub (hub).",
-	}, searchDocs(deps.Retriever))
+			"static configuration sections — returning each match's concept id, type name and summary. " +
+			"This is the discovery step: take the id of the best match and pass it to get_traefik_concept, " +
+			"get_traefik_schema or get_traefik_doc. Covers Traefik Proxy (oss), Traefik Hub (hub) and " +
+			"vendored Gateway API / core Kubernetes (external).",
+	}, searchDocs(deps.Reference))
 
-	addPrompts(s)
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "get_traefik_concept",
+		Description: "Return the full reference page for a concept id (from search_traefik_docs): every " +
+			"field with its type, default and description — the exact contract for that configuration " +
+			"object. Ground on this before authoring or correcting configuration; field names, types and " +
+			"enums are exact for the pinned Traefik version.",
+	}, getConcept(deps.Reference))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "get_traefik_schema",
+		Description: "Return the JSON Schema for a concept id (from search_traefik_docs), suitable for " +
+			"structured generation or as a tool input schema, so a generated fragment cannot be " +
+			"structurally invalid.",
+	}, getSchema(deps.Reference))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "get_traefik_doc",
+		Description: "Return the narrative documentation page for a concept id (from search_traefik_docs): " +
+			"the prose guide with examples, resolved via the reference's DOC_INDEX. Use it when the field " +
+			"contract from get_traefik_concept is not enough and you need explanation or examples.",
+	}, getDoc(deps.Reference))
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name: "validate_traefik_config",
+		Description: "Validate Traefik configuration against the official JSON Schemas " +
+			"(github.com/traefik/reference) and report each violation with its location. Accepts YAML or " +
+			"JSON, including multi-document YAML. It auto-detects what you passed — a whole traefik.yaml " +
+			"(static install or dynamic routing config), a Traefik or Gateway API CRD, or an annotated " +
+			"Kubernetes manifest — by matching it against the schema registry. Pass 'concept' to validate " +
+			"a single fragment (e.g. one middleware) against that concept's schema. Use it to vet " +
+			"generated or hand-written configuration before applying it.",
+	}, validateConfig(deps.Reference))
+
+	//addPrompts(s)
 
 	return s
 }

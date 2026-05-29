@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/chain.schema.json",
+  "title": "Chain",
+  "description": "Chain holds the chain middleware configuration. This middleware enables to define reusable combinations of other pieces of middleware.",
+  "type": "object",
+  "properties": {
+    "middlewares": {
+      "description": "Middlewares is the list of middleware names which composes the chain.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/providers.schema.json",
+  "title": "Providers",
+  "description": "Providers contains providers configuration.",
+  "type": "object",
+  "properties": {
+    "consul": {
+      "type": "object"
+    },
+    "consulCatalog": {
+      "type": "object"
+    },
+    "docker": {
+      "type": "object"
+    },
+    "ecs": {
+      "type": "object"
+    },
+    "etcd": {
+      "type": "object"
+    },
+    "file": {
+      "type": "object"
+    },
+    "http": {
+      "type": "object"
+    },
+    "knative": {
+      "type": "object"
+    },
+    "kubernetesCRD": {
+      "type": "object"
+    },
+    "kubernetesGateway": {
+      "type": "object"
+    },
+    "kubernetesIngress": {
+      "type": "object"
+    },
+    "kubernetesIngressNGINX": {
+      "type": "object"
+    },
+    "nomad": {
+      "type": "object"
+    },
+    "plugin": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "description": "Plugin defines the middleware plugin configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/middlewares/overview/#community-middlewares",
+      "type": "object"
+    },
+    "precedence": {
+      "default": [
+        "kubernetesgateway",
+        "kubernetescrd",
+        "kubernetes",
+        "kubernetesingressnginx",
+        "swarm",
+        "docker",
+        "file",
+        "redis",
+        "knative",
+        "consul",
+        "consulcatalog",
+        "nomad",
+        "etcd",
+        "ecs",
+        "http",
+        "zookeeper",
+        "rest"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "providersThrottleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "redis": {
+      "description": "Redis hold the configs of Redis as bucket in rate limiter.",
+      "type": "object"
+    },
+    "rest": {
+      "type": "object"
+    },
+    "swarm": {
+      "type": "object"
+    },
+    "zooKeeper": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/distributedratelimit.schema.json",
+  "title": "DistributedRateLimit",
+  "description": "Configuration holds the DistributedRateLimit middleware configuration.",
+  "type": "object",
+  "properties": {
+    "burst": {
+      "type": "integer"
+    },
+    "denyOnError": {
+      "type": "boolean"
+    },
+    "limit": {
+      "type": "integer"
+    },
+    "period": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "responseHeaders": {
+      "type": "boolean"
+    },
+    "sourceCriterion": {
+      "type": "object"
+    },
+    "store": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

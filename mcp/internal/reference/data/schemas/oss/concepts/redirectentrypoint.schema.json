@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/redirectentrypoint.schema.json",
+  "title": "RedirectEntryPoint",
+  "description": "RedirectEntryPoint is the definition of an entry point redirection.",
+  "type": "object",
+  "properties": {
+    "permanent": {
+      "default": true,
+      "description": "Permanent defines whether the redirection is permanent (308).",
+      "type": "boolean"
+    },
+    "priority": {
+      "default": 9223372036854775807,
+      "description": "Priority defines the router's priority. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/rules-and-priority/#priority",
+      "type": "integer"
+    },
+    "scheme": {
+      "default": "https",
+      "description": "Scheme defines the scheme to use for the request to the upstream Kubernetes Service. It defaults to https when Kubernetes Service port is 443, http otherwise.",
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

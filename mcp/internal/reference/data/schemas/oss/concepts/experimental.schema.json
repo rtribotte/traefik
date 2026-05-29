@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/experimental.schema.json",
+  "title": "Experimental",
+  "description": "Experimental experimental Traefik features.",
+  "type": "object",
+  "properties": {
+    "abortOnPluginFailure": {
+      "type": "boolean"
+    },
+    "fastProxy": {
+      "properties": {
+        "debug": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "knative": {
+      "type": "boolean"
+    },
+    "kubernetesGateway": {
+      "type": "boolean"
+    },
+    "kubernetesIngressNGINX": {
+      "type": "boolean"
+    },
+    "localPlugins": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "otlplogs": {
+      "type": "boolean"
+    },
+    "plugins": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

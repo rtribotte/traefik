@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/tcp/middlewares/inflightconn.schema.json",
+  "title": "TCPInFlightConn",
+  "description": "TCPInFlightConn holds the TCP InFlightConn middleware configuration. This middleware prevents services from being overwhelmed with high load, by limiting the number of allowed simultaneous connections for one IP. More info: https://doc.traefik.io/traefik/v3.7/middlewares/tcp/inflightconn/",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "description": "Amount defines the maximum amount of allowed simultaneous connections. The middleware closes the connection if there are already amount connections opened.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

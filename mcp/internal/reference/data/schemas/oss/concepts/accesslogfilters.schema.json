@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/accesslogfilters.schema.json",
+  "title": "AccessLogFilters",
+  "description": "AccessLogFilters holds filters configuration.",
+  "type": "object",
+  "properties": {
+    "minDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "retryAttempts": {
+      "type": "boolean"
+    },
+    "statusCodes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

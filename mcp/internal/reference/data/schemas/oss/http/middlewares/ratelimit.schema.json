@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/ratelimit.schema.json",
+  "title": "RateLimit",
+  "description": "RateLimit holds the rate limit configuration. This middleware ensures that services will receive a fair amount of requests, and allows one to define what fair is.",
+  "type": "object",
+  "properties": {
+    "average": {
+      "description": "Average is the maximum rate, by default in requests/s, allowed for the given source. It defaults to 0, which means no rate limiting. The rate is actually defined by dividing Average by Period. So for a rate below 1req/s, one needs to define a Period larger than a second.",
+      "type": "integer"
+    },
+    "burst": {
+      "default": 1,
+      "description": "Burst is the maximum number of requests allowed to arrive in the same arbitrarily small period of time. It defaults to 1.",
+      "type": "integer"
+    },
+    "period": {
+      "default": "1s",
+      "description": "Period, in combination with Average, defines the actual maximum rate, such as: r = Average / Period. It defaults to a second.",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "redis": {
+      "description": "Redis stores the configuration for using Redis as a bucket in the rate-limiting algorithm. If not specified, Traefik will default to an in-memory bucket for the algorithm.",
+      "properties": {
+        "db": {
+          "description": "DB defines the Redis database that will be selected after connecting to the server.",
+          "type": "integer"
+        },
+        "dialTimeout": {
+          "default": "5s",
+          "description": "DialTimeout sets the timeout for establishing new connections. Default value is 5 seconds.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "endpoints": {
+          "default": [
+            "localhost:6379"
+          ],
+          "description": "Endpoints contains either a single address or a seed list of host:port addresses. Default value is [\"localhost:6379\"].",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "maxActiveConns": {
+          "description": "MaxActiveConns defines the maximum number of connections allocated by the pool at a given time. Default value is 0, meaning there is no limit.",
+          "type": "integer"
+        },
+        "minIdleConns": {
+          "description": "MinIdleConns defines the minimum number of idle connections. Default value is 0, and idle connections are not closed by default.",
+          "type": "integer"
+        },
+        "password": {
+          "description": "Password defines the password to connect to the Redis server.",
+          "type": "string"
+        },
+        "poolSize": {
+          "description": "PoolSize defines the initial number of socket connections. If the pool runs out of available connections, additional ones will be created beyond PoolSize. This can be limited using MaxActiveConns. Default value is 0, meaning 10 connections per every available CPU as reported by runtime.GOMAXPROCS.",
+          "type": "integer"
+        },
+        "readTimeout": {
+          "default": "3s",
+          "description": "ReadTimeout defines the timeout for socket read operations. Default value is 3 seconds.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "tls": {
+          "description": "TLS defines TLS-specific configurations, including the CA, certificate, and key, which can be provided as a file path or file content.",
+          "properties": {
+            "ca": {
+              "type": "string"
+            },
+            "caOptional": {
+              "type": "boolean"
+            },
+            "cert": {
+              "type": "string"
+            },
+            "insecureSkipVerify": {
+              "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "username": {
+          "description": "Username defines the username to connect to the Redis server.",
+          "type": "string"
+        },
+        "writeTimeout": {
+          "default": "3s",
+          "description": "WriteTimeout defines the timeout for socket write operations. Default value is 3 seconds.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "sourceCriterion": {
+      "description": "SourceCriterion defines what criterion is used to group requests as originating from a common source. If several strategies are defined at the same time, an error will be raised. If none are set, the default is to use the request's remote address field (as an ipStrategy).",
+      "properties": {
+        "ipStrategy": {
+          "properties": {
+            "depth": {
+              "description": "Depth tells Traefik to use the X-Forwarded-For header and take the IP located at the depth position (starting from the right).",
+              "type": "integer"
+            },
+            "excludedIPs": {
+              "description": "ExcludedIPs configures Traefik to scan the X-Forwarded-For header and select the first IP not in the list.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "ipv6Subnet": {
+              "description": "IPv6Subnet configures Traefik to consider all IPv6 addresses from the defined subnet as originating from the same IP. Applies to RemoteAddrStrategy and DepthStrategy.",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "requestHeaderName": {
+          "description": "RequestHeaderName defines the name of the header used to group incoming requests.",
+          "type": "string"
+        },
+        "requestHost": {
+          "description": "RequestHost defines whether to consider the request Host as the source.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

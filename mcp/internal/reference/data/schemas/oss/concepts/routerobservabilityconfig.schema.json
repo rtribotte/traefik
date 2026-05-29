@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/routerobservabilityconfig.schema.json",
+  "title": "RouterObservabilityConfig",
+  "description": "RouterObservabilityConfig holds the observability configuration for a router.",
+  "type": "object",
+  "properties": {
+    "accessLogs": {
+      "description": "AccessLogs enables access logs for this router.",
+      "type": "boolean"
+    },
+    "metrics": {
+      "description": "Metrics enables metrics for this router.",
+      "type": "boolean"
+    },
+    "traceVerbosity": {
+      "default": "minimal",
+      "description": "TraceVerbosity defines the verbosity level of the tracing for this router.",
+      "type": "string"
+    },
+    "tracing": {
+      "description": "Tracing enables tracing for this router.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

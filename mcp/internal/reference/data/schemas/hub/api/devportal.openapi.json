@@ -1,0 +1,2194 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Traefik Hub Developer Portal API",
+    "version": "1.0.0",
+    "description": "The Developer Portal API provides endpoints for developers to discover APIs, manage applications,\ncreate API keys, and subscribe to APIs with self-service capabilities.\n\nThis API is part of Traefik Hub API Gateway and runs within customer Kubernetes clusters.\nSome features require connection to the Traefik Hub platform.\n",
+    "contact": {
+      "name": "Traefik Labs",
+      "url": "https://traefik.io",
+      "email": "support@traefik.io"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://traefik.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Developer Portal API (relative to portal base URL)"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "getPortal",
+        "summary": "Get portal information",
+        "description": "Retrieves the developer portal configuration, including available APIs, bundles,\nplans, and user-specific subscriptions. This endpoint returns only APIs and bundles\nthat the authenticated user has access to based on their group memberships.\n",
+        "tags": [
+          "Portal"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/UserGroups"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portal information retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Portal"
+                },
+                "examples": {
+                  "basic": {
+                    "summary": "Basic portal",
+                    "value": {
+                      "title": "Developer Portal",
+                      "description": "Access our APIs",
+                      "logoUrl": "https://example.com/logo.png",
+                      "apiAuthType": "jwt",
+                      "features": [
+                        "self-service-application",
+                        "self-service-subscription"
+                      ],
+                      "apis": [
+                        {
+                          "name": "petstore",
+                          "namespace": "default",
+                          "title": "Pet Store API",
+                          "specLink": "/apis/petstore@default",
+                          "versions": [
+                            {
+                              "name": "v1",
+                              "title": "Version 1",
+                              "release": "1.0.0"
+                            }
+                          ],
+                          "plans": [
+                            {
+                              "name": "free",
+                              "title": "Free Plan",
+                              "description": "100 requests per hour",
+                              "rateLimit": {
+                                "limit": 100,
+                                "period": "1h",
+                                "bucket": "application"
+                              }
+                            }
+                          ],
+                          "subscriptions": []
+                        }
+                      ],
+                      "bundles": []
+                    }
+                  },
+                  "with-bundle": {
+                    "summary": "Portal with API bundle",
+                    "value": {
+                      "title": "Enterprise Portal",
+                      "description": "Enterprise API access",
+                      "apiAuthType": "api-key",
+                      "features": [
+                        "self-service-application",
+                        "self-service-subscription"
+                      ],
+                      "apis": [],
+                      "bundles": [
+                        {
+                          "name": "premium-bundle",
+                          "namespace": "default",
+                          "title": "Premium API Bundle",
+                          "plans": [
+                            {
+                              "name": "premium",
+                              "title": "Premium Plan",
+                              "description": "Unlimited access",
+                              "operationFilter": {
+                                "include": [
+                                  "*"
+                                ]
+                              }
+                            }
+                          ],
+                          "apis": [
+                            {
+                              "name": "petstore",
+                              "namespace": "default",
+                              "title": "Pet Store API",
+                              "specLink": "/apis/petstore@default",
+                              "versions": [],
+                              "plans": [],
+                              "subscriptions": []
+                            },
+                            {
+                              "name": "bookstore",
+                              "namespace": "default",
+                              "title": "Book Store API",
+                              "specLink": "/apis/bookstore@default",
+                              "versions": [],
+                              "plans": [],
+                              "subscriptions": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "with-subscription": {
+                    "summary": "Portal with existing subscriptions",
+                    "value": {
+                      "title": "Developer Portal",
+                      "apiAuthType": "jwt",
+                      "features": [
+                        "self-service-application"
+                      ],
+                      "apis": [
+                        {
+                          "name": "petstore",
+                          "namespace": "default",
+                          "title": "Pet Store API",
+                          "specLink": "/apis/petstore@default",
+                          "versions": [],
+                          "plans": [
+                            {
+                              "name": "free",
+                              "title": "Free Plan"
+                            }
+                          ],
+                          "subscriptions": [
+                            {
+                              "id": "sub-123",
+                              "plan": {
+                                "name": "free",
+                                "title": "Free Plan",
+                                "rateLimit": {
+                                  "limit": 100,
+                                  "period": "1h",
+                                  "bucket": "application"
+                                }
+                              },
+                              "application": {
+                                "id": "app-456",
+                                "name": "My App",
+                                "appId": "my-app"
+                              },
+                              "suspended": false,
+                              "createdAt": "2025-01-15T10:30:00Z"
+                            }
+                          ]
+                        }
+                      ],
+                      "bundles": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      }
+    },
+    "/apis/{api}": {
+      "get": {
+        "operationId": "getAPISpec",
+        "summary": "Get API specification",
+        "description": "Retrieves the OpenAPI 3.0 specification for an API.",
+        "tags": [
+          "APIs"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/UserGroups"
+          },
+          {
+            "$ref": "#/components/parameters/APIParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenAPI specification retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "OpenAPI 3.0 specification document."
+                },
+                "examples": {
+                  "petstore": {
+                    "summary": "Pet Store API specification",
+                    "value": {
+                      "openapi": "3.0.0",
+                      "info": {
+                        "title": "Pet Store API",
+                        "version": "1.0.0",
+                        "description": "A simple pet store API"
+                      },
+                      "servers": [
+                        {
+                          "url": "https://api.example.com/v1"
+                        }
+                      ],
+                      "paths": {
+                        "/pets": {
+                          "get": {
+                            "summary": "List all pets",
+                            "operationId": "listPets",
+                            "responses": {
+                              "200": {
+                                "description": "An array of pets",
+                                "content": {
+                                  "application/json": {
+                                    "schema": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": null
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "404": {
+            "description": "Not Found."
+          }
+        }
+      }
+    },
+    "/apis/{api}/versions/{version}": {
+      "get": {
+        "operationId": "getAPIVersionSpec",
+        "summary": "Get API version specification",
+        "description": "Retrieves the OpenAPI 3.0 specification for a specific version of an API.",
+        "tags": [
+          "APIs"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/UserGroups"
+          },
+          {
+            "$ref": "#/components/parameters/APIParameter"
+          },
+          {
+            "$ref": "#/components/parameters/VersionParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenAPI specification retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "OpenAPI 3.0 specification document."
+                },
+                "examples": {
+                  "petstore": {
+                    "summary": "Pet Store API specification",
+                    "value": {
+                      "openapi": "3.0.0",
+                      "info": {
+                        "title": "Pet Store API",
+                        "version": "1.0.0",
+                        "description": "A simple pet store API"
+                      },
+                      "servers": [
+                        {
+                          "url": "https://api.example.com/v1"
+                        }
+                      ],
+                      "paths": {
+                        "/pets": {
+                          "get": {
+                            "summary": "List all pets",
+                            "operationId": "listPets",
+                            "responses": {
+                              "200": {
+                                "description": "An array of pets",
+                                "content": {
+                                  "application/json": {
+                                    "schema": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": null
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "404": {
+            "description": "NotFound."
+          }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "operationId": "listApplications",
+        "summary": "List applications",
+        "description": "Retrieves all applications owned by the authenticated user. Each application includes\nits API keys and subscriptions.\n",
+        "tags": [
+          "Applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Applications retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Application"
+                  }
+                },
+                "examples": {
+                  "multiple-apps": {
+                    "summary": "Multiple applications with subscriptions",
+                    "value": [
+                      {
+                        "appId": "my-app",
+                        "isManaged": false,
+                        "name": "My Application",
+                        "namespace": "default",
+                        "owner": "user-123",
+                        "notes": "Production application",
+                        "apiKeys": [
+                          {
+                            "title": "Production Key",
+                            "suspended": false,
+                            "createdAt": "2025-01-15T10:30:00Z",
+                            "updatedAt": "2025-01-15T10:30:00Z"
+                          }
+                        ],
+                        "subscriptions": [
+                          {
+                            "id": "sub-123",
+                            "api": {
+                              "name": "petstore",
+                              "namespace": "default",
+                              "title": "Pet Store API"
+                            },
+                            "plan": {
+                              "name": "free",
+                              "title": "Free Plan",
+                              "rateLimit": {
+                                "limit": 100,
+                                "period": "1h",
+                                "bucket": "application"
+                              }
+                            },
+                            "suspended": false,
+                            "createdAt": "2025-01-15T10:30:00Z"
+                          }
+                        ]
+                      },
+                      {
+                        "appId": "test-app",
+                        "isManaged": true,
+                        "name": "Test Application",
+                        "namespace": "default",
+                        "owner": "user-123",
+                        "notes": "Testing only",
+                        "apiKeys": [],
+                        "subscriptions": []
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "No applications",
+                    "value": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      },
+      "post": {
+        "operationId": "createApplication",
+        "summary": "Create application",
+        "description": "Creates a new application for the authenticated user.",
+        "tags": [
+          "Applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplicationRequest"
+              },
+              "examples": {
+                "basic": {
+                  "summary": "Basic application",
+                  "value": {
+                    "name": "my-application",
+                    "appId": "my-app",
+                    "notes": "Production application"
+                  }
+                },
+                "minimal": {
+                  "summary": "Minimal application (no notes)",
+                  "value": {
+                    "name": "test-app",
+                    "appId": "test-app"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Application created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Platform application object.",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "id": "app-456",
+                  "name": "My Application",
+                  "namespace": "default"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "409": {
+            "description": "Conflict."
+          }
+        }
+      }
+    },
+    "/applications/{app-id}": {
+      "delete": {
+        "operationId": "deleteApplication",
+        "summary": "Delete application",
+        "description": "Deletes an application and all its associated API keys and subscriptions.\nOnly non-managed applications can be deleted. Users can only delete applications\nthey own.\n",
+        "tags": [
+          "Applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content."
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateApplication",
+        "summary": "Update application",
+        "description": "Updates application notes. Only non-managed applications can be updated.\nUsers can only update applications they own.\n",
+        "tags": [
+          "Applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationRequest"
+              },
+              "example": {
+                "notes": "Updated production notes with new contact info"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Application updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Updated platform application object.",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "id": "app-456",
+                  "name": "My Application",
+                  "notes": "Updated production notes with new contact info"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      }
+    },
+    "/applications/{app-id}/api-keys": {
+      "delete": {
+        "operationId": "deleteAPIKey",
+        "summary": "Delete API key",
+        "description": "Deletes an API key for an application.\nOnly non-managed applications can have API keys deleted.\nUsers can only delete API keys from applications they own.\n",
+        "tags": [
+          "API Keys"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "required": true,
+            "description": "The title of the API key to delete.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Old Key"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content."
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAPIKeys",
+        "summary": "List API keys",
+        "description": "Retrieves all API keys for an application. Users can only list API keys for applications they own.\n",
+        "tags": [
+          "API Keys"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API keys retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APIKey"
+                  }
+                },
+                "examples": {
+                  "multiple-keys": {
+                    "summary": "Multiple API keys",
+                    "value": [
+                      {
+                        "title": "Production Key",
+                        "suspended": false,
+                        "createdAt": "2025-01-15T10:30:00Z",
+                        "updatedAt": "2025-01-15T10:30:00Z"
+                      },
+                      {
+                        "title": "Development Key",
+                        "suspended": false,
+                        "createdAt": "2025-01-14T09:00:00Z",
+                        "updatedAt": "2025-01-14T09:00:00Z"
+                      },
+                      {
+                        "title": "Old Key",
+                        "suspended": true,
+                        "createdAt": "2025-01-10T08:00:00Z",
+                        "updatedAt": "2025-01-16T14:00:00Z"
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "No API keys",
+                    "value": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAPIKey",
+        "summary": "Create API key",
+        "description": "Creates a new API key for an application. The API key token is returned only once\nat creation time and cannot be retrieved later. Only non-managed applications can\nhave API keys created.\n",
+        "tags": [
+          "API Keys"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAPIKeyRequest"
+              },
+              "examples": {
+                "production": {
+                  "summary": "Production key",
+                  "value": {
+                    "title": "Production Key"
+                  }
+                },
+                "development": {
+                  "summary": "Development key",
+                  "value": {
+                    "title": "Development Key"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAPIKeyResponse"
+                },
+                "example": {
+                  "token": "hub_ak_1234567890abcdefghijklmnopqrstuvwxyz"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found."
+          },
+          "409": {
+            "description": "Conflict."
+          }
+        }
+      }
+    },
+    "/applications/{app-id}/api-keys/suspend": {
+      "post": {
+        "operationId": "suspendAPIKey",
+        "summary": "Suspend or unsuspend API key",
+        "description": "Suspends or unsuspends an API key. Suspended keys cannot be used for authentication.\nOnly non-managed applications can have API keys suspended/unsuspended.\nUsers can only modify API keys from applications they own.\n",
+        "tags": [
+          "API Keys"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/AppIDParameter"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendAPIKeyRequest"
+              },
+              "examples": {
+                "suspend": {
+                  "summary": "Suspend an API key",
+                  "value": {
+                    "title": "Production Key",
+                    "suspend": true
+                  }
+                },
+                "unsuspend": {
+                  "summary": "Unsuspend an API key",
+                  "value": {
+                    "title": "Production Key",
+                    "suspend": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No content."
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      }
+    },
+    "/content/{content-id}": {
+      "get": {
+        "operationId": "getContent",
+        "summary": "Get content",
+        "description": "Retrieves the raw markdown content.",
+        "tags": [
+          "Content"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/ContentIDParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content retrieved successfully.",
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found."
+          }
+        }
+      }
+    },
+    "/self-service-subscriptions": {
+      "post": {
+        "operationId": "upsertSelfServiceSubscriptions",
+        "summary": "Create or update self-service subscriptions",
+        "description": "Creates or updates self-service subscriptions in batch. This endpoint allows users to\nsubscribe their applications to APIs with specific plans. The operation filter, rate limit,\nand quota must exactly match the catalog item configuration for the selected plan.\n\nIf a subscription ID is provided, the subscription will be updated; otherwise, a new\nsubscription will be created.\n\nThis endpoint requires the self-service-subscription feature to be enabled.\n",
+        "tags": [
+          "Self-Service Subscriptions"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/UserGroups"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UpsertSelfServiceSubscriptionRequest"
+                }
+              },
+              "examples": {
+                "create-single": {
+                  "summary": "Create a single self-service subscription",
+                  "value": [
+                    {
+                      "appId": "my-app",
+                      "owner": "user-123",
+                      "api": {
+                        "namespace": "default",
+                        "name": "petstore"
+                      },
+                      "apiPlan": {
+                        "namespace": "default",
+                        "name": "free",
+                        "title": "Free Plan"
+                      },
+                      "operationFilter": {
+                        "include": [
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "rateLimit": {
+                        "limit": 100,
+                        "period": "1s",
+                        "bucket": "application"
+                      }
+                    }
+                  ]
+                },
+                "create-multiple": {
+                  "summary": "Create multiple self-service subscriptions",
+                  "value": [
+                    {
+                      "appId": "my-app",
+                      "owner": "user-123",
+                      "api": {
+                        "namespace": "default",
+                        "name": "petstore"
+                      },
+                      "apiPlan": {
+                        "namespace": "default",
+                        "name": "free",
+                        "title": "Free Plan"
+                      },
+                      "rateLimit": {
+                        "limit": 100,
+                        "period": "1s",
+                        "bucket": "application"
+                      }
+                    },
+                    {
+                      "appId": "my-app",
+                      "owner": "user-123",
+                      "api": {
+                        "namespace": "default",
+                        "name": "bookstore"
+                      },
+                      "apiPlan": {
+                        "namespace": "default",
+                        "name": "premium",
+                        "title": "Premium Plan"
+                      },
+                      "quota": {
+                        "limit": 10000,
+                        "period": "24h",
+                        "bucket": "application"
+                      }
+                    }
+                  ]
+                },
+                "update-existing": {
+                  "summary": "Update an existing self-service subscription",
+                  "value": [
+                    {
+                      "id": "sub-123",
+                      "appId": "my-app",
+                      "owner": "user-123",
+                      "api": {
+                        "namespace": "default",
+                        "name": "petstore"
+                      },
+                      "apiPlan": {
+                        "namespace": "default",
+                        "name": "premium",
+                        "title": "Premium Plan"
+                      },
+                      "rateLimit": {
+                        "limit": 1000,
+                        "period": "1h",
+                        "bucket": "application"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created/updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "Created/updated self-service subscription objects."
+                  }
+                },
+                "example": [
+                  {
+                    "id": "sub-123",
+                    "api": {
+                      "namespace": "default",
+                      "name": "petstore"
+                    },
+                    "plan": {
+                      "namespace": "default",
+                      "name": "free",
+                      "title": "Free Plan"
+                    },
+                    "application": {
+                      "id": "app-456",
+                      "name": "My Application"
+                    },
+                    "createdAt": "2025-01-15T10:30:00Z"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Not found."
+          },
+          "422": {
+            "description": "Unprocessable entity."
+          }
+        }
+      }
+    },
+    "/self-service-subscriptions/{id}": {
+      "delete": {
+        "operationId": "deleteSelfServiceSubscription",
+        "summary": "Delete self-service subscription",
+        "description": "Deletes a self-service subscription. Users can only delete subscriptions they own.",
+        "tags": [
+          "Self-Service Subscriptions"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PortalRef"
+          },
+          {
+            "$ref": "#/components/parameters/UserID"
+          },
+          {
+            "$ref": "#/components/parameters/SubscriptionIDParameter"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content."
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "422": {
+            "description": "Unprocessable entity."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message describing what went wrong."
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "example": {
+          "message": "Portal not found"
+        }
+      },
+      "Portal": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Portal title."
+          },
+          "description": {
+            "type": "string",
+            "description": "Portal description."
+          },
+          "logoUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the portal logo."
+          },
+          "apiAuthType": {
+            "type": "string",
+            "enum": [
+              "jwt",
+              "api-key",
+              "basic-auth"
+            ],
+            "description": "Authentication type used for API access."
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "self-service-application",
+                "self-service-subscription"
+              ]
+            },
+            "description": "Available features in the portal."
+          },
+          "contentItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItem"
+            },
+            "description": "Content items associated with the portal."
+          },
+          "apis": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/API"
+            },
+            "description": "List of APIs available to the user."
+          },
+          "bundles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bundle"
+            },
+            "description": "List of API bundles available to the user."
+          }
+        },
+        "required": [
+          "apiAuthType",
+          "apis",
+          "bundles"
+        ],
+        "example": {
+          "title": "Developer Portal",
+          "description": "Access our APIs",
+          "logoUrl": "https://example.com/logo.png",
+          "apiAuthType": "jwt",
+          "features": [
+            "self-service-application",
+            "self-service-subscription"
+          ],
+          "apis": [],
+          "bundles": []
+        }
+      },
+      "API": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "API name."
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Kubernetes namespace."
+          },
+          "title": {
+            "type": "string",
+            "description": "API display title."
+          },
+          "specLink": {
+            "type": "string",
+            "description": "Link to the API specification endpoint.",
+            "example": "/apis/petstore@default"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Version"
+            },
+            "description": "Available API versions."
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogPlanWithOperationFilter"
+            },
+            "description": "Plans that can be subscribed to for this API."
+          },
+          "contentItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItem"
+            },
+            "description": "Content items associated with the API."
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionWithApplication"
+            },
+            "description": "User's subscriptions to this API."
+          }
+        },
+        "required": [
+          "name",
+          "namespace",
+          "title",
+          "specLink"
+        ],
+        "example": {
+          "name": "petstore",
+          "namespace": "default",
+          "title": "Pet Store API",
+          "specLink": "/apis/petstore@default",
+          "versions": [
+            {
+              "name": "v1",
+              "title": "Version 1",
+              "release": "1.0.0"
+            }
+          ],
+          "plans": [],
+          "subscriptions": []
+        }
+      },
+      "Version": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Version name."
+          },
+          "title": {
+            "type": "string",
+            "description": "Version display title."
+          },
+          "release": {
+            "type": "string",
+            "description": "Semantic version.",
+            "example": "1.0.0"
+          }
+        },
+        "required": [
+          "name",
+          "title",
+          "release"
+        ],
+        "example": {
+          "name": "v1",
+          "title": "Version 1",
+          "release": "1.0.0"
+        }
+      },
+      "Bundle": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Bundle name."
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Kubernetes namespace."
+          },
+          "title": {
+            "type": "string",
+            "description": "Bundle display title."
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogPlanWithOperationFilter"
+            },
+            "description": "Plans that can be subscribed to for this bundle of APIs."
+          },
+          "contentItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItem"
+            },
+            "description": "Content items associated with the bundle."
+          },
+          "apis": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/API"
+            },
+            "description": "APIs included in this bundle."
+          }
+        },
+        "required": [
+          "name",
+          "namespace",
+          "title",
+          "apis"
+        ],
+        "example": {
+          "name": "premium-bundle",
+          "namespace": "default",
+          "title": "Premium API Bundle",
+          "plans": [],
+          "apis": []
+        }
+      },
+      "CatalogPlan": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plan name."
+          },
+          "title": {
+            "type": "string",
+            "description": "Plan display title."
+          },
+          "description": {
+            "type": "string",
+            "description": "Plan description."
+          },
+          "rateLimit": {
+            "$ref": "#/components/schemas/RateLimit"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/Quota"
+          }
+        },
+        "required": [
+          "name",
+          "title"
+        ],
+        "example": {
+          "name": "free",
+          "title": "Free Plan",
+          "description": "Basic access with rate limits",
+          "rateLimit": {
+            "limit": 100,
+            "period": "1h",
+            "bucket": "application"
+          }
+        }
+      },
+      "SubscriptionPlan": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plan name."
+          },
+          "title": {
+            "type": "string",
+            "description": "Plan display title."
+          },
+          "description": {
+            "type": "string",
+            "description": "Plan description."
+          },
+          "rateLimit": {
+            "$ref": "#/components/schemas/RateLimit"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/QuotaWithCurrentUsage"
+          }
+        },
+        "required": [
+          "name",
+          "title"
+        ]
+      },
+      "PlanWithOperationFilter": {
+        "$ref": "#/components/schemas/CatalogPlanWithOperationFilter"
+      },
+      "RateLimit": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "The number of requests per period used to calculate the regeneration rate. Traffic will converge to this rate over time by delaying requests when possible, and dropping them when throttling alone is insufficient.",
+            "example": 100
+          },
+          "period": {
+            "type": "string",
+            "description": "The time unit used to express the rate. Combined with limit, it defines the rate at which request capacity regenerates (limit ÷ period).",
+            "example": "1h"
+          },
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "application",
+              "subscription",
+              "application-api"
+            ],
+            "description": "Scope of the rate limit.",
+            "example": "application"
+          }
+        },
+        "required": [
+          "limit",
+          "period",
+          "bucket"
+        ]
+      },
+      "Quota": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Limit is the maximum number of requests per sliding period.",
+            "example": 10000
+          },
+          "period": {
+            "type": "string",
+            "description": "Time period for the quota (e.g., \"1h\", \"24h\").",
+            "example": "24h"
+          },
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "application",
+              "subscription",
+              "application-api"
+            ],
+            "description": "Scope of the quota.",
+            "example": "application"
+          }
+        },
+        "required": [
+          "limit",
+          "period",
+          "bucket"
+        ]
+      },
+      "OperationFilter": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "name of the operation sets that are allowed to be called by the client."
+          }
+        },
+        "example": {
+          "include": [
+            "read",
+            "write"
+          ]
+        }
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Subscription unique identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Subscription name (only if isManaged)."
+          },
+          "isManaged": {
+            "type": "boolean",
+            "description": "Whether the subscription is managed by administrators (read-only via API)."
+          },
+          "operationFilter": {
+            "$ref": "#/components/schemas/OperationFilter"
+          },
+          "claims": {
+            "type": "string",
+            "description": "Expression that validate claims in order to authorize the request.",
+            "example": "Equals(`role`, `admin`)"
+          },
+          "suspended": {
+            "type": "boolean",
+            "description": "Whether the subscription is suspended."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Subscription creation timestamp."
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SubscriptionPlan"
+          }
+        },
+        "required": [
+          "id",
+          "plan",
+          "suspended"
+        ],
+        "example": {
+          "id": "sub-123",
+          "plan": {
+            "name": "free",
+            "title": "Free Plan"
+          },
+          "suspended": false,
+          "createdAt": "2025-01-15T10:30:00Z"
+        }
+      },
+      "ApplicationReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Application unique identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name."
+          },
+          "appId": {
+            "type": "string",
+            "description": "Application identifier used during the authentication flow."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "appId"
+        ],
+        "example": {
+          "id": "app-456",
+          "name": "My App",
+          "appId": "my-app"
+        }
+      },
+      "Application": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string",
+            "description": "Application identifier used during the authentication flow."
+          },
+          "isManaged": {
+            "type": "boolean",
+            "description": "Whether the application is managed by administrators."
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name."
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Kubernetes namespace."
+          },
+          "owner": {
+            "type": "string",
+            "description": "Application owner user ID."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Application notes."
+          },
+          "apiKeys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIKey"
+            },
+            "description": "API keys associated with the application."
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionWithApplicationAndAPI"
+            },
+            "description": "Subscriptions associated with the application."
+          }
+        },
+        "required": [
+          "appId",
+          "isManaged",
+          "name",
+          "owner"
+        ],
+        "example": {
+          "appId": "my-app",
+          "isManaged": false,
+          "name": "My Application",
+          "namespace": "default",
+          "owner": "user-123",
+          "notes": "Production application",
+          "apiKeys": [],
+          "subscriptions": []
+        }
+      },
+      "SubscriptionWithApplication": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Subscription"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "application": {
+                "$ref": "#/components/schemas/ApplicationReference"
+              },
+              "api": {
+                "$ref": "#/components/schemas/APIReference"
+              }
+            }
+          }
+        ],
+        "example": {
+          "id": "sub-123",
+          "plan": {
+            "name": "free",
+            "title": "Free Plan"
+          },
+          "application": {
+            "id": "app-456",
+            "name": "My App",
+            "appId": "my-app"
+          },
+          "suspended": false,
+          "createdAt": "2025-01-15T10:30:00Z"
+        }
+      },
+      "SubscriptionWithApplicationAndAPI": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Subscription"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "application": {
+                "$ref": "#/components/schemas/ApplicationReference"
+              },
+              "api": {
+                "$ref": "#/components/schemas/APIReference"
+              }
+            }
+          }
+        ],
+        "example": {
+          "id": "sub-123",
+          "plan": {
+            "name": "free",
+            "title": "Free Plan"
+          },
+          "application": {
+            "id": "app-456",
+            "name": "My App",
+            "appId": "my-app"
+          },
+          "api": {
+            "name": "petstore",
+            "namespace": "default",
+            "title": "Pet Store API"
+          },
+          "suspended": false,
+          "createdAt": "2025-01-15T10:30:00Z"
+        }
+      },
+      "APIReference": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "API name."
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Kubernetes namespace."
+          },
+          "title": {
+            "type": "string",
+            "description": "API display title."
+          }
+        },
+        "required": [
+          "name",
+          "namespace",
+          "title"
+        ],
+        "example": {
+          "name": "petstore",
+          "namespace": "default",
+          "title": "Pet Store API"
+        }
+      },
+      "APIKey": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "API key title/name."
+          },
+          "suspended": {
+            "type": "boolean",
+            "description": "Whether the API key is suspended."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "API key creation timestamp. Only present for self-service API keys."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "API key last update timestamp. Only present for self-service API keys."
+          }
+        },
+        "required": [
+          "title",
+          "suspended"
+        ],
+        "example": {
+          "title": "Production Key",
+          "suspended": false,
+          "createdAt": "2025-01-15T10:30:00Z",
+          "updatedAt": "2025-01-15T10:30:00Z"
+        }
+      },
+      "CreateApplicationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Application name. Must be a valid DNS label.",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "maxLength": 63,
+            "example": "my-application"
+          },
+          "appId": {
+            "type": "string",
+            "description": "Unique application identifier.",
+            "example": "my-app"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional notes about the application.",
+            "example": "Production application for mobile app"
+          }
+        },
+        "required": [
+          "name",
+          "appId"
+        ],
+        "example": {
+          "name": "my-application",
+          "appId": "my-app",
+          "notes": "Production application"
+        }
+      },
+      "UpdateApplicationRequest": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string",
+            "description": "Application notes.",
+            "example": "Updated production notes"
+          }
+        },
+        "required": [
+          "notes"
+        ],
+        "example": {
+          "notes": "Updated production notes"
+        }
+      },
+      "CreateAPIKeyRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "API key title/name.",
+            "example": "Production Key"
+          },
+          "value": {
+            "type": "string",
+            "description": "Custom value for the API key. If not provided, a random value will be generated. This field is only accepted when the administrator has enabled user-defined API key values; otherwise, a 403 response will be returned.",
+            "minLength": 5,
+            "maxLength": 4096,
+            "pattern": "^[!-~]+",
+            "example": "my-custom-api-key-value"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "example": {
+          "title": "Production Key"
+        }
+      },
+      "CreateAPIKeyResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The API key token (only shown once at creation).",
+            "example": "hub_ak_1234567890abcdefghijklmnopqrstuvwxyz"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "example": {
+          "token": "hub_ak_1234567890abcdefghijklmnopqrstuvwxyz"
+        }
+      },
+      "SuspendAPIKeyRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "API key title to suspend/unsuspend.",
+            "example": "Production Key"
+          },
+          "suspend": {
+            "type": "boolean",
+            "description": "True to suspend, false to unsuspend.",
+            "example": true
+          }
+        },
+        "required": [
+          "title",
+          "suspend"
+        ],
+        "example": {
+          "title": "Production Key",
+          "suspend": true
+        }
+      },
+      "UpsertSelfServiceSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Subscription ID (for updates, omit for creates).",
+            "example": "sub-123"
+          },
+          "appId": {
+            "type": "string",
+            "description": "Application ID to associate with the subscription.",
+            "example": "my-app"
+          },
+          "owner": {
+            "type": "string",
+            "description": "Owner user ID.",
+            "example": "user-123"
+          },
+          "api": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "example": "default"
+              },
+              "name": {
+                "type": "string",
+                "example": "petstore"
+              }
+            },
+            "required": [
+              "namespace",
+              "name"
+            ],
+            "description": "API to subscribe to."
+          },
+          "apiPlan": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "example": "default"
+              },
+              "name": {
+                "type": "string",
+                "example": "free"
+              },
+              "title": {
+                "type": "string",
+                "example": "Free Plan"
+              }
+            },
+            "required": [
+              "namespace",
+              "name",
+              "title"
+            ],
+            "description": "Plan to use for the subscription."
+          },
+          "operationFilter": {
+            "$ref": "#/components/schemas/OperationFilter"
+          },
+          "rateLimit": {
+            "$ref": "#/components/schemas/RateLimit"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/Quota"
+          }
+        },
+        "required": [
+          "appId",
+          "owner",
+          "api",
+          "apiPlan"
+        ],
+        "example": {
+          "appId": "my-app",
+          "owner": "user-123",
+          "api": {
+            "namespace": "default",
+            "name": "petstore"
+          },
+          "apiPlan": {
+            "namespace": "default",
+            "name": "free",
+            "title": "Free Plan"
+          },
+          "operationFilter": {
+            "include": [
+              "GET /pets"
+            ]
+          },
+          "rateLimit": {
+            "limit": 100,
+            "period": "1h",
+            "bucket": "application"
+          }
+        }
+      },
+      "ContentItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the content item."
+          },
+          "title": {
+            "type": "string",
+            "description": "Content title."
+          },
+          "order": {
+            "type": "integer",
+            "description": "Display order of the content."
+          },
+          "link": {
+            "type": "object",
+            "properties": {
+              "href": {
+                "type": "string",
+                "description": "URL of the external content."
+              }
+            },
+            "required": [
+              "href"
+            ],
+            "description": "Link to external content."
+          },
+          "contentLink": {
+            "type": "string",
+            "description": "Link to retrieve the content."
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "order"
+        ],
+        "example": {
+          "id": "abc123def456",
+          "title": "Getting Started",
+          "order": 1,
+          "contentLink": "/content/abc123def456"
+        }
+      },
+      "CatalogPlanWithOperationFilter": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CatalogPlan"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operationFilter": {
+                "$ref": "#/components/schemas/OperationFilter"
+              }
+            }
+          }
+        ]
+      },
+      "QuotaWithCurrentUsage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Quota"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": "integer",
+                "description": "Current quota usage.",
+                "example": 5432
+              }
+            },
+            "required": [
+              "current"
+            ]
+          }
+        ]
+      }
+    },
+    "parameters": {
+      "PortalRef": {
+        "name": "Api-Portal-Ref",
+        "in": "header",
+        "required": true,
+        "description": "Portal identifier (required for all requests).",
+        "schema": {
+          "type": "string"
+        },
+        "example": "my-portal@default"
+      },
+      "UserID": {
+        "name": "Hub-User-Id",
+        "in": "header",
+        "required": true,
+        "description": "User external ID (required for authenticated requests).",
+        "schema": {
+          "type": "string"
+        },
+        "example": "user-123"
+      },
+      "UserGroups": {
+        "name": "Hub-User-Groups",
+        "in": "header",
+        "required": false,
+        "description": "User group memberships (comma-separated, optional).",
+        "schema": {
+          "type": "string"
+        },
+        "example": "developers,premium-users"
+      },
+      "APIParameter": {
+        "name": "api",
+        "in": "path",
+        "required": true,
+        "description": "API identifier in format `{name}@{namespace}`.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "petstore@default"
+      },
+      "VersionParameter": {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "description": "API version name.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "v1"
+      },
+      "AppIDParameter": {
+        "name": "app-id",
+        "in": "path",
+        "required": true,
+        "description": "Application ID (appId).",
+        "schema": {
+          "type": "string"
+        },
+        "example": "my-app"
+      },
+      "SubscriptionIDParameter": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Subscription unique identifier.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "sub-123"
+      },
+      "ContentIDParameter": {
+        "name": "content-id",
+        "in": "path",
+        "required": true,
+        "description": "Content unique identifier.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "abc123def456"
+      }
+    }
+  }
+}

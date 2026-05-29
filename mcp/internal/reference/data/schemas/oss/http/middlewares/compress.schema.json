@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/compress.schema.json",
+  "title": "Compress",
+  "description": "Compress holds the compress middleware configuration. This middleware compresses responses before sending them to the client, using gzip, brotli, or zstd compression.",
+  "type": "object",
+  "properties": {
+    "defaultEncoding": {
+      "description": "DefaultEncoding specifies the default encoding if the `Accept-Encoding` header is not in the request or contains a wildcard (`*`).",
+      "type": "string"
+    },
+    "encodings": {
+      "default": [
+        "gzip",
+        "br",
+        "zstd"
+      ],
+      "description": "Encodings defines the list of supported compression algorithms.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "excludedContentTypes": {
+      "description": "ExcludedContentTypes defines the list of content types to compare the Content-Type header of the incoming requests and responses before compressing. `application/grpc` is always excluded.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "includedContentTypes": {
+      "description": "IncludedContentTypes defines the list of content types to compare the Content-Type header of the responses before compressing.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "minResponseBodyBytes": {
+      "description": "MinResponseBodyBytes defines the minimum amount of bytes a response body must have to be compressed. Default: 1024.",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

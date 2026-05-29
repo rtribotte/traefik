@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/chatcompletion.schema.json",
+  "title": "ChatCompletion",
+  "description": "Config holds the ChatCompletion Middleware configuration.",
+  "type": "object",
+  "properties": {
+    "allowModelOverride": {
+      "type": "boolean"
+    },
+    "allowParamsOverride": {
+      "type": "boolean"
+    },
+    "model": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

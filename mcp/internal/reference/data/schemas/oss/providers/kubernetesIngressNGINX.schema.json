@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/kubernetesIngressNGINX.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "allowCrossNamespaceResources": {
+      "type": "boolean"
+    },
+    "allowSnippetAnnotations": {
+      "type": "boolean"
+    },
+    "certAuthFilePath": {
+      "type": "string"
+    },
+    "clientBodyBufferSize": {
+      "type": "integer"
+    },
+    "controllerClass": {
+      "type": "string"
+    },
+    "customHTTPErrors": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "defaultBackendService": {
+      "type": "string"
+    },
+    "disableSvcExternalName": {
+      "type": "boolean"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "globalAllowedResponseHeaders": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "globalAuthURL": {
+      "type": "string"
+    },
+    "httpEntryPoint": {
+      "type": "string"
+    },
+    "httpsEntryPoint": {
+      "type": "string"
+    },
+    "ingressClass": {
+      "type": "string"
+    },
+    "ingressClassByName": {
+      "type": "boolean"
+    },
+    "ipAllowListStrategy": {
+      "properties": {
+        "depth": {
+          "description": "Depth tells Traefik to use the X-Forwarded-For header and take the IP located at the depth position (starting from the right).",
+          "type": "integer"
+        },
+        "excludedIPs": {
+          "description": "ExcludedIPs configures Traefik to scan the X-Forwarded-For header and select the first IP not in the list.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "ipv6Subnet": {
+          "description": "IPv6Subnet configures Traefik to consider all IPv6 addresses from the defined subnet as originating from the same IP. Applies to RemoteAddrStrategy and DepthStrategy.",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "proxyBodySize": {
+      "type": "integer"
+    },
+    "proxyBufferSize": {
+      "type": "integer"
+    },
+    "proxyBuffering": {
+      "type": "boolean"
+    },
+    "proxyBuffersNumber": {
+      "type": "integer"
+    },
+    "proxyConnectTimeout": {
+      "type": "integer"
+    },
+    "proxyNextUpstream": {
+      "type": "string"
+    },
+    "proxyNextUpstreamTimeout": {
+      "type": "integer"
+    },
+    "proxyNextUpstreamTries": {
+      "type": "integer"
+    },
+    "proxyReadTimeout": {
+      "type": "integer"
+    },
+    "proxyRequestBuffering": {
+      "description": "Configuration options available within the NGINX Ingress Controller ConfigMap.",
+      "type": "boolean"
+    },
+    "proxySendTimeout": {
+      "type": "integer"
+    },
+    "publishService": {
+      "description": "TODO: support report-node-internal-ip-address and update-status.",
+      "type": "string"
+    },
+    "publishStatusAddress": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "strictValidatePathType": {
+      "default": true,
+      "type": "boolean"
+    },
+    "throttleDuration": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "upstreamKeepaliveTimeout": {
+      "type": "integer"
+    },
+    "watchIngressWithoutClass": {
+      "type": "boolean"
+    },
+    "watchNamespace": {
+      "type": "string"
+    },
+    "watchNamespaceSelector": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

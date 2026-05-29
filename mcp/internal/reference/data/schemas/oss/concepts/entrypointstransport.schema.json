@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/entrypointstransport.schema.json",
+  "title": "EntryPointsTransport",
+  "description": "EntryPointsTransport configures communication between clients and Traefik.",
+  "type": "object",
+  "properties": {
+    "keepAliveMaxRequests": {
+      "type": "integer"
+    },
+    "keepAliveMaxTime": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "lifeCycle": {
+      "default": {
+        "graceTimeOut": "10s"
+      },
+      "properties": {
+        "graceTimeOut": {
+          "default": "10s",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "requestAcceptGraceTimeout": {
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "respondingTimeouts": {
+      "default": {
+        "idleTimeout": "3m0s",
+        "readTimeout": "1m0s"
+      },
+      "properties": {
+        "idleTimeout": {
+          "default": "3m0s",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "readTimeout": {
+          "default": "1m0s",
+          "description": "ReadTimeout defines the timeout for socket read operations. Default value is 3 seconds.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        },
+        "writeTimeout": {
+          "description": "WriteTimeout defines the timeout for socket write operations. Default value is 3 seconds.",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

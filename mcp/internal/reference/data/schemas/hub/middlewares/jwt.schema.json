@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/jwt.schema.json",
+  "title": "JWT",
+  "description": "Configuration configures a JWT ACP handler.",
+  "type": "object",
+  "properties": {
+    "claims": {
+      "type": "string"
+    },
+    "clientConfig": {
+      "type": "object"
+    },
+    "forwardAuthorization": {
+      "type": "boolean"
+    },
+    "forwardHeaders": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "headerName": {
+      "description": "HeaderName defines the HTTP header name from which to extract the JWT token. Defaults to \"Authorization\" when not set.",
+      "type": "string"
+    },
+    "jwksFile": {
+      "type": "object"
+    },
+    "jwksUrl": {
+      "type": "string"
+    },
+    "publicKey": {
+      "type": "object"
+    },
+    "signingSecret": {
+      "type": "string"
+    },
+    "signingSecretBase64Encoded": {
+      "type": "boolean"
+    },
+    "stripAuthorizationHeader": {
+      "type": "boolean"
+    },
+    "tokenKey": {
+      "description": "TokenKey defines the form key or query key where to look for the token if not found in the Authorization header.",
+      "type": "string"
+    },
+    "tokenQueryKey": {
+      "type": "string"
+    },
+    "trustedIssuers": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "usernameClaim": {
+      "description": "UsernameClaim defines the claim used to set the clientUsername in the accessLog.",
+      "type": "string"
+    },
+    "wwwAuthenticate": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

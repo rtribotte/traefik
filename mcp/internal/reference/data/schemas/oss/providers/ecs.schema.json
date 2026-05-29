@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/ecs.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "accessKeyID": {
+      "type": "string"
+    },
+    "autoDiscoverClusters": {
+      "default": false,
+      "type": "boolean"
+    },
+    "clusters": {
+      "default": [
+        "default"
+      ],
+      "description": "Provider lookup parameters.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "constraints": {
+      "type": "string"
+    },
+    "defaultRule": {
+      "type": "string"
+    },
+    "ecsAnywhere": {
+      "type": "boolean"
+    },
+    "exposedByDefault": {
+      "default": true,
+      "type": "boolean"
+    },
+    "healthyTasksOnly": {
+      "default": false,
+      "type": "boolean"
+    },
+    "refreshSeconds": {
+      "default": 15,
+      "type": "integer"
+    },
+    "region": {
+      "type": "string"
+    },
+    "secretAccessKey": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

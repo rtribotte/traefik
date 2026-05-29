@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/providers/consulcatalogenterprise.schema.json",
+  "title": "ConsulCatalogEnterprise",
+  "description": "Provider is the Consul Catalog Enterprise provider implementation.",
+  "type": "object",
+  "properties": {
+    "namespaces": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "partition": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

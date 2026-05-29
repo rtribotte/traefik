@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/datadog.schema.json",
+  "title": "Datadog",
+  "description": "Datadog contains address and metrics pushing interval configuration.",
+  "type": "object",
+  "properties": {
+    "addEntryPointsLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addRoutersLabels": {
+      "type": "boolean"
+    },
+    "addServicesLabels": {
+      "default": true,
+      "type": "boolean"
+    },
+    "address": {
+      "default": "localhost:8125",
+      "description": "Address defines the authentication server address.",
+      "type": "string"
+    },
+    "prefix": {
+      "default": "traefik",
+      "description": "Prefix is the string to add before the current path in the requested URL. It should include a leading slash (/).",
+      "type": "string"
+    },
+    "pushInterval": {
+      "default": "10s",
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

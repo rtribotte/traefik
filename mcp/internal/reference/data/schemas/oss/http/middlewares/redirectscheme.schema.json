@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/redirectscheme.schema.json",
+  "title": "RedirectScheme",
+  "description": "RedirectScheme holds the redirect scheme middleware configuration. This middleware redirects requests from a scheme/port to another. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/redirectscheme/",
+  "type": "object",
+  "properties": {
+    "ForcePermanentRedirect": {
+      "description": "ForcePermanentRedirect is an internal field (not exposed in configuration). When set to true, this forces the use of permanent redirects 308, regardless of the request method. Used by the provider ingress-nginx.",
+      "type": "boolean"
+    },
+    "permanent": {
+      "description": "Permanent defines whether the redirection is permanent. For HTTP GET requests a 301 is returned, otherwise a 308 is returned.",
+      "type": "boolean"
+    },
+    "port": {
+      "description": "Port defines the port of the new URL.",
+      "type": "string"
+    },
+    "scheme": {
+      "description": "Scheme defines the scheme of the new URL.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/providers/docker.schema.json",
+  "title": "Provider",
+  "description": "Provider holds configurations of the provider.",
+  "type": "object",
+  "properties": {
+    "allowEmptyServices": {
+      "type": "boolean"
+    },
+    "constraints": {
+      "type": "string"
+    },
+    "defaultRule": {
+      "type": "string"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "exposedByDefault": {
+      "type": "boolean"
+    },
+    "httpClientTimeout": {
+      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+      "type": "string"
+    },
+    "network": {
+      "type": "string"
+    },
+    "password": {
+      "description": "Password defines the password to connect to the Redis server.",
+      "type": "string"
+    },
+    "tls": {
+      "description": "TLS defines the configuration used to secure the connection to the authentication server.",
+      "properties": {
+        "ca": {
+          "type": "string"
+        },
+        "caOptional": {
+          "type": "boolean"
+        },
+        "cert": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "description": "InsecureSkipVerify defines whether the server certificates should be validated.",
+          "type": "boolean"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "useBindPortIP": {
+      "type": "boolean"
+    },
+    "username": {
+      "description": "Username defines the username to connect to the Redis server.",
+      "type": "string"
+    },
+    "watch": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

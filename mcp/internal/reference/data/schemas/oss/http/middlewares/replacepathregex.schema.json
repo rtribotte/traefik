@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/replacepathregex.schema.json",
+  "title": "ReplacePathRegex",
+  "description": "ReplacePathRegex holds the replace path regex middleware configuration. This middleware replaces the path of a URL using regex matching and replacement. More info: https://doc.traefik.io/traefik/v3.7/middlewares/http/replacepathregex/",
+  "type": "object",
+  "properties": {
+    "regex": {
+      "description": "Regex defines the regular expression used to match and capture the path from the request URL.",
+      "type": "string"
+    },
+    "replacement": {
+      "description": "Replacement defines the replacement path format, which can include captured variables.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

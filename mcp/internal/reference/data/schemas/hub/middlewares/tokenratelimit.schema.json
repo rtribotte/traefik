@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/tokenratelimit.schema.json",
+  "title": "TokenRateLimit",
+  "description": "Config holds the configuration for the token rate limit middleware.",
+  "type": "object",
+  "properties": {
+    "clientRequestFormat": {
+      "type": "object"
+    },
+    "estimateStrategy": {
+      "type": "object"
+    },
+    "inputTokenLimit": {
+      "type": "object"
+    },
+    "onDenyResponse": {
+      "type": "object"
+    },
+    "outputTokenLimit": {
+      "type": "object"
+    },
+    "sourceCriterion": {
+      "description": "Source criterion for bucket naming.",
+      "type": "object"
+    },
+    "store": {
+      "type": "object"
+    },
+    "totalTokenLimit": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

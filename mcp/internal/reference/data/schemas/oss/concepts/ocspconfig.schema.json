@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/ocspconfig.schema.json",
+  "title": "OCSPConfig",
+  "description": "OCSPConfig contains the OCSP configuration.",
+  "type": "object",
+  "properties": {
+    "responderOverrides": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

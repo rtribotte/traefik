@@ -1,0 +1,124 @@
+{
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/annotations/ingress.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "Ingress"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "metadata": {
+            "properties": {
+              "annotations": {
+                "propertyNames": {
+                  "anyOf": [
+                    {
+                      "not": {
+                        "pattern": "^(traefik\\.|nginx\\.ingress\\.kubernetes\\.io/)"
+                      }
+                    },
+                    {
+                      "enum": [
+                        "traefik.ingress.kubernetes.io/router.entrypoints",
+                        "traefik.ingress.kubernetes.io/router.middlewares",
+                        "traefik.ingress.kubernetes.io/router.observability.accesslogs",
+                        "traefik.ingress.kubernetes.io/router.observability.metadata.ingress.ingressname",
+                        "traefik.ingress.kubernetes.io/router.observability.metadata.ingress.namespace",
+                        "traefik.ingress.kubernetes.io/router.observability.metadata.ingress.servicename",
+                        "traefik.ingress.kubernetes.io/router.observability.metadata.ingress.serviceport",
+                        "traefik.ingress.kubernetes.io/router.observability.metrics",
+                        "traefik.ingress.kubernetes.io/router.observability.traceverbosity",
+                        "traefik.ingress.kubernetes.io/router.observability.tracing",
+                        "traefik.ingress.kubernetes.io/router.pathmatcher",
+                        "traefik.ingress.kubernetes.io/router.priority",
+                        "traefik.ingress.kubernetes.io/router.rulesyntax",
+                        "traefik.ingress.kubernetes.io/router.tls.certresolver",
+                        "traefik.ingress.kubernetes.io/router.tls.domains",
+                        "traefik.ingress.kubernetes.io/router.tls.options"
+                      ]
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "Service"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "metadata": {
+            "properties": {
+              "annotations": {
+                "propertyNames": {
+                  "anyOf": [
+                    {
+                      "not": {
+                        "pattern": "^(traefik\\.|nginx\\.ingress\\.kubernetes\\.io/)"
+                      }
+                    },
+                    {
+                      "enum": [
+                        "traefik.ingress.kubernetes.io/service.middlewares",
+                        "traefik.ingress.kubernetes.io/service.nativelb",
+                        "traefik.ingress.kubernetes.io/service.nodeportlb",
+                        "traefik.ingress.kubernetes.io/service.passhostheader",
+                        "traefik.ingress.kubernetes.io/service.serversscheme",
+                        "traefik.ingress.kubernetes.io/service.serverstransport",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.domain",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.httponly",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.maxage",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.name",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.path",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.samesite",
+                        "traefik.ingress.kubernetes.io/service.sticky.cookie.secure"
+                      ]
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "description": "Validates that any traefik.* or nginx.ingress.kubernetes.io/* annotation on this Kubernetes manifest is one of the keys Traefik v3.7.0 actually reads via the TraefikIngressAnnotations surface. The whitelist depends on the manifest's kind.",
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "Ingress",
+        "Service"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind"
+  ],
+  "title": "Kubernetes manifest with TraefikIngressAnnotations",
+  "type": "object"
+}

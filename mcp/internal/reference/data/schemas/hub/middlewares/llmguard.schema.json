@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/llmguard.schema.json",
+  "title": "LLMGuard",
+  "description": "Config is the unified configuration for an LLM guard middleware.",
+  "type": "object",
+  "properties": {
+    "clientConfig": {
+      "type": "object"
+    },
+    "clientRequestFormat": {
+      "description": "ClientRequestFormat defines the format used by the upstream client. Valid values: \"ccr\", \"custom\", \"responsesAPI\". Default: \"custom\".",
+      "type": "object"
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "format": {
+      "type": "object"
+    },
+    "model": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "request": {
+      "type": "object"
+    },
+    "response": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/hub/middlewares/contentguard.schema.json",
+  "title": "ContentGuard",
+  "description": "Config holds the configuration for content-guard middleware.",
+  "type": "object",
+  "properties": {
+    "clientRequestFormat": {
+      "description": "ClientRequestFormat defines the format used by the upstream client. Valid values: \"ccr\", \"custom\", \"responsesAPI\". Default: \"custom\".",
+      "type": "object"
+    },
+    "engine": {
+      "type": "object"
+    },
+    "request": {
+      "type": "object"
+    },
+    "response": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

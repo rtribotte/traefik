@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/concepts/failovererror.schema.json",
+  "title": "FailoverError",
+  "description": "FailoverError holds errors configuration.",
+  "type": "object",
+  "properties": {
+    "maxRequestBodyBytes": {
+      "default": -1,
+      "description": "MaxRequestBodyBytes defines the maximum size allowed for the body of the request. Default value is -1, which means unlimited size.",
+      "type": "integer"
+    },
+    "status": {
+      "description": "Status defines the list of status code ranges for which the fallback service should be used.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

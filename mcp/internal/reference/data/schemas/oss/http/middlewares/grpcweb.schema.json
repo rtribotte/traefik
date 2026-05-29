@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/traefik/reference/main/schemas/oss/http/middlewares/grpcweb.schema.json",
+  "title": "GrpcWeb",
+  "description": "GrpcWeb holds the gRPC web middleware configuration. This middleware converts a gRPC web request to an HTTP/2 gRPC request.",
+  "type": "object",
+  "properties": {
+    "allowOrigins": {
+      "description": "AllowOrigins is a list of allowable origins. Can also be a wildcard origin \"*\".",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}
