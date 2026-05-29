@@ -1,0 +1,35 @@
+[
+  {
+    "name": "a1b2c3",
+    "sans": ["admin.localhost", "shop.localhost"],
+    "notAfter": "2099-01-01T00:00:00Z",
+    "notBefore": "2024-01-01T00:00:00Z",
+    "serialNumber": "12345",
+    "commonName": "admin.localhost",
+    "issuerOrg": "Acme Co",
+    "issuerCN": "Acme Root CA",
+    "version": "v3",
+    "keyType": "ECDSA",
+    "keySize": 256,
+    "signatureAlgorithm": "ECDSA-SHA256",
+    "certFingerprint": "a1b2c3",
+    "publicKeyFingerprint": "d4e5f6",
+    "status": "enabled"
+  },
+  {
+    "name": "f6e5d4",
+    "sans": ["legacy.localhost"],
+    "notAfter": "2020-01-01T00:00:00Z",
+    "notBefore": "2019-01-01T00:00:00Z",
+    "serialNumber": "67890",
+    "commonName": "legacy.localhost",
+    "issuerCN": "Old CA",
+    "version": "v3",
+    "keyType": "RSA",
+    "keySize": 2048,
+    "signatureAlgorithm": "SHA256-RSA",
+    "certFingerprint": "f6e5d4",
+    "publicKeyFingerprint": "c3b2a1",
+    "status": "expired"
+  }
+]

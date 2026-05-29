@@ -60,6 +60,15 @@ func addReadTools(s *mcp.Server, target traefik.Target) {
 	}, getEntryPoints(target))
 
 	mcp.AddTool(s, &mcp.Tool{
+		Name: "list_certificates",
+		Description: "List the TLS certificates Traefik is currently serving: common name, SANs, " +
+			"validity window, days until expiry, issuer, key type and the expiry status Traefik " +
+			"computes (enabled, warning when under 30 days left, or expired). Use it for any " +
+			"certificate or expiry question — it is the authoritative live view, richer than the " +
+			"traefik_tls_certs_not_after metric. Returns an empty list when no TLS is configured.",
+	}, listCertificates(target))
+
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "get_overview",
 		Description: "Summary counts of routers, services and middlewares per protocol, plus enabled features and providers.",
 	}, getOverview(target))
