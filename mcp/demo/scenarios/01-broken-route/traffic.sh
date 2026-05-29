@@ -7,8 +7,8 @@ set -euo pipefail
 
 web="http://localhost:8081" # base stack publishes the web entrypoint here.
 
-echo "sending 5 requests to shop.localhost (they will 404) ..."
+echo "sending 5 requests to blog.localhost (they will 404) ..."
 for _ in $(seq 1 5); do
-  curl -s -o /dev/null -H 'Host: shop.localhost' "$web/api" || true
+  curl -s -o /dev/null -H 'Host: blog.localhost' "$web/api" || true
 done
 echo "done; the router never registered — check the application log (tail_traefik_logs) for the rule parse error"

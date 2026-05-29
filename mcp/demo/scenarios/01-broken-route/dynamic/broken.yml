@@ -2,18 +2,18 @@
 # uses the Traefik v2 form of PathPrefix with several arguments
 # (PathPrefix(`/api`, `/admin`)). In v3 every matcher takes a single argument,
 # so the rule fails to parse, Traefik logs the error and the router is never
-# added to the runtime — shop.localhost 404s. The service itself is valid, so it
+# added to the runtime — blog.localhost 404s. The service itself is valid, so it
 # shows up unused in list_services, which is the clue that the router, not the
 # backend, is the problem.
 http:
   routers:
-    shop:
-      rule: "Host(`shop.localhost`) && PathPrefix(`/api`, `/admin`)"
+    blog:
+      rule: "Host(`blog.localhost`) && PathPrefix(`/api`, `/admin`)"
       entrypoints:
         - web
-      service: shop
+      service: blog
   services:
-    shop:
+    blog:
       loadBalancer:
         servers:
           - url: "http://whoami:80"

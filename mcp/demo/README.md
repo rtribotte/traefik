@@ -40,11 +40,21 @@ router status or log line answers the question. The config-fault ones (01, 02,
 ```bash
 ./demo.sh up                     # base stack only
 ./demo.sh up 01-broken-route     # base + a scenario overlay
+./demo.sh up all                 # every scenario at once (see below)
 ./demo.sh ps  01-broken-route
 ./demo.sh logs
 ./demo.sh down 01-broken-route
+./demo.sh down all               # tear the all-scenarios stack down
 ./demo.sh list                   # list scenarios
 ```
+
+Each scenario owns a distinct host (`blog`, `admin`/cert, `checkout`, `shop`,
+`api`) and distinct router/service names, so `up all` brings every scenario up
+on one stack at the same time — useful for exploring the whole tool surface in a
+single session — and runs each scenario's traffic in turn. Run
+`./scripts/gen-certs.sh` first so the security-posture cert is present. A single
+named `up <scenario>` is still a clean slate that tears down whatever was up
+before; `up all` is the one case that deliberately keeps them together.
 
 Traefik API/dashboard: http://localhost:8080 — this is what the MCP server reads.
 

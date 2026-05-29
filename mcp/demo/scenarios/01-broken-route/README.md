@@ -1,4 +1,4 @@
-# Scenario 01 — "shop.localhost is broken and I don't know why"
+# Scenario 01 — "blog.localhost is broken and I don't know why"
 
 The full broken-route loop: **diagnose → look up → fix → validate**. A router
 silently fails to register because its rule still uses Traefik v2 syntax. This is
@@ -15,28 +15,28 @@ once — live introspection, the embedded reference, and config validation.
 
 ## What's wrong
 
-`scenarios/01-broken-route/dynamic/broken.yml` defines router `shop@file` with the
+`scenarios/01-broken-route/dynamic/broken.yml` defines router `blog@file` with the
 rule:
 
 ```
-Host(`shop.localhost`) && PathPrefix(`/api`, `/admin`)
+Host(`blog.localhost`) && PathPrefix(`/api`, `/admin`)
 ```
 
 `PathPrefix` with several arguments is the **Traefik v2** form. In v3 every matcher
 takes a single argument, so the rule fails to parse, the router is never added to
-the runtime, and `shop.localhost` 404s. Traefik logs the parse error; the `shop`
+the runtime, and `blog.localhost` 404s. Traefik logs the parse error; the `blog`
 *service* is valid and shows up unused in `list_services`.
 
 ## Demo in Claude Desktop
 
-- "shop.localhost returns 404 but I configured a router for it — what's wrong, and
+- "blog.localhost returns 404 but I configured a router for it — what's wrong, and
   how do I fix it?"
 
 Expected flow:
 
-1. **Diagnose (live).** `get_router("shop@file")` shows `status: disabled` with the
+1. **Diagnose (live).** `get_router("blog@file")` shows `status: disabled` with the
    rule parse error attached (`PathPrefix: unexpected number of parameters; got 2,
-   expected one of [1]`); `list_services` shows `shop@file` defined and healthy.
+   expected one of [1]`); `list_services` shows `blog@file` defined and healthy.
    `tail_traefik_logs` filtered to errors carries the same message. The router, not
    the backend, is broken.
 2. **Look up (reference).** `search_traefik_docs("routing rule syntax")` →

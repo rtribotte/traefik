@@ -2,9 +2,10 @@
 # Launch the demo stack, optionally with a scenario overlay.
 #
 #   ./demo.sh up                     # base stack only
-#   ./demo.sh up 02-service-5xx      # base + scenario, then its traffic
-#   ./demo.sh traffic 02-service-5xx # re-run a scenario's traffic only
-#   ./demo.sh down [scenario]        # tear everything down
+#   ./demo.sh up 01-broken-route     # base + scenario, then its traffic
+#   ./demo.sh up all                 # every scenario at once, then all traffic
+#   ./demo.sh traffic 01-broken-route # re-run a scenario's traffic only
+#   ./demo.sh down [scenario|all]    # tear everything down
 #   ./demo.sh logs
 #   ./demo.sh ps
 #   ./demo.sh list                   # list scenarios
@@ -30,18 +31,31 @@ dyn_dir="config/dynamic"
 cmd="${1:-}"
 scenario="${2:-}"
 
-files=(-f docker-compose.yml)
-if [[ -n "$scenario" ]]; then
+# scenario_dirs is the set of scenario directories this invocation acts on:
+# none for the base stack, one for a named scenario, or every scenario for the
+# special "all" target (all scenarios up at once — their hosts and resource
+# names are distinct, so they coexist on the one stack).
+scenario_dirs=()
+if [[ "$scenario" == "all" ]]; then
+  for d in scenarios/*/; do
+    scenario_dirs+=("${d%/}")
+  done
+elif [[ -n "$scenario" ]]; then
   if [[ ! -d "scenarios/$scenario" ]]; then
     echo "unknown scenario: $scenario" >&2
-    echo "available:" >&2
+    echo "available (or 'all'):" >&2
     ls -1 scenarios >&2
     exit 1
   fi
-  if [[ -f "scenarios/$scenario/compose.yml" ]]; then
-    files+=(-f "scenarios/$scenario/compose.yml")
-  fi
+  scenario_dirs+=("scenarios/$scenario")
 fi
+
+files=(-f docker-compose.yml)
+for sd in "${scenario_dirs[@]}"; do
+  if [[ -f "$sd/compose.yml" ]]; then
+    files+=(-f "$sd/compose.yml")
+  fi
+done
 
 # clear_dynamic removes scenario-provided dynamic config, keeping .gitkeep, so
 # the watched dir starts empty for every scenario.
@@ -49,11 +63,14 @@ clear_dynamic() {
   find "$dyn_dir" -type f ! -name '.gitkeep' -delete
 }
 
-# sync_dynamic copies the current scenario's dynamic config into the watched dir.
+# sync_dynamic copies every selected scenario's dynamic config into the watched
+# dir (one scenario, or all of them for the "all" target).
 sync_dynamic() {
-  if [[ -n "$scenario" && -d "scenarios/$scenario/dynamic" ]]; then
-    find "scenarios/$scenario/dynamic" -maxdepth 1 -type f -exec cp {} "$dyn_dir/" \;
-  fi
+  for sd in "${scenario_dirs[@]}"; do
+    if [[ -d "$sd/dynamic" ]]; then
+      find "$sd/dynamic" -maxdepth 1 -type f -exec cp {} "$dyn_dir/" \;
+    fi
+  done
 }
 
 # wait_ready blocks until the Traefik API answers, so scenario traffic does not
@@ -70,17 +87,18 @@ wait_ready() {
   return 1
 }
 
-# run_traffic executes the scenario's traffic.sh, if it has one.
+# run_traffic executes each selected scenario's traffic.sh, if it has one.
 run_traffic() {
-  if [[ -z "$scenario" ]]; then
+  if [[ ${#scenario_dirs[@]} -eq 0 ]]; then
     echo "no scenario given; nothing to run" >&2
     return 0
   fi
-  local script="scenarios/$scenario/traffic.sh"
-  if [[ -f "$script" ]]; then
-    echo "running traffic for $scenario ..."
-    API_URL="$api_url" bash "$script"
-  fi
+  for sd in "${scenario_dirs[@]}"; do
+    if [[ -f "$sd/traffic.sh" ]]; then
+      echo "running traffic for ${sd#scenarios/} ..."
+      API_URL="$api_url" bash "$sd/traffic.sh"
+    fi
+  done
 }
 
 case "$cmd" in
@@ -93,7 +111,7 @@ case "$cmd" in
     # traefik on a mounted-file change, so force-recreate just that service to
     # pick up edits when switching scenarios.
     docker compose "${files[@]}" up -d --force-recreate --no-deps traefik
-    if [[ -n "$scenario" && -f "scenarios/$scenario/traffic.sh" ]]; then
+    if [[ ${#scenario_dirs[@]} -gt 0 ]]; then
       wait_ready
       run_traffic
     fi
@@ -107,7 +125,7 @@ case "$cmd" in
   ps)   docker compose "${files[@]}" ps ;;
   list) ls -1 scenarios ;;
   *)
-    echo "usage: ./demo.sh {up|down|traffic|logs|ps|list} [scenario]" >&2
+    echo "usage: ./demo.sh {up|down|traffic|logs|ps|list} [scenario|all]" >&2
     exit 1
     ;;
 esac
