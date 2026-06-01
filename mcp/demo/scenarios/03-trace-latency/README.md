@@ -25,9 +25,7 @@ ingestion before querying.
 
 ## Demo in Claude Desktop
 
-- "checkout.localhost is slow but I can't see why — the config and the backend
-  look fine. Can you find a slow request in the traces and tell me where the
-  time is going?"
+- "checkout.localhost is slow but I can't see why, can you help?"
 
 Expected: the assistant inspects the router/service/middleware config and the
 backend health and finds nothing wrong — in particular the `pluginA`
