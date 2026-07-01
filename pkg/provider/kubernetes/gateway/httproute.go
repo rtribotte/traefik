@@ -149,7 +149,11 @@ func (p *Provider) loadHTTPRoute(ctx context.Context, gatewayName, gatewayNamesp
 				EntryPoints: []string{listener.EPName},
 			}
 			if listener.Protocol == gatev1.HTTPSProtocolType {
-				router.TLS = &dynamic.RouterTLSConfig{}
+				// On a terminated HTTPS listener the router is a child of the
+				// listener parent router (which owns the SNI scope and TLS); it
+				// only matches the request Host. See buildHTTPSListenerRouters.
+				router.EntryPoints = nil
+				router.ParentRefs = []string{listener.RouterName}
 			}
 
 			var err error
@@ -783,7 +787,7 @@ func buildPathRule(pathMatch gatev1.HTTPPathMatch) (string, int) {
 		return fmt.Sprintf("Path(%q)", pathValue), 100000
 
 	case gatev1.PathMatchPathPrefix:
-		// PathPrefix(`/`) rule is a catch-all,
+		// PathPrefix("/") rule is a catch-all,
 		// here we ensure it would be evaluated last.
 		if pathValue == "/" {
 			return `PathPrefix("/")`, 1

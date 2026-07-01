@@ -19,6 +19,7 @@ import (
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/job"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
+	"github.com/traefik/traefik/v3/pkg/provider"
 	traefikv1alpha1 "github.com/traefik/traefik/v3/pkg/provider/kubernetes/crd/traefikio/v1alpha1"
 	"github.com/traefik/traefik/v3/pkg/provider/kubernetes/k8s"
 	"github.com/traefik/traefik/v3/pkg/safe"
@@ -137,6 +138,13 @@ type gatewayListener struct {
 	Attached bool
 
 	EPName string
+
+	// RouterName holds the name of the per-listener parent router. For a
+	// terminated HTTPS listener the parent router owns the listener SNI scope
+	// (HostSNI) and the HTTPRoute-derived routers are attached to it as child
+	// routers (ParentRefs), so the parent is the structural owner(SNI) and the
+	// matching child is owner(Host). See buildHTTPSListenerRouters.
+	RouterName string
 }
 
 type gatewayWithListeners struct {
@@ -324,7 +332,9 @@ func (p *Provider) loadConfigurationFromGateways(ctx context.Context) *dynamic.C
 			Routers:  map[string]*dynamic.UDPRouter{},
 			Services: map[string]*dynamic.UDPService{},
 		},
-		TLS: &dynamic.TLSConfiguration{},
+		TLS: &dynamic.TLSConfiguration{
+			Options: map[string]tls.Options{},
+		},
 	}
 
 	addresses, err := p.gatewayAddresses()
@@ -659,6 +669,11 @@ func (p *Provider) loadGatewayListeners(ctx context.Context, gateway *gatev1.Gat
 					}
 				}
 			}
+
+			// A terminated HTTPS listener gets a parent router owning its SNI scope.
+			if listener.Protocol == gatev1.HTTPSProtocolType && !isTLSPassthrough {
+				p.buildHTTPSListenerRouter(gateway, &gatewayListeners[i], conf)
+			}
 		}
 
 		gatewayListeners[i].Attached = true
@@ -669,6 +684,34 @@ func (p *Provider) loadGatewayListeners(ctx context.Context, gateway *gatev1.Gat
 	}
 
 	return gatewayListeners
+}
+
+// buildHTTPSListenerRouter builds the parent router associated with the listener TLS configuration.
+func (p *Provider) buildHTTPSListenerRouter(gateway *gatev1.Gateway, listener *gatewayListener, conf *dynamic.Configuration) {
+	hostname := string(ptr.Deref(listener.Hostname, ""))
+
+	parentName := provider.Normalize(fmt.Sprintf("%s-%s-%s-ep-%s", gateway.Namespace, gateway.Name, listener.Name, listener.EPName))
+	listener.RouterName = parentName
+
+	listenerTLSOptions := tls.Options{}
+	listenerTLSOptions.SetDefaults()
+
+	conf.TLS.Options[parentName] = listenerTLSOptions
+
+	listenerRouter := &dynamic.Router{
+		Rule:        fmt.Sprintf("Host(%q)", hostname),
+		EntryPoints: []string{listener.EPName},
+		TLS: &dynamic.RouterTLSConfig{
+			Options: parentName,
+		},
+	}
+
+	if hostname == "" {
+		listenerRouter.Rule = "Host(`*`) || PathPrefix(`/`)"
+		listenerRouter.Priority = 1
+	}
+
+	conf.HTTP.Routers[parentName] = listenerRouter
 }
 
 func (p *Provider) makeGatewayStatus(gateway *gatev1.Gateway, listeners []gatewayListener, addresses []gatev1.GatewayStatusAddress) (gatev1.GatewayStatus, []metav1.Condition) {

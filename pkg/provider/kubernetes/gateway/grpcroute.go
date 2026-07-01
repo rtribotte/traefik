@@ -153,7 +153,11 @@ func (p *Provider) loadGRPCRoute(ctx context.Context, gatewayName, gatewayNamesp
 				EntryPoints: []string{listener.EPName},
 			}
 			if listener.Protocol == gatev1.HTTPSProtocolType {
-				router.TLS = &dynamic.RouterTLSConfig{}
+				// On a terminated HTTPS listener the router is a child of the
+				// listener parent router (which owns the SNI scope and TLS); it
+				// only matches the request Host. See buildHTTPSListenerRouters.
+				router.EntryPoints = nil
+				router.ParentRefs = []string{listener.RouterName}
 			}
 
 			var err error
