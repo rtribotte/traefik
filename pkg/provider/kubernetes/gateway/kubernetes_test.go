@@ -199,7 +199,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					ServersTransports: map[string]*dynamic.TCPServersTransport{},
 				},
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
+					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+					},
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
@@ -284,12 +290,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -443,7 +454,12 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					ServersTransports: map[string]*dynamic.TCPServersTransport{},
 				},
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
+					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-websecure": {
+							EntryPoints: []string{"websecure"},
+							Rule:        `Host("foo.example.com")`,
+						},
+					},
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
@@ -527,7 +543,12 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					ServersTransports: map[string]*dynamic.TCPServersTransport{},
 				},
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
+					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-websecure": {
+							EntryPoints: []string{"websecure"},
+							Rule:        `Host("foo.example.com")`,
+						},
+					},
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
@@ -678,12 +699,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -742,12 +768,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "api@internal",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "api@internal",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares:       map[string]*dynamic.Middleware{},
@@ -976,12 +1007,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-68ef33b73c758387c1f3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-68ef33b73c758387c1f3-wrr",
-							Rule:        `(Host("foo.com") || Host("bar.com")) && PathPrefix("/")`,
-							Priority:    9,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-68ef33b73c758387c1f3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-68ef33b73c758387c1f3-wrr",
+							Rule:       `(Host("foo.com") || Host("bar.com")) && PathPrefix("/")`,
+							Priority:   9,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1040,12 +1076,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e9a5f9c29d35e93ffeef": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e9a5f9c29d35e93ffeef-wrr",
-							Rule:        `(Host("foo.com") || HostRegexp("^[a-z0-9-\\.]+\\.bar\\.com$")) && PathPrefix("/")`,
-							Priority:    11,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e9a5f9c29d35e93ffeef": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e9a5f9c29d35e93ffeef-wrr",
+							Rule:       `(Host("foo.com") || HostRegexp("^[a-z0-9-\\.]+\\.bar\\.com$")) && PathPrefix("/")`,
+							Priority:   11,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1104,12 +1145,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-5c1d3f0c956b39f87c03": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-5c1d3f0c956b39f87c03-wrr",
-							Rule:        `(Host("foo.com") || HostRegexp("^[a-z0-9-\\.]+\\.foo\\.com$")) && PathPrefix("/")`,
-							Priority:    11,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-5c1d3f0c956b39f87c03": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-5c1d3f0c956b39f87c03-wrr",
+							Rule:       `(Host("foo.com") || HostRegexp("^[a-z0-9-\\.]+\\.foo\\.com$")) && PathPrefix("/")`,
+							Priority:   11,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1168,19 +1214,24 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100009,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100009,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-9618b798382aa725aa8b": {
-							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && Path("/bir")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-9618b798382aa725aa8b-wrr",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && Path("/bir")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-9618b798382aa725aa8b-wrr",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1266,12 +1317,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1356,6 +1412,11 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -1365,11 +1426,11 @@ func TestLoadHTTPRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-http-ep-web-0-af329269dd38031b03e3": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-http-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							ParentRefs: []string{"default-my-gateway-http-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-http-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-https-ep-websecure-0-af329269dd38031b03e3": {
 							Service:    "httproute-default-http-app-1-gw-default-my-gateway-https-ep-websecure-0-af329269dd38031b03e3-wrr",
@@ -1477,6 +1538,11 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -1486,11 +1552,11 @@ func TestLoadHTTPRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-websecure-0-af329269dd38031b03e3": {
 							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-websecure-0-af329269dd38031b03e3-wrr",
@@ -1593,26 +1659,31 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e6f8c7ac24ba601f1855": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && (Path("/bar") || PathPrefix("/bar/")) && Header("my-header","foo") && Header("my-header2","bar")`,
-							Priority:    10610,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e6f8c7ac24ba601f1855-wrr",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e6f8c7ac24ba601f1855": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && (Path("/bar") || PathPrefix("/bar/")) && Header("my-header","foo") && Header("my-header2","bar")`,
+							Priority:   10610,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-e6f8c7ac24ba601f1855-wrr",
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-2-b69179397f7b7cef15cd": {
-							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && PathRegexp("^/buzz/[0-9]+$")`,
-							Priority:    11408,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-2-b69179397f7b7cef15cd-wrr",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && PathRegexp("^/buzz/[0-9]+$")`,
+							Priority:   11408,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-2-b69179397f7b7cef15cd-wrr",
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-2c055906fe09bc52ae0a": {
-							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && Path("/bar") && Header("my-header","bar")`,
-							Priority:    100109,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-2c055906fe09bc52ae0a-wrr",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && Path("/bar") && Header("my-header","bar")`,
+							Priority:   100109,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-1-2c055906fe09bc52ae0a-wrr",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1725,12 +1796,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-c93669faca743dc125a6": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && (Path("/foo") || PathPrefix("/foo/")) && Method("GET")`,
-							Priority:    11408,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-c93669faca743dc125a6-wrr",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-c93669faca743dc125a6": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && (Path("/foo") || PathPrefix("/foo/")) && Method("GET")`,
+							Priority:   11408,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-c93669faca743dc125a6-wrr",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1789,12 +1865,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fa3e8bf16a9c0d8be299": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Rule:        `Host("foo.com") && (Path("/foo") || PathPrefix("/foo/")) && Query("foo","bar") && QueryRegexp("baz","buz")`,
-							Priority:    10428,
-							RuleSyntax:  "default",
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fa3e8bf16a9c0d8be299-wrr",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fa3e8bf16a9c0d8be299": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Rule:       `Host("foo.com") && (Path("/foo") || PathPrefix("/foo/")) && Query("foo","bar") && QueryRegexp("baz","buz")`,
+							Priority:   10428,
+							RuleSyntax: "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fa3e8bf16a9c0d8be299-wrr",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1853,12 +1934,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983-wrr",
-							Rule:        `Host("foo.com") && Path("/foo")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983-wrr",
+							Rule:       `Host("foo.com") && Path("/foo")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -1917,19 +2003,24 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983-wrr",
-							Rule:        `Host("foo.com") && Path("/foo")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-a5ad2b19cc7661582983-wrr",
+							Rule:       `Host("foo.com") && Path("/foo")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4-wrr",
-							Rule:        `Host("bar.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4-wrr",
+							Rule:       `Host("bar.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2015,12 +2106,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4-wrr",
-							Rule:        `Host("bar.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-95b064ae9808f10000f4-wrr",
+							Rule:       `Host("bar.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2079,8 +2175,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c-wrr",
 							Rule:        `Host("example.org") && PathPrefix("/")`,
 							Priority:    13,
@@ -2152,8 +2253,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c-wrr",
 							Rule:        `Host("example.org") && PathPrefix("/")`,
 							Priority:    13,
@@ -2225,12 +2331,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-129ac65f6c6d641b7fac": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-129ac65f6c6d641b7fac-wrr",
-							Rule:        `Host("foo.com") && (Path("/bar") || PathPrefix("/bar/"))`,
-							Priority:    10408,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-129ac65f6c6d641b7fac": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-129ac65f6c6d641b7fac-wrr",
+							Rule:       `Host("foo.com") && (Path("/bar") || PathPrefix("/bar/"))`,
+							Priority:   10408,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{
@@ -2298,8 +2409,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c-wrr",
 							Rule:        `Host("example.org") && PathPrefix("/")`,
 							Priority:    13,
@@ -2348,8 +2464,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-3be6c6c1abd7a2aec50c-wrr",
 							Rule:        `Host("example.org") && PathPrefix("/")`,
 							Priority:    13,
@@ -2397,8 +2518,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259-wrr",
 							Rule:        `Host("example.com") && (Path("/foo") || PathPrefix("/foo/"))`,
 							RuleSyntax:  "default",
@@ -2468,8 +2594,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259-wrr",
 							Rule:        `Host("example.com") && (Path("/foo") || PathPrefix("/foo/"))`,
 							RuleSyntax:  "default",
@@ -2539,8 +2670,13 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259": {
+							ParentRefs:  []string{"default-my-gateway-http-ep-web"},
 							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-1fc167f18269cb272259-wrr",
 							Rule:        `Host("example.com") && (Path("/foo") || PathPrefix("/foo/"))`,
 							RuleSyntax:  "default",
@@ -2612,12 +2748,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2687,12 +2828,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2757,12 +2903,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2818,12 +2969,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2880,12 +3036,17 @@ func TestLoadHTTPRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -2996,12 +3157,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3048,12 +3214,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3103,12 +3274,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3156,12 +3332,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3210,12 +3391,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3284,12 +3470,17 @@ func TestLoadHTTPRoutes_backendExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-multi-protocols-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-multi-protocols-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-multi-protocols-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-multi-protocols-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3469,12 +3660,17 @@ func TestLoadHTTPRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 							Middlewares: []string{
 								"default-my-first-middleware",
 								"default-my-second-middleware",
@@ -3541,12 +3737,17 @@ func TestLoadHTTPRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 							Middlewares: []string{
 								"default-my-first-middleware",
 								"default-my-second-middleware",
@@ -3611,12 +3812,17 @@ func TestLoadHTTPRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-err-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-err-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3663,12 +3869,17 @@ func TestLoadHTTPRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-err-wrr",
-							Rule:        `Host("foo.com") && Path("/bar")`,
-							Priority:    100008,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3": {
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-af329269dd38031b03e3-err-wrr",
+							Rule:       `Host("foo.com") && Path("/bar")`,
+							Priority:   100008,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3763,12 +3974,17 @@ func TestLoadGRPCRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-wrr",
-							Rule:        `Host("foo.com") && PathPrefix("/")`,
-							Priority:    22,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+							Service:    "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-wrr",
+							Rule:       `Host("foo.com") && PathPrefix("/")`,
+							Priority:   22,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 							Middlewares: []string{
 								"default-my-first-middleware",
 								"default-my-second-middleware",
@@ -3835,12 +4051,17 @@ func TestLoadGRPCRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-wrr",
-							Rule:        `Host("foo.com") && PathPrefix("/")`,
-							Priority:    22,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+							Service:    "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-wrr",
+							Rule:       `Host("foo.com") && PathPrefix("/")`,
+							Priority:   22,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 							Middlewares: []string{
 								"default-my-first-middleware",
 								"default-my-second-middleware",
@@ -3905,12 +4126,17 @@ func TestLoadGRPCRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-err-wrr",
-							Rule:        `Host("foo.com") && PathPrefix("/")`,
-							Priority:    22,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+							Service:    "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-err-wrr",
+							Rule:       `Host("foo.com") && PathPrefix("/")`,
+							Priority:   22,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -3960,12 +4186,17 @@ func TestLoadGRPCRoutes_filterExtensionRef(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+						"default-my-gateway-http-ep-web": {
 							EntryPoints: []string{"web"},
-							Service:     "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-err-wrr",
-							Rule:        `Host("foo.com") && PathPrefix("/")`,
-							Priority:    22,
-							RuleSyntax:  "default",
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+						"grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64": {
+							Service:    "grpcroute-default-grpc-app-1-gw-default-my-gateway-ep-web-0-6a1e0890d475642f7c64-err-wrr",
+							Rule:       `Host("foo.com") && PathPrefix("/")`,
+							Priority:   22,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},
@@ -5229,7 +5460,13 @@ func TestLoadTLSRoutes(t *testing.T) {
 					ServersTransports: map[string]*dynamic.TCPServersTransport{},
 				},
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
+					Routers: map[string]*dynamic.Router{
+						"default-my-mixed-gateway-http-ep-http": {
+							EntryPoints: []string{"http"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
+					},
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
@@ -6538,6 +6775,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -6547,11 +6789,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-default-http-app-1-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -6655,7 +6897,12 @@ func TestLoadMixedRoutes(t *testing.T) {
 					ServersTransports: map[string]*dynamic.TCPServersTransport{},
 				},
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
+					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-http1-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("foo.bar")`,
+						},
+					},
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
@@ -6760,6 +7007,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -6769,11 +7021,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -6980,6 +7232,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -6989,11 +7246,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -7003,11 +7260,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							ParentRefs: []string{"default-my-gateway-https-ep-websecure"},
 						},
 						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -7240,6 +7497,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -7249,11 +7511,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							},
 						},
 						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-bar-http-app-bar-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-bar-http-app-bar-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -7390,6 +7652,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
+						"default-my-gateway-http-ep-web": {
+							EntryPoints: []string{"web"},
+							Rule:        `Host("*")`,
+							Priority:    1,
+						},
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
 							Rule:        `Host("*")`,
@@ -7399,11 +7666,11 @@ func TestLoadMixedRoutes(t *testing.T) {
 							},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900": {
-							EntryPoints: []string{"web"},
-							Service:     "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
-							Rule:        `PathPrefix("/")`,
-							Priority:    2,
-							RuleSyntax:  "default",
+							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-web-0-fc344df89b6d773f1900-wrr",
+							Rule:       `PathPrefix("/")`,
+							Priority:   2,
+							RuleSyntax: "default",
+							ParentRefs: []string{"default-my-gateway-http-ep-web"},
 						},
 						"httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900": {
 							Service:    "httproute-default-http-app-default-gw-default-my-gateway-ep-websecure-0-fc344df89b6d773f1900-wrr",
@@ -7774,12 +8041,16 @@ func TestLoadRoutesWithReferenceGrants(t *testing.T) {
 				},
 				HTTP: &dynamic.HTTPConfiguration{
 					Routers: map[string]*dynamic.Router{
-						"httproute-default-http-app-1-gw-default-my-gateway-ep-http-0-f407383e48e821a834a9": {
+						"default-my-gateway-http-ep-http": {
 							EntryPoints: []string{"http"},
-							Rule:        `Host("foo.example.com") && PathPrefix("/")`,
-							Service:     "httproute-default-http-app-1-gw-default-my-gateway-ep-http-0-f407383e48e821a834a9-wrr",
-							RuleSyntax:  "default",
-							Priority:    17,
+							Rule:        `Host("foo.example.com")`,
+						},
+						"httproute-default-http-app-1-gw-default-my-gateway-ep-http-0-f407383e48e821a834a9": {
+							Rule:       `Host("foo.example.com") && PathPrefix("/")`,
+							Service:    "httproute-default-http-app-1-gw-default-my-gateway-ep-http-0-f407383e48e821a834a9-wrr",
+							RuleSyntax: "default",
+							Priority:   17,
+							ParentRefs: []string{"default-my-gateway-http-ep-http"},
 						},
 					},
 					Middlewares: map[string]*dynamic.Middleware{},

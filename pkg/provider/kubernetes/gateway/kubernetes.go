@@ -666,10 +666,16 @@ func (p *Provider) loadGatewayListeners(ctx context.Context, gateway *gatev1.Gat
 				}
 			}
 
-			// A terminated HTTPS listener gets a parent router owning its SNI scope.
+			// A terminated HTTPS listener gets a parent router owning its SNI scope and TLS configuration.
 			if listener.Protocol == gatev1.HTTPSProtocolType && !isTLSPassthrough {
-				p.buildHTTPSListenerRouter(gateway, &gatewayListeners[i], conf)
+				p.buildListenerRouter(gateway, &gatewayListeners[i], conf)
 			}
+		}
+
+		// A plain HTTP listener also gets a parent router so its HTTPRoute/GRPCRoute
+		// derived routers attach as children, mirroring the HTTPS structure.
+		if listener.Protocol == gatev1.HTTPProtocolType {
+			p.buildListenerRouter(gateway, &gatewayListeners[i], conf)
 		}
 
 		gatewayListeners[i].Attached = true
@@ -682,29 +688,35 @@ func (p *Provider) loadGatewayListeners(ctx context.Context, gateway *gatev1.Gat
 	return gatewayListeners
 }
 
-// buildHTTPSListenerRouter builds the parent router associated with the listener TLS configuration.
-func (p *Provider) buildHTTPSListenerRouter(gateway *gatev1.Gateway, listener *gatewayListener, conf *dynamic.Configuration) {
+// buildListenerRouter builds the per-listener parent router. The HTTPRoute and
+// GRPCRoute derived routers are attached to it as children (ParentRefs), so the
+// parent owns the entrypoint (and, for a terminated HTTPS listener, the TLS
+// configuration) while the children only match the request.
+func (p *Provider) buildListenerRouter(gateway *gatev1.Gateway, listener *gatewayListener, conf *dynamic.Configuration) {
 	hostname := string(ptr.Deref(listener.Hostname, ""))
 
 	parentName := provider.Normalize(fmt.Sprintf("%s-%s-%s-ep-%s", gateway.Namespace, gateway.Name, listener.Name, listener.EPName))
 	listener.RouterName = parentName
 
-	listenerTLSOptions := tls.Options{}
-	listenerTLSOptions.SetDefaults()
-
-	conf.TLS.Options[parentName] = listenerTLSOptions
-
 	listenerRouter := &dynamic.Router{
 		Rule:        fmt.Sprintf("Host(%q)", hostname),
 		EntryPoints: []string{listener.EPName},
-		TLS: &dynamic.RouterTLSConfig{
-			Options: parentName,
-		},
 	}
 
 	if hostname == "" {
 		listenerRouter.Rule = `Host("*")`
 		listenerRouter.Priority = 1
+	}
+
+	if listener.Protocol == gatev1.HTTPSProtocolType {
+		listenerTLSOptions := tls.Options{}
+		listenerTLSOptions.SetDefaults()
+
+		conf.TLS.Options[parentName] = listenerTLSOptions
+
+		listenerRouter.TLS = &dynamic.RouterTLSConfig{
+			Options: parentName,
+		}
 	}
 
 	conf.HTTP.Routers[parentName] = listenerRouter

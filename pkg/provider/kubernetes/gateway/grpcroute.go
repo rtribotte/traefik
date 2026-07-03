@@ -147,17 +147,13 @@ func (p *Provider) loadGRPCRoute(ctx context.Context, gatewayName, gatewayNamesp
 
 			router := dynamic.Router{
 				// "default" stands for the default rule syntax in Traefik v3, i.e. the v3 syntax.
-				RuleSyntax:  "default",
-				Rule:        rule,
-				Priority:    priority,
-				EntryPoints: []string{listener.EPName},
-			}
-			if listener.Protocol == gatev1.HTTPSProtocolType {
-				// On a terminated HTTPS listener the router is a child of the
-				// listener parent router (which owns the SNI scope and TLS); it
-				// only matches the request Host. See buildHTTPSListenerRouters.
-				router.EntryPoints = nil
-				router.ParentRefs = []string{listener.RouterName}
+				RuleSyntax: "default",
+				Rule:       rule,
+				Priority:   priority,
+				// The router is a child of the per-listener parent router (which owns
+				// the entrypoint and, for HTTPS, the TLS configuration); it only
+				// matches the request. See buildListenerRouter.
+				ParentRefs: []string{listener.RouterName},
 			}
 
 			var err error
