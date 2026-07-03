@@ -139,11 +139,7 @@ type gatewayListener struct {
 
 	EPName string
 
-	// RouterName holds the name of the per-listener parent router. For a
-	// terminated HTTPS listener the parent router owns the listener SNI scope
-	// (HostSNI) and the HTTPRoute-derived routers are attached to it as child
-	// routers (ParentRefs), so the parent is the structural owner(SNI) and the
-	// matching child is owner(Host). See buildHTTPSListenerRouters.
+	// RouterName holds the name of the per-listener parent router.
 	RouterName string
 }
 
@@ -707,7 +703,7 @@ func (p *Provider) buildHTTPSListenerRouter(gateway *gatev1.Gateway, listener *g
 	}
 
 	if hostname == "" {
-		listenerRouter.Rule = "Host(`*`) || PathPrefix(`/`)"
+		listenerRouter.Rule = `Host("*")`
 		listenerRouter.Priority = 1
 	}
 

@@ -780,7 +780,7 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -862,7 +862,7 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -1358,7 +1358,7 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-https-ep-websecure",
@@ -1479,7 +1479,7 @@ func TestLoadHTTPRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -2663,7 +2663,9 @@ func TestLoadHTTPRoutes(t *testing.T) {
 						},
 					},
 				},
-				TLS: &dynamic.TLSConfiguration{},
+				TLS: &dynamic.TLSConfiguration{
+					Options: map[string]tls.Options{},
+				},
 			},
 		},
 		{
@@ -6538,7 +6540,7 @@ func TestLoadMixedRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -6760,7 +6762,7 @@ func TestLoadMixedRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -6980,7 +6982,7 @@ func TestLoadMixedRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -7240,7 +7242,7 @@ func TestLoadMixedRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
@@ -7390,7 +7392,7 @@ func TestLoadMixedRoutes(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-my-gateway-https-ep-websecure": {
 							EntryPoints: []string{"websecure"},
-							Rule:        "Host(`*`) || PathPrefix(`/`)",
+							Rule:        `Host("*")`,
 							Priority:    1,
 							TLS: &dynamic.RouterTLSConfig{
 								Options: "default-my-gateway-https-ep-websecure",
