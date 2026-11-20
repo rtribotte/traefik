@@ -15779,7 +15779,7 @@ func TestLoadIngresses(t *testing.T) {
 					Routers: map[string]*dynamic.Router{
 						"default-7-hostless-auth-tls-17-rule-0-path-0": {
 							EntryPoints: []string{"http"},
-							Rule:        `PathPrefix("/")`,
+							Rule:        `PathPrefix("/") && !(Host("auth-tls-verify-client.localhost") || Host("whoami.localhost"))`,
 							RuleSyntax:  "default",
 							Middlewares: []string{"default-7-hostless-auth-tls-17-rule-0-path-0-pass-certificate-to-upstream", "default-7-hostless-auth-tls-17-rule-0-path-0-retry"},
 							Service:     "default-7-hostless-auth-tls-17-whoami-6-80-2",
@@ -15795,7 +15795,7 @@ func TestLoadIngresses(t *testing.T) {
 						},
 						"default-7-hostless-auth-tls-17-rule-0-path-0-tls": {
 							EntryPoints: []string{"https"},
-							Rule:        `PathPrefix("/")`,
+							Rule:        `PathPrefix("/") && !(Host("auth-tls-verify-client.localhost") || Host("whoami.localhost"))`,
 							RuleSyntax:  "default",
 							Middlewares: []string{"default-7-hostless-auth-tls-17-rule-0-path-0-tls-pass-certificate-to-upstream", "default-7-hostless-auth-tls-17-rule-0-path-0-tls-retry"},
 							Service:     "default-7-hostless-auth-tls-17-whoami-6-80-2",

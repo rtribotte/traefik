@@ -125,9 +125,11 @@ func (p *Provider) translate(ctx context.Context, mc *model) *dynamic.Configurat
 		}
 	}
 
+	otherServersRule := otherServersHostRule(mc.Servers)
+
 	for _, srv := range mc.Servers {
 		if srv.AuthTLSError != "" {
-			p.addAuthTLSErrorRouters(ctx, mc, srv, conf)
+			p.addAuthTLSErrorRouters(ctx, srv, otherServersRule, conf)
 			continue
 		}
 
@@ -184,6 +186,10 @@ func (p *Provider) translate(ctx context.Context, mc *model) *dynamic.Configurat
 			}
 
 			rule := buildRule(srv.Hostname, loc)
+			// The ingress-nginx default server only receives the requests for the hosts no other server matches.
+			if srv.Hostname == "" && otherServersRule != "" {
+				rule = strings.TrimPrefix(rule+" && !"+otherServersRule, " && ")
+			}
 
 			var routerKey string
 			if loc.IsIngressDefaultBackend {
@@ -665,7 +671,7 @@ func buildAppRootRouterRule(host string, aliases []string) string {
 // addAuthTLSErrorRouters registers the routers answering 403 to every request for a host whose auth-tls-secret cannot be used.
 // ingress-nginx returns 403 at the server level, before selecting a location, so none of the locations of the host,
 // and none of their middlewares, ever handle a request, over HTTPS as well as over HTTP.
-func (p *Provider) addAuthTLSErrorRouters(ctx context.Context, mc *model, srv *server, conf *dynamic.Configuration) {
+func (p *Provider) addAuthTLSErrorRouters(ctx context.Context, srv *server, otherServersRule string, conf *dynamic.Configuration) {
 	log.Ctx(ctx).Error().Msgf("Host %q answers 403: %s", srv.Hostname, srv.AuthTLSError)
 
 	if _, exists := conf.HTTP.Services[forbiddenServiceName]; !exists {
@@ -693,18 +699,8 @@ func (p *Provider) addAuthTLSErrorRouters(ctx context.Context, mc *model, srv *s
 		rule = `PathPrefix("/")`
 		priority = 1
 
-		var hosts []string
-		for _, other := range mc.Servers {
-			if other.Hostname != "" {
-				hosts = append(hosts, other.Hostname)
-				hosts = append(hosts, serverAliases(other)...)
-			}
-		}
-		slices.Sort(hosts)
-		hosts = slices.Compact(hosts)
-
-		if len(hosts) > 0 {
-			rule += " && !" + buildHostRule(hosts[0], hosts[1:])
+		if otherServersRule != "" {
+			rule += " && !" + otherServersRule
 		}
 	}
 
@@ -740,6 +736,26 @@ func (p *Provider) addAuthTLSErrorRouters(ctx context.Context, mc *model, srv *s
 		tlsOption.SetDefaults()
 		conf.TLS.Options[srv.TLSOptionName] = tlsOption
 	}
+}
+
+// otherServersHostRule builds the rule matching the hostnames and the server-alias hostnames of every server but the default one.
+// It returns an empty string when the default server is the only one.
+func otherServersHostRule(servers map[string]*server) string {
+	var hosts []string
+	for _, srv := range servers {
+		if srv.Hostname != "" {
+			hosts = append(hosts, srv.Hostname)
+			hosts = append(hosts, serverAliases(srv)...)
+		}
+	}
+	if len(hosts) == 0 {
+		return ""
+	}
+
+	slices.Sort(hosts)
+	hosts = slices.Compact(hosts)
+
+	return buildHostRule(hosts[0], hosts[1:])
 }
 
 // serverAliases returns the sorted server-alias hostnames resolved for the locations of a server.
