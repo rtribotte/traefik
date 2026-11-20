@@ -22789,6 +22789,215 @@ func TestLoadIngresses(t *testing.T) {
 			},
 		},
 		{
+			desc: "Canaries sharing a production service on different hosts: the first one applies to both hosts",
+			paths: []string{
+				"services.yml",
+				"ingressclasses.yml",
+				"ingresses/ingresses-with-canaries-sharing-service.yml",
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:  map[string]*dynamic.TCPRouter{},
+					Services: map[string]*dynamic.TCPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers: map[string]*dynamic.Router{
+						"default-7-production-10-rule-0-path-0": {
+							EntryPoints: []string{"http"},
+							Rule:        `Host("first.localhost") && PathPrefix("/")`,
+							RuleSyntax:  "default",
+							Service:     "default-7-production-10-whoami-6-80-2-wrr",
+							Observability: &dynamic.RouterObservabilityConfig{
+								Metadata: &dynamic.ObservabilityMetadata{
+									Ingress: &dynamic.KubernetesMetadata{
+										Kind:      "Ingress",
+										Namespace: "default",
+										Name:      "production",
+									},
+								},
+							},
+							Middlewares: []string{"default-7-production-10-rule-0-path-0-retry"},
+						},
+						"default-7-production-10-rule-0-path-0-tls": {
+							EntryPoints: []string{"https"},
+							Rule:        `Host("first.localhost") && PathPrefix("/")`,
+							RuleSyntax:  "default",
+							Service:     "default-7-production-10-whoami-6-80-2-wrr",
+							Observability: &dynamic.RouterObservabilityConfig{
+								Metadata: &dynamic.ObservabilityMetadata{
+									Ingress: &dynamic.KubernetesMetadata{
+										Kind:      "Ingress",
+										Namespace: "default",
+										Name:      "production",
+									},
+								},
+							},
+							Middlewares: []string{"default-7-production-10-rule-0-path-0-tls-retry"},
+							TLS: &dynamic.RouterTLSConfig{
+								Options: "first.localhost",
+							},
+						},
+						"default-7-production-10-rule-1-path-0": {
+							EntryPoints: []string{"http"},
+							Rule:        `Host("second.localhost") && PathPrefix("/")`,
+							RuleSyntax:  "default",
+							Service:     "default-7-production-10-whoami-6-80-2-wrr",
+							Observability: &dynamic.RouterObservabilityConfig{
+								Metadata: &dynamic.ObservabilityMetadata{
+									Ingress: &dynamic.KubernetesMetadata{
+										Kind:      "Ingress",
+										Namespace: "default",
+										Name:      "production",
+									},
+								},
+							},
+							Middlewares: []string{"default-7-production-10-rule-1-path-0-retry"},
+						},
+						"default-7-production-10-rule-1-path-0-tls": {
+							EntryPoints: []string{"https"},
+							Rule:        `Host("second.localhost") && PathPrefix("/")`,
+							RuleSyntax:  "default",
+							Service:     "default-7-production-10-whoami-6-80-2-wrr",
+							Observability: &dynamic.RouterObservabilityConfig{
+								Metadata: &dynamic.ObservabilityMetadata{
+									Ingress: &dynamic.KubernetesMetadata{
+										Kind:      "Ingress",
+										Namespace: "default",
+										Name:      "production",
+									},
+								},
+							},
+							Middlewares: []string{"default-7-production-10-rule-1-path-0-tls-retry"},
+							TLS: &dynamic.RouterTLSConfig{
+								Options: "second.localhost",
+							},
+						},
+					},
+					Middlewares: map[string]*dynamic.Middleware{
+						"default-7-production-10-rule-0-path-0-retry": {
+							Retry: &dynamic.Retry{
+								Attempts:            3,
+								MaxRequestBodyBytes: new(defaultProxyBodySize),
+							},
+						},
+						"default-7-production-10-rule-0-path-0-tls-retry": {
+							Retry: &dynamic.Retry{
+								Attempts:            3,
+								MaxRequestBodyBytes: new(defaultProxyBodySize),
+							},
+						},
+						"default-7-production-10-rule-1-path-0-retry": {
+							Retry: &dynamic.Retry{
+								Attempts:            3,
+								MaxRequestBodyBytes: new(defaultProxyBodySize),
+							},
+						},
+						"default-7-production-10-rule-1-path-0-tls-retry": {
+							Retry: &dynamic.Retry{
+								Attempts:            3,
+								MaxRequestBodyBytes: new(defaultProxyBodySize),
+							},
+						},
+					},
+					Services: map[string]*dynamic.Service{
+						"unavailable-service": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Strategy:       "wrr",
+								PassHostHeader: new(true),
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: dynamic.DefaultFlushInterval,
+								},
+							},
+						},
+						"default-7-production-10-whoami-6-80-2": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers: []dynamic.Server{
+									{
+										URL: "http://10.10.0.1:80",
+									},
+									{
+										URL: "http://10.10.0.2:80",
+									},
+								},
+								Strategy:         "wrr",
+								PassHostHeader:   new(true),
+								ServersTransport: "default-7-production-10",
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: dynamic.DefaultFlushInterval,
+								},
+							},
+							Observability: &dynamic.ServiceObservabilityConfig{
+								Metadata: &dynamic.ServiceObservabilityMetadata{
+									Kubernetes: &dynamic.KubernetesServiceMetadata{
+										Namespace: "default",
+										Name:      "whoami",
+										Port:      "80",
+									},
+								},
+							},
+						},
+						"default-7-production-10-whoami-6-80-2-canary": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers: []dynamic.Server{
+									{
+										URL: "http://10.10.0.7:80",
+									},
+									{
+										URL: "http://10.10.0.8:80",
+									},
+								},
+								Strategy:         "wrr",
+								PassHostHeader:   new(true),
+								ServersTransport: "default-7-production-10",
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: dynamic.DefaultFlushInterval,
+								},
+							},
+							Observability: &dynamic.ServiceObservabilityConfig{
+								Metadata: &dynamic.ServiceObservabilityMetadata{
+									Kubernetes: &dynamic.KubernetesServiceMetadata{
+										Namespace: "default",
+										Name:      "canary",
+										Port:      "80",
+									},
+								},
+							},
+						},
+						"default-7-production-10-whoami-6-80-2-wrr": {
+							Weighted: &dynamic.WeightedRoundRobin{
+								Services: []dynamic.WRRService{
+									{
+										Name:   "default-7-production-10-whoami-6-80-2",
+										Weight: new(90),
+									},
+									{
+										Name:   "default-7-production-10-whoami-6-80-2-canary",
+										Weight: new(10),
+									},
+								},
+							},
+						},
+					},
+					ServersTransports: map[string]*dynamic.ServersTransport{
+						"default-7-production-10": {
+							ForwardingTimeouts: &dynamic.ForwardingTimeouts{
+								DialTimeout:     ptypes.Duration(60 * time.Second),
+								ReadTimeout:     ptypes.Duration(60 * time.Second),
+								WriteTimeout:    ptypes.Duration(60 * time.Second),
+								IdleConnTimeout: ptypes.Duration(60 * time.Second),
+							},
+						},
+					},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Options: map[string]tls.Options{
+						"first.localhost":  hostTLSOption(),
+						"second.localhost": hostTLSOption(),
+					},
+				},
+			},
+		},
+		{
 			desc: "Canary with header",
 			paths: []string{
 				"services.yml",

@@ -253,6 +253,15 @@ func (p *Provider) build(ctx context.Context, ingressClasses []*netv1.IngressCla
 
 				alreadyMatchedPaths[pathKey] = struct{}{}
 
+				// ingress-nginx attaches the canary to the production service, and only uses the first one attached:
+				// the canary applies to every path routing to that service, whichever host declares it.
+				primaryKey := canaryPrimaryKey(canaryIngress.Namespace, *prodIngressPath.Backend.Service)
+				if _, ok := canaryConfigs[primaryKey]; ok {
+					logger.Warn().Msgf("A canary ingress is already configured for service %s, ignoring canary for host=%s path=%s", prodSvc.Name, rule.Host, pa.Path)
+					markProcessedIngress(canaryIngress.Ingress)
+					continue
+				}
+
 				weightTotal := max(ptr.Deref(canaryIngress.config.CanaryWeightTotal, 0), 100)
 				weight := min(max(ptr.Deref(canaryIngress.config.CanaryWeight, 0), 0), weightTotal)
 
@@ -268,8 +277,6 @@ func (p *Provider) build(ctx context.Context, ingressClasses []*netv1.IngressCla
 					}
 				}
 
-				// Primary backend key for the original ingress path.
-				primaryKey := canaryPrimaryKey(canaryIngress.Namespace, *prodIngressPath.Backend.Service)
 				canaryConfigs[primaryKey] = canaryConfig{
 					BackendName:   canaryBackendName,
 					Weight:        weight,
