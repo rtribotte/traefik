@@ -14,18 +14,18 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otellogrus"
 )
 
-// Handler writes the TCP access logs, in the JSON format, and exports them with OTLP when configured.
+// Logger writes the TCP access logs, in the JSON format, and exports them with OTLP when configured.
 // It is shared by the access log middlewares of all the TCP routers.
-type Handler struct {
-	config *otypes.TCPAccessLog
-	logger *logrus.Logger
+type Logger struct {
+	config       *otypes.TCPAccessLog
+	logrusLogger *logrus.Logger
 
 	// The regular output is discarded when only OTLP is used, even after a rotation.
 	discardOutput bool
 
-	// mu protects the file, which is replaced on rotation.
-	mu   sync.Mutex
-	file io.WriteCloser
+	// muFile protects the file, which is replaced on rotation.
+	muFile sync.Mutex
+	file   io.WriteCloser
 
 	// The log lines are only buffered when the buffering size is greater than zero.
 	logChan chan logLine
@@ -37,8 +37,8 @@ type logLine struct {
 	time   time.Time
 }
 
-// NewHandler creates a new TCP access log Handler.
-func NewHandler(ctx context.Context, config *otypes.TCPAccessLog) (*Handler, error) {
+// NewLogger creates a new TCP access Logger.
+func NewLogger(ctx context.Context, config *otypes.TCPAccessLog) (*Logger, error) {
 	var file io.WriteCloser = noopCloser{os.Stdout}
 	if len(config.FilePath) > 0 {
 		f, err := openFile(config.FilePath)
@@ -48,18 +48,18 @@ func NewHandler(ctx context.Context, config *otypes.TCPAccessLog) (*Handler, err
 		file = f
 	}
 
-	// The zero value of the logger mutex makes the writes thread-safe.
-	logger := &logrus.Logger{
+	// The zero value of the logrus logger mutex makes the writes thread-safe.
+	logrusLogger := &logrus.Logger{
 		Out:       file,
 		Formatter: &logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano},
 		Hooks:     make(logrus.LevelHooks),
 		Level:     logrus.InfoLevel,
 	}
 
-	handler := &Handler{
-		config: config,
-		logger: logger,
-		file:   file,
+	logger := &Logger{
+		config:       config,
+		logrusLogger: logrusLogger,
+		file:         file,
 	}
 
 	if config.OTLP != nil {
@@ -69,84 +69,84 @@ func NewHandler(ctx context.Context, config *otypes.TCPAccessLog) (*Handler, err
 			return nil, fmt.Errorf("setting up OpenTelemetry logger provider: %w", err)
 		}
 
-		logger.Hooks.Add(otellogrus.NewHook("traefik", otellogrus.WithLoggerProvider(otelLoggerProvider)))
+		logrusLogger.Hooks.Add(otellogrus.NewHook("traefik", otellogrus.WithLoggerProvider(otelLoggerProvider)))
 		if !config.DualOutput {
-			handler.discardOutput = true
-			logger.Out = io.Discard
+			logger.discardOutput = true
+			logrusLogger.Out = io.Discard
 		}
 	}
 
 	if config.BufferingSize > 0 {
-		handler.logChan = make(chan logLine, config.BufferingSize)
-		handler.wg.Go(func() {
-			for line := range handler.logChan {
-				handler.write(line)
+		logger.logChan = make(chan logLine, config.BufferingSize)
+		logger.wg.Go(func() {
+			for line := range logger.logChan {
+				logger.write(line)
 			}
 		})
 	}
 
-	return handler, nil
+	return logger, nil
 }
 
 // Close writes the buffered log lines, and closes the log file.
-func (h *Handler) Close() error {
-	if h.logChan != nil {
-		close(h.logChan)
-		h.wg.Wait()
+func (l *Logger) Close() error {
+	if l.logChan != nil {
+		close(l.logChan)
+		l.wg.Wait()
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	l.muFile.Lock()
+	defer l.muFile.Unlock()
 
-	return h.file.Close()
+	return l.file.Close()
 }
 
 // Rotate closes and reopens the log file to allow for rotation by an external source.
-func (h *Handler) Rotate() error {
-	if h.config.FilePath == "" {
+func (l *Logger) Rotate() error {
+	if l.config.FilePath == "" {
 		return nil
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	l.muFile.Lock()
+	defer l.muFile.Unlock()
 
-	file, err := openFile(h.config.FilePath)
+	file, err := openFile(l.config.FilePath)
 	if err != nil {
 		return err
 	}
 
-	if !h.discardOutput {
-		h.logger.SetOutput(file)
+	if !l.discardOutput {
+		l.logrusLogger.SetOutput(file)
 	}
 
-	_ = h.file.Close()
-	h.file = file
+	_ = l.file.Close()
+	l.file = file
 
 	return nil
 }
 
-func (h *Handler) log(fields logrus.Fields) {
+func (l *Logger) log(fields logrus.Fields) {
 	// The line is timestamped when the connection ends, even when it is written later on.
 	line := logLine{fields: fields, time: time.Now()}
 
-	if h.logChan != nil {
-		h.logChan <- line
+	if l.logChan != nil {
+		l.logChan <- line
 		return
 	}
 
-	h.write(line)
+	l.write(line)
 }
 
-func (h *Handler) write(line logLine) {
-	entry := h.logger.WithFields(line.fields).WithTime(line.time)
+func (l *Logger) write(line logLine) {
+	entry := l.logrusLogger.WithFields(line.fields).WithTime(line.time)
 
 	var message string
-	if h.config.OTLP != nil {
+	if l.config.OTLP != nil {
 		// As for the HTTP access logs, the OTLP log body is the formatted log line.
 		// The formatter reads the entry level, which logrus only sets when the log method is called.
 		entry.Level = logrus.InfoLevel
 
-		mBytes, err := h.logger.Formatter.Format(entry)
+		mBytes, err := l.logrusLogger.Formatter.Format(entry)
 		if err != nil {
 			message = fmt.Sprintf("Failed to format TCP access log entry: %v", err)
 		} else {
@@ -171,7 +171,7 @@ func openFile(filePath string) (*os.File, error) {
 	return file, nil
 }
 
-// noopCloser keeps the standard output open when the handler is closed.
+// noopCloser keeps the standard output open when the logger is closed.
 type noopCloser struct {
 	*os.File
 }

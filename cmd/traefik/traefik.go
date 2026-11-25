@@ -614,18 +614,18 @@ func setupAccessLog(ctx context.Context, conf *otypes.AccessLog) *accesslog.Hand
 	return accessLoggerMiddleware
 }
 
-func setupTCPAccessLog(ctx context.Context, conf *otypes.TCPAccessLog) *tcpaccesslog.Handler {
+func setupTCPAccessLog(ctx context.Context, conf *otypes.TCPAccessLog) *tcpaccesslog.Logger {
 	if conf == nil {
 		return nil
 	}
 
-	handler, err := tcpaccesslog.NewHandler(ctx, conf)
+	logger, err := tcpaccesslog.NewLogger(ctx, conf)
 	if err != nil {
 		log.Warn().Err(err).Msg("Unable to create TCP access logger")
 		return nil
 	}
 
-	return handler
+	return logger
 }
 
 func setupTracing(ctx context.Context, conf *static.Tracing) (*tracing.Tracer, io.Closer) {

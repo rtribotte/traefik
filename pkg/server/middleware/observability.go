@@ -24,25 +24,25 @@ import (
 
 // ObservabilityMgr is a manager for observability (AccessLogs, Metrics and Tracing) enablement.
 type ObservabilityMgr struct {
-	config                    static.Configuration
-	accessLoggerMiddleware    *accesslog.Handler
-	tcpAccessLoggerMiddleware *tcpaccesslog.Handler
-	metricsRegistry           metrics.Registry
-	semConvMetricRegistry     *metrics.SemConvMetricsRegistry
-	tracer                    *tracing.Tracer
-	tracerCloser              io.Closer
+	config                 static.Configuration
+	accessLoggerMiddleware *accesslog.Handler
+	tcpAccessLogger        *tcpaccesslog.Logger
+	metricsRegistry        metrics.Registry
+	semConvMetricRegistry  *metrics.SemConvMetricsRegistry
+	tracer                 *tracing.Tracer
+	tracerCloser           io.Closer
 }
 
 // NewObservabilityMgr creates a new ObservabilityMgr.
-func NewObservabilityMgr(config static.Configuration, metricsRegistry metrics.Registry, semConvMetricRegistry *metrics.SemConvMetricsRegistry, accessLoggerMiddleware *accesslog.Handler, tcpAccessLoggerMiddleware *tcpaccesslog.Handler, tracer *tracing.Tracer, tracerCloser io.Closer) *ObservabilityMgr {
+func NewObservabilityMgr(config static.Configuration, metricsRegistry metrics.Registry, semConvMetricRegistry *metrics.SemConvMetricsRegistry, accessLoggerMiddleware *accesslog.Handler, tcpAccessLogger *tcpaccesslog.Logger, tracer *tracing.Tracer, tracerCloser io.Closer) *ObservabilityMgr {
 	return &ObservabilityMgr{
-		config:                    config,
-		metricsRegistry:           metricsRegistry,
-		semConvMetricRegistry:     semConvMetricRegistry,
-		accessLoggerMiddleware:    accessLoggerMiddleware,
-		tcpAccessLoggerMiddleware: tcpAccessLoggerMiddleware,
-		tracer:                    tracer,
-		tracerCloser:              tracerCloser,
+		config:                 config,
+		metricsRegistry:        metricsRegistry,
+		semConvMetricRegistry:  semConvMetricRegistry,
+		accessLoggerMiddleware: accessLoggerMiddleware,
+		tcpAccessLogger:        tcpAccessLogger,
+		tracer:                 tracer,
+		tracerCloser:           tracerCloser,
 	}
 }
 
@@ -112,14 +112,14 @@ func (o *ObservabilityMgr) SemConvMetricsRegistry() *metrics.SemConvMetricsRegis
 	return o.semConvMetricRegistry
 }
 
-// TCPAccessLogHandler is an accessor to the TCP access log handler.
+// TCPAccessLogger is an accessor to the TCP access logger.
 // It is nil when the TCP access logs are disabled.
-func (o *ObservabilityMgr) TCPAccessLogHandler() *tcpaccesslog.Handler {
+func (o *ObservabilityMgr) TCPAccessLogger() *tcpaccesslog.Logger {
 	if o == nil {
 		return nil
 	}
 
-	return o.tcpAccessLoggerMiddleware
+	return o.tcpAccessLogger
 }
 
 // Close closes the accessLogger and tracer.
@@ -134,8 +134,8 @@ func (o *ObservabilityMgr) Close() {
 		}
 	}
 
-	if o.tcpAccessLoggerMiddleware != nil {
-		if err := o.tcpAccessLoggerMiddleware.Close(); err != nil {
+	if o.tcpAccessLogger != nil {
+		if err := o.tcpAccessLogger.Close(); err != nil {
 			log.Error().Err(err).Msg("Could not close the TCP access log file")
 		}
 	}
@@ -156,8 +156,8 @@ func (o *ObservabilityMgr) RotateAccessLogs() error {
 		}
 	}
 
-	if o.tcpAccessLoggerMiddleware != nil {
-		if err := o.tcpAccessLoggerMiddleware.Rotate(); err != nil {
+	if o.tcpAccessLogger != nil {
+		if err := o.tcpAccessLogger.Rotate(); err != nil {
 			errs = append(errs, fmt.Errorf("rotating the TCP access log file: %w", err))
 		}
 	}

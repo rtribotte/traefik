@@ -29,7 +29,7 @@ import (
 func TestRouterAccessLogHandler(t *testing.T) {
 	testCases := []struct {
 		desc    string
-		handler *Handler
+		logger  *Logger
 		tls     *dynamic.RouterTCPTLSConfig
 		wrapped bool
 		tlsMode string
@@ -39,20 +39,20 @@ func TestRouterAccessLogHandler(t *testing.T) {
 		},
 		{
 			desc:    "without TLS",
-			handler: &Handler{},
+			logger:  &Logger{},
 			wrapped: true,
 			tlsMode: "none",
 		},
 		{
 			desc:    "TLS terminated",
-			handler: &Handler{},
+			logger:  &Logger{},
 			tls:     &dynamic.RouterTCPTLSConfig{},
 			wrapped: true,
 			tlsMode: "terminated",
 		},
 		{
 			desc:    "TLS passthrough",
-			handler: &Handler{},
+			logger:  &Logger{},
 			tls:     &dynamic.RouterTCPTLSConfig{Passthrough: true},
 			wrapped: true,
 			tlsMode: "passthrough",
@@ -65,7 +65,7 @@ func TestRouterAccessLogHandler(t *testing.T) {
 
 			next := tcp.HandlerFunc(func(conn tcp.WriteCloser) {})
 
-			handler, err := RouterAccessLogHandler(t.Context(), test.handler, "web", "router@file", "service@file", test.tls)(next)
+			handler, err := RouterAccessLogHandler(t.Context(), test.logger, "web", "router@file", "service@file", test.tls)(next)
 			require.NoError(t, err)
 
 			middleware, wrapped := handler.(*accessLogMiddleware)
@@ -79,7 +79,7 @@ func TestRouterAccessLogHandler(t *testing.T) {
 }
 
 func TestAccessLogMiddleware_ServeTCP(t *testing.T) {
-	handler, logFile := newHandler(t)
+	logger, logFile := newLogger(t)
 
 	serverConn, clientConn := net.Pipe()
 	t.Cleanup(func() {
@@ -100,7 +100,7 @@ func TestAccessLogMiddleware_ServeTCP(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	middleware, err := RouterAccessLogHandler(t.Context(), handler, "web", "router@file", "service@file", nil)(next)
+	middleware, err := RouterAccessLogHandler(t.Context(), logger, "web", "router@file", "service@file", nil)(next)
 	require.NoError(t, err)
 
 	middleware.ServeTCP(pipeConn{Conn: serverConn})
@@ -153,7 +153,7 @@ func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			handler, logFile := newHandler(t)
+			logger, logFile := newLogger(t)
 
 			serverConn, clientConn := net.Pipe()
 			t.Cleanup(func() {
@@ -176,7 +176,7 @@ func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
 				assert.NoError(t, err)
 			})
 
-			middleware, err := RouterAccessLogHandler(t.Context(), handler, "websecure", "router@file", "service@file", &dynamic.RouterTCPTLSConfig{})(next)
+			middleware, err := RouterAccessLogHandler(t.Context(), logger, "websecure", "router@file", "service@file", &dynamic.RouterTCPTLSConfig{})(next)
 			require.NoError(t, err)
 
 			middleware.ServeTCP(tls.Server(serverConn, &tls.Config{
@@ -292,7 +292,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 
 			logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-			handler, err := NewHandler(t.Context(), &otypes.TCPAccessLog{
+			logger, err := NewLogger(t.Context(), &otypes.TCPAccessLog{
 				FilePath:   logFile,
 				DualOutput: test.dualOutput,
 				OTLP: &otypes.OTelLog{
@@ -301,7 +301,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 				},
 			})
 			require.NoError(t, err)
-			t.Cleanup(func() { require.NoError(t, handler.Close()) })
+			t.Cleanup(func() { require.NoError(t, logger.Close()) })
 
 			serverConn, clientConn := net.Pipe()
 			t.Cleanup(func() {
@@ -318,7 +318,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 				assert.NoError(t, err)
 			})
 
-			middleware, err := RouterAccessLogHandler(t.Context(), handler, "web", "router@file", "service@file", nil)(next)
+			middleware, err := RouterAccessLogHandler(t.Context(), logger, "web", "router@file", "service@file", nil)(next)
 			require.NoError(t, err)
 
 			middleware.ServeTCP(pipeConn{Conn: serverConn})
@@ -339,17 +339,17 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 	}
 }
 
-func newHandler(t *testing.T) (*Handler, string) {
+func newLogger(t *testing.T) (*Logger, string) {
 	t.Helper()
 
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-	handler, err := NewHandler(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
+	logger, err := NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 
-	t.Cleanup(func() { require.NoError(t, handler.Close()) })
+	t.Cleanup(func() { require.NoError(t, logger.Close()) })
 
-	return handler, logFile
+	return logger, logFile
 }
 
 func readEntries(t *testing.T, logFile string) []map[string]any {

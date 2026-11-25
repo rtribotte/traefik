@@ -55,8 +55,8 @@ type connectionStater interface {
 }
 
 type accessLogMiddleware struct {
-	next    tcp.Handler
-	handler *Handler
+	next   tcp.Handler
+	logger *Logger
 
 	entryPointName string
 	routerName     string
@@ -65,10 +65,10 @@ type accessLogMiddleware struct {
 }
 
 // RouterAccessLogHandler returns the access log TCP router handler.
-// It is idempotent when the TCP access logs are disabled, i.e. when the given handler is nil.
-func RouterAccessLogHandler(ctx context.Context, handler *Handler, entryPointName, routerName, serviceName string, tlsConfig *dynamic.RouterTCPTLSConfig) tcp.Constructor {
+// It is idempotent when the TCP access logs are disabled, i.e. when the given logger is nil.
+func RouterAccessLogHandler(ctx context.Context, logger *Logger, entryPointName, routerName, serviceName string, tlsConfig *dynamic.RouterTCPTLSConfig) tcp.Constructor {
 	return func(next tcp.Handler) (tcp.Handler, error) {
-		if handler == nil {
+		if logger == nil {
 			return next, nil
 		}
 
@@ -85,7 +85,7 @@ func RouterAccessLogHandler(ctx context.Context, handler *Handler, entryPointNam
 
 		return &accessLogMiddleware{
 			next:           next,
-			handler:        handler,
+			logger:         logger,
 			entryPointName: entryPointName,
 			routerName:     routerName,
 			serviceName:    serviceName,
@@ -120,7 +120,7 @@ func (a *accessLogMiddleware) ServeTCP(conn tcp.WriteCloser) {
 		addTLSFields(fields, stater.ConnectionState())
 	}
 
-	a.handler.log(fields)
+	a.logger.log(fields)
 }
 
 // addAddressFields adds the address and the port of the given network address.
