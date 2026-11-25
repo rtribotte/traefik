@@ -475,6 +475,47 @@ tcpAccessLog:
 | Field      | Description    | Default | Required |
 |:-----------|:--------------------------|:--------|:---------|
 | <a id="opt-tcpAccessLog-filePath" href="#opt-tcpAccessLog-filePath" title="#opt-tcpAccessLog-filePath">`tcpAccessLog.filePath`</a> | By default, the TCP access logs are written to the standard output.<br />You can configure a file path instead using the `filePath` option. |  | No      |
+| <a id="opt-tcpAccessLog-dualOutput" href="#opt-tcpAccessLog-dualOutput" title="#opt-tcpAccessLog-dualOutput">`tcpAccessLog.dualOutput`</a> | Force Stdio logging, even if OTLP is configured. By default, Stdio logging is disabled when OTLP is enabled for performance reasons. | false      | No      |
+
+### OpenTelemetry
+
+Traefik supports OpenTelemetry for TCP access logs.
+As for the HTTP access logs, it requires the [`experimental.otlpLogs`](#opentelemetry_1) option to be enabled.
+
+!!! warning
+    This is an experimental feature.
+
+The `tcpAccessLog.otlp` options are the same as the [`accessLog.otlp`](#opt-accesslog-otlp-serviceName) ones.
+Each field is sent as an attribute of the OpenTelemetry log record.
+
+```yaml tab="File (YAML)"
+experimental:
+  otlpLogs: true
+
+tcpAccessLog:
+  # Keep Stdio logs alongside OTEL logging
+  dualOutput: true
+  otlp:
+    http:
+      endpoint: https://collector:4318/v1/logs
+```
+
+```toml tab="File (TOML)"
+[experimental]
+  otlpLogs = true
+
+[tcpAccessLog]
+  dualOutput = true
+
+[tcpAccessLog.otlp]
+  http.endpoint = "https://collector:4318/v1/logs"
+```
+
+```sh tab="CLI"
+--experimental.otlpLogs=true
+--tcpaccesslog.dualoutput=true
+--tcpaccesslog.otlp.http.endpoint=https://collector:4318/v1/logs
+```
 
 ### Fields
 

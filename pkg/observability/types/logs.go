@@ -77,7 +77,10 @@ func (l *AccessLog) SetDefaults() {
 // TCPAccessLog holds the configuration settings for the TCP access logger (middlewares/tcp/accesslog).
 // The TCP access logs are always written in the JSON format.
 type TCPAccessLog struct {
-	FilePath string `description:"TCP access log file path. Stdout is used when omitted or empty." json:"filePath,omitempty" toml:"filePath,omitempty" yaml:"filePath,omitempty"`
+	FilePath   string `description:"TCP access log file path. Stdout is used when omitted or empty." json:"filePath,omitempty" toml:"filePath,omitempty" yaml:"filePath,omitempty"`
+	DualOutput bool   `description:"Enables TCP access log output alongside OTLP. By default, this output is disabled when OTLP is configured." json:"dualOutput,omitempty" toml:"dualOutput,omitempty" yaml:"dualOutput,omitempty" export:"true"`
+
+	OTLP *OTelLog `description:"Settings for OpenTelemetry." json:"otlp,omitempty" toml:"otlp,omitempty" yaml:"otlp,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
 }
 
 // AccessLogFilters holds filters configuration.

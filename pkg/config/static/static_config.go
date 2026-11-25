@@ -542,6 +542,16 @@ func (c *Configuration) ValidateConfiguration() error {
 		}
 	}
 
+	if c.TCPAccessLog != nil && c.TCPAccessLog.OTLP != nil {
+		if c.Experimental == nil || !c.Experimental.OTLPLogs {
+			return errors.New("the experimental OTLPLogs feature must be enabled to use OTLP TCP access logging")
+		}
+
+		if c.TCPAccessLog.OTLP.GRPC != nil && c.TCPAccessLog.OTLP.GRPC.TLS != nil && c.TCPAccessLog.OTLP.GRPC.Insecure {
+			return errors.New("TCP access logs OTLP GRPC: TLS and Insecure options are mutually exclusive")
+		}
+	}
+
 	if c.Log != nil && c.Log.OTLP != nil {
 		if c.Experimental == nil || !c.Experimental.OTLPLogs {
 			return errors.New("the experimental OTLPLogs feature must be enabled to use OTLP logging")

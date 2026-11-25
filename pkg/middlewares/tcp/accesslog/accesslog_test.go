@@ -2,13 +2,17 @@ package accesslog
 
 import (
 	"bufio"
+	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,6 +20,7 @@ import (
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	"github.com/traefik/traefik/v3/pkg/tls/generate"
+	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 )
 
 func TestRouterAccessLogHandler(t *testing.T) {
@@ -208,12 +213,99 @@ func TestAddAddressFields(t *testing.T) {
 	}
 }
 
+func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		dualOutput  bool
+		fileEntries int
+	}{
+		{
+			desc: "OTLP only",
+		},
+		{
+			desc:        "OTLP with dual output",
+			dualOutput:  true,
+			fileEntries: 1,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			logCh := make(chan string, 1)
+			collector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gzr, err := gzip.NewReader(r.Body)
+				require.NoError(t, err)
+
+				body, err := io.ReadAll(gzr)
+				require.NoError(t, err)
+
+				req := plogotlp.NewExportRequest()
+				require.NoError(t, req.UnmarshalProto(body))
+
+				marshalledReq, err := json.Marshal(req)
+				require.NoError(t, err)
+
+				logCh <- string(marshalledReq)
+			}))
+			t.Cleanup(collector.Close)
+
+			logFile := filepath.Join(t.TempDir(), "tcp-access.log")
+
+			handler, err := NewHandler(t.Context(), &otypes.TCPAccessLog{
+				FilePath:   logFile,
+				DualOutput: test.dualOutput,
+				OTLP: &otypes.OTelLog{
+					ServiceName: "test",
+					HTTP:        &otypes.OTelHTTP{Endpoint: collector.URL},
+				},
+			})
+			require.NoError(t, err)
+			t.Cleanup(func() { _ = handler.file.Close() })
+
+			serverConn, clientConn := net.Pipe()
+			t.Cleanup(func() {
+				_ = serverConn.Close()
+				_ = clientConn.Close()
+			})
+
+			go func() {
+				_, _ = clientConn.Write([]byte("ping"))
+			}()
+
+			next := tcp.HandlerFunc(func(conn tcp.WriteCloser) {
+				_, err := io.ReadFull(conn, make([]byte, 4))
+				assert.NoError(t, err)
+			})
+
+			middleware, err := RouterAccessLogHandler(t.Context(), handler, "web", "router@file", "service@file", nil)(next)
+			require.NoError(t, err)
+
+			middleware.ServeTCP(pipeConn{Conn: serverConn})
+
+			select {
+			case <-time.After(5 * time.Second):
+				t.Fatal("TCP access log not exported")
+
+			case log := <-logCh:
+				assert.Regexp(t, `{"key":"service.name","value":{"stringValue":"test"}}`, log)
+				assert.Regexp(t, `{"key":"traefik.router.name","value":{"stringValue":"router@file"}}`, log)
+				assert.Regexp(t, `{"key":"traefik.connection.received_bytes","value":{"intValue":"4"}}`, log)
+				assert.NotRegexp(t, `"body":{"stringValue":""}`, log)
+			}
+
+			assert.Len(t, readEntries(t, logFile), test.fileEntries)
+		})
+	}
+}
+
 func newHandler(t *testing.T) (*Handler, string) {
 	t.Helper()
 
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-	handler, err := NewHandler(&otypes.TCPAccessLog{FilePath: logFile})
+	handler, err := NewHandler(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 
 	t.Cleanup(func() { _ = handler.file.Close() })

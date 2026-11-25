@@ -222,7 +222,7 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 	}
 	metricsRegistry := metrics.NewMultiRegistry(metricRegistries)
 	accessLog := setupAccessLog(ctx, staticConfiguration.AccessLog)
-	tcpAccessLog := setupTCPAccessLog(staticConfiguration.TCPAccessLog)
+	tcpAccessLog := setupTCPAccessLog(ctx, staticConfiguration.TCPAccessLog)
 	tracer, tracerCloser := setupTracing(ctx, staticConfiguration.Tracing)
 	observabilityMgr := middleware.NewObservabilityMgr(*staticConfiguration, metricsRegistry, semConvMetricRegistry, accessLog, tcpAccessLog, tracer, tracerCloser)
 
@@ -614,12 +614,12 @@ func setupAccessLog(ctx context.Context, conf *otypes.AccessLog) *accesslog.Hand
 	return accessLoggerMiddleware
 }
 
-func setupTCPAccessLog(conf *otypes.TCPAccessLog) *tcpaccesslog.Handler {
+func setupTCPAccessLog(ctx context.Context, conf *otypes.TCPAccessLog) *tcpaccesslog.Handler {
 	if conf == nil {
 		return nil
 	}
 
-	handler, err := tcpaccesslog.NewHandler(conf)
+	handler, err := tcpaccesslog.NewHandler(ctx, conf)
 	if err != nil {
 		log.Warn().Err(err).Msg("Unable to create TCP access logger")
 		return nil
