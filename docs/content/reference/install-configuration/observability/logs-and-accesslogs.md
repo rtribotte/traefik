@@ -538,6 +538,6 @@ tcpAccessLog:
 | <a id="opt-server-address" href="#opt-server-address" title="#opt-server-address">`server.address`</a> | The server name sent by the client (SNI), when the TLS is terminated by Traefik. |
 | <a id="opt-tls-protocol-version" href="#opt-tls-protocol-version" title="#opt-tls-protocol-version">`tls.protocol.version`</a> | The TLS version, when the TLS is terminated by Traefik. |
 | <a id="opt-tls-cipher" href="#opt-tls-cipher" title="#opt-tls-cipher">`tls.cipher`</a> | The TLS cipher suite, when the TLS is terminated by Traefik. |
-| <a id="opt-tls-client-certificate" href="#opt-tls-client-certificate" title="#opt-tls-client-certificate">`tls.client.certificate`</a> | The PEM-encoded client certificate, when the TLS is terminated by Traefik and the client provides one. |
+| <a id="opt-tls-client-subject" href="#opt-tls-client-subject" title="#opt-tls-client-subject">`tls.client.subject`</a> | The subject of the client certificate, when the TLS is terminated by Traefik and the client provides one. |
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}

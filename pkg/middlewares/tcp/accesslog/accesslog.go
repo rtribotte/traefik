@@ -1,10 +1,8 @@
 package accesslog
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/pem"
 	"net"
 	"strconv"
 	"time"
@@ -24,23 +22,23 @@ const (
 // The fields are named after the OpenTelemetry semantic conventions attributes,
 // and after the TCP routers metrics labels for the Traefik specific ones.
 const (
-	entryPointNameField       = "traefik.entrypoint.name"
-	routerNameField           = "traefik.router.name"
-	serviceNameField          = "traefik.service.name"
-	tlsModeField              = "traefik.tls.mode"
-	receivedBytesField        = "traefik.connection.received_bytes"
-	sentBytesField            = "traefik.connection.sent_bytes"
-	durationField             = "traefik.connection.duration"
-	clientAddressField        = "client.address"
-	clientPortField           = "client.port"
-	localAddressField         = "network.local.address"
-	localPortField            = "network.local.port"
-	networkTransportField     = "network.transport"
-	networkTypeField          = "network.type"
-	serverAddressField        = "server.address"
-	tlsProtocolVersionField   = "tls.protocol.version"
-	tlsCipherField            = "tls.cipher"
-	tlsClientCertificateField = "tls.client.certificate"
+	entryPointNameField     = "traefik.entrypoint.name"
+	routerNameField         = "traefik.router.name"
+	serviceNameField        = "traefik.service.name"
+	tlsModeField            = "traefik.tls.mode"
+	receivedBytesField      = "traefik.connection.received_bytes"
+	sentBytesField          = "traefik.connection.sent_bytes"
+	durationField           = "traefik.connection.duration"
+	clientAddressField      = "client.address"
+	clientPortField         = "client.port"
+	localAddressField       = "network.local.address"
+	localPortField          = "network.local.port"
+	networkTransportField   = "network.transport"
+	networkTypeField        = "network.type"
+	serverAddressField      = "server.address"
+	tlsProtocolVersionField = "tls.protocol.version"
+	tlsCipherField          = "tls.cipher"
+	tlsClientSubjectField   = "tls.client.subject"
 )
 
 // The values of the TLS mode field.
@@ -169,13 +167,9 @@ func addTLSFields(fields logrus.Fields, state tls.ConnectionState) {
 	fields[tlsProtocolVersionField] = traefiktls.GetVersion(&state)
 	fields[tlsCipherField] = traefiktls.GetCipherName(&state)
 
-	if len(state.PeerCertificates) == 0 {
-		return
-	}
-
-	buf := new(bytes.Buffer)
-	if err := pem.Encode(buf, &pem.Block{Type: "CERTIFICATE", Bytes: state.PeerCertificates[0].Raw}); err == nil {
-		fields[tlsClientCertificateField] = buf.String()
+	// As for the HTTP access logs, only the subject of the client certificate is logged.
+	if len(state.PeerCertificates) > 0 {
+		fields[tlsClientSubjectField] = state.PeerCertificates[0].Subject.String()
 	}
 }
 

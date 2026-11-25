@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"io"
 	"net"
@@ -127,46 +128,82 @@ func TestAccessLogMiddleware_ServeTCP(t *testing.T) {
 }
 
 func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
-	handler, logFile := newHandler(t)
-
 	cert, err := generate.DefaultCertificate()
 	require.NoError(t, err)
 
-	serverConn, clientConn := net.Pipe()
-	t.Cleanup(func() {
-		_ = serverConn.Close()
-		_ = clientConn.Close()
-	})
-
-	go func() {
-		client := tls.Client(clientConn, &tls.Config{ServerName: "foo.localhost", InsecureSkipVerify: true})
-		_, _ = client.Write([]byte("ping"))
-	}()
-
-	next := tcp.HandlerFunc(func(conn tcp.WriteCloser) {
-		_, err := io.ReadFull(conn, make([]byte, 4))
-		assert.NoError(t, err)
-	})
-
-	middleware, err := RouterAccessLogHandler(t.Context(), handler, "websecure", "router@file", "service@file", &dynamic.RouterTCPTLSConfig{})(next)
+	leaf, err := x509.ParseCertificate(cert.Certificate[0])
 	require.NoError(t, err)
 
-	middleware.ServeTCP(tls.Server(serverConn, &tls.Config{
-		Certificates: []tls.Certificate{*cert},
-		MaxVersion:   tls.VersionTLS12,
-		CipherSuites: []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
-	}))
+	testCases := []struct {
+		desc            string
+		clientCert      bool
+		expectedSubject string
+	}{
+		{
+			desc: "without client certificate",
+		},
+		{
+			desc:            "with client certificate",
+			clientCert:      true,
+			expectedSubject: leaf.Subject.String(),
+		},
+	}
 
-	entries := readEntries(t, logFile)
-	require.Len(t, entries, 1)
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
 
-	entry := entries[0]
-	assert.Equal(t, "terminated", entry["traefik.tls.mode"])
-	assert.Equal(t, "foo.localhost", entry["server.address"])
-	assert.Equal(t, "1.2", entry["tls.protocol.version"])
-	assert.Equal(t, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", entry["tls.cipher"])
-	assert.InDelta(t, 4, entry["traefik.connection.received_bytes"], 0)
-	assert.NotContains(t, entry, "tls.client.certificate")
+			handler, logFile := newHandler(t)
+
+			serverConn, clientConn := net.Pipe()
+			t.Cleanup(func() {
+				_ = serverConn.Close()
+				_ = clientConn.Close()
+			})
+
+			clientConfig := &tls.Config{ServerName: "foo.localhost", InsecureSkipVerify: true}
+			if test.clientCert {
+				clientConfig.Certificates = []tls.Certificate{*cert}
+			}
+
+			go func() {
+				client := tls.Client(clientConn, clientConfig)
+				_, _ = client.Write([]byte("ping"))
+			}()
+
+			next := tcp.HandlerFunc(func(conn tcp.WriteCloser) {
+				_, err := io.ReadFull(conn, make([]byte, 4))
+				assert.NoError(t, err)
+			})
+
+			middleware, err := RouterAccessLogHandler(t.Context(), handler, "websecure", "router@file", "service@file", &dynamic.RouterTCPTLSConfig{})(next)
+			require.NoError(t, err)
+
+			middleware.ServeTCP(tls.Server(serverConn, &tls.Config{
+				Certificates: []tls.Certificate{*cert},
+				MaxVersion:   tls.VersionTLS12,
+				CipherSuites: []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+				ClientAuth:   tls.RequestClientCert,
+			}))
+
+			entries := readEntries(t, logFile)
+			require.Len(t, entries, 1)
+
+			entry := entries[0]
+			assert.Equal(t, "terminated", entry["traefik.tls.mode"])
+			assert.Equal(t, "foo.localhost", entry["server.address"])
+			assert.Equal(t, "1.2", entry["tls.protocol.version"])
+			assert.Equal(t, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", entry["tls.cipher"])
+			assert.InDelta(t, 4, entry["traefik.connection.received_bytes"], 0)
+
+			if test.expectedSubject == "" {
+				assert.NotContains(t, entry, "tls.client.subject")
+				return
+			}
+
+			assert.Equal(t, test.expectedSubject, entry["tls.client.subject"])
+		})
+	}
 }
 
 func TestAddAddressFields(t *testing.T) {
