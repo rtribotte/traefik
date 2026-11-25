@@ -113,7 +113,7 @@ func (o *ObservabilityMgr) SemConvMetricsRegistry() *metrics.SemConvMetricsRegis
 
 // BuildTCP builds a TCP observability middleware.
 func (o *ObservabilityMgr) BuildTCP(ctx context.Context, handler tcp.Handler) tcp.Handler {
-	if o.tcpAccessLoggerMiddleware == nil {
+	if o == nil || o.tcpAccessLoggerMiddleware == nil {
 		return handler
 	}
 

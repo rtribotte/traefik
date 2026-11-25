@@ -405,24 +405,6 @@ Below the fields displayed with the generic CLF format:
 | <a id="opt-KubernetesServiceName" href="#opt-KubernetesServiceName" title="#opt-KubernetesServiceName">`KubernetesServiceName`</a> | The name of the Kubernetes Service that handled the request. See `KubernetesServiceNamespace` for the per-request semantics. |
 | <a id="opt-KubernetesServicePort" href="#opt-KubernetesServicePort" title="#opt-KubernetesServicePort">`KubernetesServicePort`</a> | The port of the Kubernetes Service that handled the request. See `KubernetesServiceNamespace` for the per-request semantics. |
 
-### TCP Access Logs
-
-When using TCP routers, Traefik can also generate access logs for TCP connections.
-The format of TCP access logs is always JSON, and it contains the following fields:
-
-| Field             | Description                                                                                             |
-|-------------------|---------------------------------------------------------------------------------------------------------|
-| `event`           | The event type, either `connection_start` or `connection_end`.                                          |
-| `client_addr`     | The remote address of the client.                                                                       |
-| `server_addr`     | The local address of the server.                                                                        |
-| `timestamp`       | The timestamp of the event.                                                                             |
-| `bytes_in`        | The number of bytes received from the client (only for `connection_end` events).                        |
-| `bytes_out`       | The number of bytes sent to the client (only for `connection_end` events).                              |
-| `duration_ms`     | The duration of the connection in milliseconds (only for `connection_end` events).                      |
-| `status`          | The status of the connection, either `success` or `error` (only for `connection_end` events).           |
-| `error`           | The error message if the connection status is `error` (only for `connection_end` events).               |
-| `client_cert_pem` | The PEM-encoded client certificate, if mTLS is used and a client certificate is provided.               |
-
 ### Log Rotation
 
 Traefik does not rotate the access log file.
@@ -460,5 +442,53 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
+
+## TCP Access Logs
+
+TCP access logs concern the connections handled by the TCP routers.
+They are configured independently from the HTTP [access logs](#accesslogs):
+enabling one does not enable the other.
+
+### Configuration Example
+
+```yaml tab="File (YAML)"
+tcpAccessLog:
+  filePath: "/var/log/traefik/tcp-access.log"
+  format: json
+```
+
+```toml tab="File (TOML)"
+[tcpAccessLog]
+  filePath = "/var/log/traefik/tcp-access.log"
+  format = "json"
+```
+
+```sh tab="CLI"
+--tcpaccesslog=true
+--tcpaccesslog.filepath=/var/log/traefik/tcp-access.log
+--tcpaccesslog.format=json
+```
+
+### Configuration Options
+
+| Field      | Description    | Default | Required |
+|:-----------|:--------------------------|:--------|:---------|
+| <a id="opt-tcpAccessLog-filePath" href="#opt-tcpAccessLog-filePath" title="#opt-tcpAccessLog-filePath">`tcpAccessLog.filePath`</a> | By default, the TCP access logs are written to the standard output.<br />You can configure a file path instead using the `filePath` option. |  | No      |
+| <a id="opt-tcpAccessLog-format" href="#opt-tcpAccessLog-format" title="#opt-tcpAccessLog-format">`tcpAccessLog.format`</a> | Format of the TCP access logs.<br />Available formats: `common` or `json`. | "common" | No      |
+
+### Fields
+
+| Field             | Description                                                                                             |
+|-------------------|---------------------------------------------------------------------------------------------------------|
+| <a id="opt-event" href="#opt-event" title="#opt-event">`event`</a> | The event type, either `connection_start` or `connection_end`. |
+| <a id="opt-client-addr" href="#opt-client-addr" title="#opt-client-addr">`client_addr`</a> | The remote address of the client. |
+| <a id="opt-server-addr" href="#opt-server-addr" title="#opt-server-addr">`server_addr`</a> | The local address of the server. |
+| <a id="opt-timestamp" href="#opt-timestamp" title="#opt-timestamp">`timestamp`</a> | The timestamp of the event. |
+| <a id="opt-bytes-in" href="#opt-bytes-in" title="#opt-bytes-in">`bytes_in`</a> | The number of bytes received from the client (only for `connection_end` events). |
+| <a id="opt-bytes-out" href="#opt-bytes-out" title="#opt-bytes-out">`bytes_out`</a> | The number of bytes sent to the client (only for `connection_end` events). |
+| <a id="opt-duration-ms" href="#opt-duration-ms" title="#opt-duration-ms">`duration_ms`</a> | The duration of the connection in milliseconds (only for `connection_end` events). |
+| <a id="opt-status" href="#opt-status" title="#opt-status">`status`</a> | The status of the connection, either `success` or `error` (only for `connection_end` events). |
+| <a id="opt-error" href="#opt-error" title="#opt-error">`error`</a> | The error message if the connection status is `error` (only for `connection_end` events). |
+| <a id="opt-client-cert-pem" href="#opt-client-cert-pem" title="#opt-client-cert-pem">`client_cert_pem`</a> | The PEM-encoded client certificate, if mTLS is used and a client certificate is provided. |
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}

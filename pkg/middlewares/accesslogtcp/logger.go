@@ -20,15 +20,15 @@ import (
 // Handler is the main struct for TCP access logging.
 // It holds the logger, config, and output file, and ensures thread-safe writes.
 type Handler struct {
-	config *types.AccessLog   // Reuse the HTTP access log config struct for consistency.
+	config *types.TCPAccessLog
 	logger *logrus.Logger     // The logger instance used to write log entries.
 	file   io.WriteCloser     // The file or output stream for logs.
 	mu     sync.Mutex         // Mutex to ensure logs are written atomically.
 }
 
 // NewHandler creates a new TCP access log handler.
-// It sets up the log file, format, and logger, reusing config from HTTP.
-func NewHandler(config *types.AccessLog) (*Handler, error) {
+// It sets up the log file, format, and logger.
+func NewHandler(config *types.TCPAccessLog) (*Handler, error) {
 	var file io.WriteCloser = os.Stdout // Default to stdout if no file is specified.
 	if len(config.FilePath) > 0 {
 		f, err := os.OpenFile(config.FilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o664)
