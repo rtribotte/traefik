@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	"go.opentelemetry.io/contrib/bridges/otellogrus"
@@ -17,11 +18,17 @@ import (
 // Logger writes the TCP access logs, in the JSON format, and exports them with OTLP when configured.
 // It is shared by the access log middlewares of all the TCP routers.
 type Logger struct {
-	config       *otypes.TCPAccessLog
-	logrusLogger *logrus.Logger
+	config    *otypes.TCPAccessLog
+	formatter logrus.Formatter
 
-	// The regular output is discarded when only OTLP is used, even after a rotation.
-	discardOutput bool
+	// fileLogger writes the log lines to the file.
+	// It is nil when only OTLP is used.
+	fileLogger *logrus.Logger
+
+	// otlpLogger exports the log lines with OTLP, with the formatted log line as body.
+	// It is nil when OTLP is not used.
+	// It is distinct from the file one, so that the body does not end up in the message of the written log line.
+	otlpLogger *logrus.Logger
 
 	// muFile protects the file, which is replaced on rotation.
 	muFile sync.Mutex
@@ -48,18 +55,20 @@ func NewLogger(ctx context.Context, config *otypes.TCPAccessLog) (*Logger, error
 		file = f
 	}
 
-	// The zero value of the logrus logger mutex makes the writes thread-safe.
-	logrusLogger := &logrus.Logger{
-		Out:       file,
-		Formatter: &logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano},
-		Hooks:     make(logrus.LevelHooks),
-		Level:     logrus.InfoLevel,
+	logger := &Logger{
+		config:    config,
+		formatter: &logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano},
+		file:      file,
 	}
 
-	logger := &Logger{
-		config:       config,
-		logrusLogger: logrusLogger,
-		file:         file,
+	// The zero value of the logrus logger mutex makes the writes thread-safe.
+	if config.OTLP == nil || config.DualOutput {
+		logger.fileLogger = &logrus.Logger{
+			Out:       file,
+			Formatter: logger.formatter,
+			Hooks:     make(logrus.LevelHooks),
+			Level:     logrus.InfoLevel,
+		}
 	}
 
 	if config.OTLP != nil {
@@ -69,11 +78,15 @@ func NewLogger(ctx context.Context, config *otypes.TCPAccessLog) (*Logger, error
 			return nil, fmt.Errorf("setting up OpenTelemetry logger provider: %w", err)
 		}
 
-		logrusLogger.Hooks.Add(otellogrus.NewHook("traefik", otellogrus.WithLoggerProvider(otelLoggerProvider)))
-		if !config.DualOutput {
-			logger.discardOutput = true
-			logrusLogger.Out = io.Discard
+		// The OTLP logger only exports the log lines through its hook,
+		// so it does not format them for its output.
+		logger.otlpLogger = &logrus.Logger{
+			Out:       io.Discard,
+			Formatter: noopFormatter{},
+			Hooks:     make(logrus.LevelHooks),
+			Level:     logrus.InfoLevel,
 		}
+		logger.otlpLogger.Hooks.Add(otellogrus.NewHook("traefik", otellogrus.WithLoggerProvider(otelLoggerProvider)))
 	}
 
 	if config.BufferingSize > 0 {
@@ -115,8 +128,8 @@ func (l *Logger) Rotate() error {
 		return err
 	}
 
-	if !l.discardOutput {
-		l.logrusLogger.SetOutput(file)
+	if l.fileLogger != nil {
+		l.fileLogger.SetOutput(file)
 	}
 
 	_ = l.file.Close()
@@ -138,23 +151,35 @@ func (l *Logger) log(fields logrus.Fields) {
 }
 
 func (l *Logger) write(line logLine) {
-	entry := l.logrusLogger.WithFields(line.fields).WithTime(line.time)
-
-	var message string
-	if l.config.OTLP != nil {
-		// As for the HTTP access logs, the OTLP log body is the formatted log line.
-		// The formatter reads the entry level, which logrus only sets when the log method is called.
-		entry.Level = logrus.InfoLevel
-
-		mBytes, err := l.logrusLogger.Formatter.Format(entry)
-		if err != nil {
-			message = fmt.Sprintf("Failed to format TCP access log entry: %v", err)
-		} else {
-			message = string(mBytes)
-		}
+	if l.fileLogger != nil {
+		l.fileLogger.WithFields(line.fields).WithTime(line.time).Println()
 	}
 
-	entry.Println(message)
+	if l.otlpLogger != nil {
+		l.export(line)
+	}
+}
+
+// export exports the given log line with OTLP.
+// As for the HTTP access logs, the body is the formatted log line,
+// as some observability platforms parse it instead of the attributes.
+func (l *Logger) export(line logLine) {
+	entry := l.otlpLogger.WithFields(line.fields).WithTime(line.time)
+
+	// The formatter reads the entry level, which logrus only sets when the log method is called.
+	formatted := entry.Dup()
+	formatted.Level = logrus.InfoLevel
+
+	var body string
+	if b, err := l.formatter.Format(formatted); err != nil {
+		// The log line is still exported with its attributes,
+		// but the formatting error is not sent as if it was the log line.
+		log.Error().Err(err).Msg("Unable to format the TCP access log body")
+	} else {
+		body = string(b)
+	}
+
+	entry.Println(body)
 }
 
 func openFile(filePath string) (*os.File, error) {
@@ -178,4 +203,12 @@ type noopCloser struct {
 
 func (n noopCloser) Close() error {
 	return nil
+}
+
+// noopFormatter does not format the log lines,
+// for the loggers which only export them through their hooks.
+type noopFormatter struct{}
+
+func (noopFormatter) Format(*logrus.Entry) ([]byte, error) {
+	return nil, nil
 }

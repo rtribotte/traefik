@@ -17,12 +17,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	"github.com/traefik/traefik/v3/pkg/tls/generate"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 )
 
@@ -272,23 +275,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			logCh := make(chan string, 1)
-			collector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				gzr, err := gzip.NewReader(r.Body)
-				require.NoError(t, err)
-
-				body, err := io.ReadAll(gzr)
-				require.NoError(t, err)
-
-				req := plogotlp.NewExportRequest()
-				require.NoError(t, req.UnmarshalProto(body))
-
-				marshalledReq, err := json.Marshal(req)
-				require.NoError(t, err)
-
-				logCh <- string(marshalledReq)
-			}))
-			t.Cleanup(collector.Close)
+			collectorURL, exported := newCollector(t)
 
 			logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
@@ -297,7 +284,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 				DualOutput: test.dualOutput,
 				OTLP: &otypes.OTelLog{
 					ServiceName: "test",
-					HTTP:        &otypes.OTelHTTP{Endpoint: collector.URL},
+					HTTP:        &otypes.OTelHTTP{Endpoint: collectorURL},
 				},
 			})
 			require.NoError(t, err)
@@ -323,19 +310,100 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 
 			middleware.ServeTCP(pipeConn{Conn: serverConn})
 
-			select {
-			case <-time.After(5 * time.Second):
-				t.Fatal("TCP access log not exported")
+			resource, record := waitForRecord(t, exported)
 
-			case log := <-logCh:
-				assert.Regexp(t, `{"key":"service.name","value":{"stringValue":"test"}}`, log)
-				assert.Regexp(t, `{"key":"traefik.router.name","value":{"stringValue":"router@file"}}`, log)
-				assert.Regexp(t, `{"key":"traefik.connection.received_bytes","value":{"intValue":"4"}}`, log)
-				assert.NotRegexp(t, `"body":{"stringValue":""}`, log)
+			serviceName, _ := resource.Attributes().Get("service.name")
+			assert.Equal(t, "test", serviceName.Str())
+
+			routerName, _ := record.Attributes().Get("traefik.router.name")
+			assert.Equal(t, "router@file", routerName.Str())
+
+			receivedBytes, _ := record.Attributes().Get("traefik.connection.received_bytes")
+			assert.Equal(t, int64(4), receivedBytes.Int())
+
+			// The body is the formatted log line, as written to the file with the dual output.
+			body := make(map[string]any)
+			require.NoError(t, json.Unmarshal([]byte(record.Body().Str()), &body))
+			assert.Equal(t, "router@file", body["traefik.router.name"])
+			assert.Empty(t, body["msg"])
+
+			entries := readEntries(t, logFile)
+			require.Len(t, entries, test.fileEntries)
+
+			if test.dualOutput {
+				// The written log line does not embed the body in its message.
+				assert.Empty(t, entries[0]["msg"])
+				assert.Equal(t, body, entries[0])
 			}
-
-			assert.Len(t, readEntries(t, logFile), test.fileEntries)
 		})
+	}
+}
+
+func TestLogger_export_formatError(t *testing.T) {
+	collectorURL, exported := newCollector(t)
+
+	logger, err := NewLogger(t.Context(), &otypes.TCPAccessLog{
+		OTLP: &otypes.OTelLog{
+			HTTP: &otypes.OTelHTTP{Endpoint: collectorURL},
+		},
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, logger.Close()) })
+
+	// A channel cannot be serialized to JSON, which makes the formatting fail.
+	logger.log(logrus.Fields{"traefik.router.name": "router@file", "unserializable": make(chan int)})
+
+	_, record := waitForRecord(t, exported)
+
+	// The log line is exported with its attributes, but the formatting error is not sent as its body.
+	routerName, _ := record.Attributes().Get("traefik.router.name")
+	assert.Equal(t, "router@file", routerName.Str())
+	assert.Empty(t, record.Body().Str())
+}
+
+// newCollector starts an OTLP HTTP collector, which sends the export requests it receives to the returned channel.
+func newCollector(t *testing.T) (string, <-chan plogotlp.ExportRequest) {
+	t.Helper()
+
+	exported := make(chan plogotlp.ExportRequest, 10)
+	collector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gzr, err := gzip.NewReader(r.Body)
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		body, err := io.ReadAll(gzr)
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		req := plogotlp.NewExportRequest()
+		if !assert.NoError(t, req.UnmarshalProto(body)) {
+			return
+		}
+
+		exported <- req
+	}))
+	t.Cleanup(collector.Close)
+
+	return collector.URL, exported
+}
+
+// waitForRecord waits for the first exported log record, and returns it with its resource.
+func waitForRecord(t *testing.T, exported <-chan plogotlp.ExportRequest) (pcommon.Resource, plog.LogRecord) {
+	t.Helper()
+
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("TCP access log not exported")
+		return pcommon.Resource{}, plog.LogRecord{}
+
+	case req := <-exported:
+		require.Positive(t, req.Logs().LogRecordCount())
+
+		resourceLogs := req.Logs().ResourceLogs().At(0)
+
+		return resourceLogs.Resource(), resourceLogs.ScopeLogs().At(0).LogRecords().At(0)
 	}
 }
 
