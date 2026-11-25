@@ -539,5 +539,6 @@ tcpAccessLog:
 | <a id="opt-tls-protocol-version" href="#opt-tls-protocol-version" title="#opt-tls-protocol-version">`tls.protocol.version`</a> | The TLS version, when the TLS is terminated by Traefik. |
 | <a id="opt-tls-cipher" href="#opt-tls-cipher" title="#opt-tls-cipher">`tls.cipher`</a> | The TLS cipher suite, when the TLS is terminated by Traefik. |
 | <a id="opt-tls-client-subject" href="#opt-tls-client-subject" title="#opt-tls-client-subject">`tls.client.subject`</a> | The subject of the client certificate, when the TLS is terminated by Traefik and the client provides one. |
+| <a id="opt-tls-client-hash-sha256" href="#opt-tls-client-hash-sha256" title="#opt-tls-client-hash-sha256">`tls.client.hash.sha256`</a> | The SHA-256 fingerprint of the client certificate, as an uppercase hexadecimal string, when the TLS is terminated by Traefik and the client provides one.<br />Unlike the subject, it identifies the certificate uniquely, e.g. when a certificate is renewed with the same subject. |
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}

@@ -2,9 +2,12 @@ package accesslog
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -39,6 +42,7 @@ const (
 	tlsProtocolVersionField = "tls.protocol.version"
 	tlsCipherField          = "tls.cipher"
 	tlsClientSubjectField   = "tls.client.subject"
+	tlsClientHashField      = "tls.client.hash.sha256"
 )
 
 // The values of the TLS mode field.
@@ -167,10 +171,19 @@ func addTLSFields(fields logrus.Fields, state tls.ConnectionState) {
 	fields[tlsProtocolVersionField] = traefiktls.GetVersion(&state)
 	fields[tlsCipherField] = traefiktls.GetCipherName(&state)
 
-	// As for the HTTP access logs, only the subject of the client certificate is logged.
-	if len(state.PeerCertificates) > 0 {
-		fields[tlsClientSubjectField] = state.PeerCertificates[0].Subject.String()
+	if len(state.PeerCertificates) == 0 {
+		return
 	}
+
+	// As for the HTTP access logs, the subject of the client certificate is logged.
+	// It is not unique, e.g. for a renewed certificate,
+	// so the certificate is also identified by its SHA-256 fingerprint,
+	// formatted as an uppercase hash, as the semantic conventions require.
+	cert := state.PeerCertificates[0]
+	hash := sha256.Sum256(cert.Raw)
+
+	fields[tlsClientSubjectField] = cert.Subject.String()
+	fields[tlsClientHashField] = strings.ToUpper(hex.EncodeToString(hash[:]))
 }
 
 // countingConn counts the bytes received from and sent to the client.

@@ -3,9 +3,11 @@ package accesslog
 import (
 	"bufio"
 	"compress/gzip"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -138,6 +140,7 @@ func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
 		desc            string
 		clientCert      bool
 		expectedSubject string
+		expectedHash    string
 	}{
 		{
 			desc: "without client certificate",
@@ -146,6 +149,7 @@ func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
 			desc:            "with client certificate",
 			clientCert:      true,
 			expectedSubject: leaf.Subject.String(),
+			expectedHash:    fmt.Sprintf("%X", sha256.Sum256(leaf.Raw)),
 		},
 	}
 
@@ -198,10 +202,12 @@ func TestAccessLogMiddleware_ServeTCP_tls(t *testing.T) {
 
 			if test.expectedSubject == "" {
 				assert.NotContains(t, entry, "tls.client.subject")
+				assert.NotContains(t, entry, "tls.client.hash.sha256")
 				return
 			}
 
 			assert.Equal(t, test.expectedSubject, entry["tls.client.subject"])
+			assert.Equal(t, test.expectedHash, entry["tls.client.hash.sha256"])
 		})
 	}
 }
