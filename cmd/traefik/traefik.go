@@ -31,6 +31,7 @@ import (
 	"github.com/traefik/traefik/v3/pkg/config/runtime"
 	"github.com/traefik/traefik/v3/pkg/config/static"
 	"github.com/traefik/traefik/v3/pkg/middlewares/accesslog"
+	tcpaccesslog "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"github.com/traefik/traefik/v3/pkg/observability/metrics"
 	"github.com/traefik/traefik/v3/pkg/observability/tracing"
@@ -611,6 +612,20 @@ func setupAccessLog(ctx context.Context, conf *otypes.AccessLog) *accesslog.Hand
 	}
 
 	return accessLoggerMiddleware
+}
+
+func setupTCPAccessLog(conf *otypes.TCPAccessLog) *tcpaccesslog.Handler {
+	if conf == nil {
+		return nil
+	}
+
+	handler, err := tcpaccesslog.NewHandler(conf)
+	if err != nil {
+		log.Warn().Err(err).Msg("Unable to create TCP access logger")
+		return nil
+	}
+
+	return handler
 }
 
 func setupTracing(ctx context.Context, conf *static.Tracing) (*tracing.Tracer, io.Closer) {
