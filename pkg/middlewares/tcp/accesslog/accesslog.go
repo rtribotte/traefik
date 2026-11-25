@@ -34,10 +34,6 @@ const (
 	durationField           = "traefik.connection.duration"
 	clientAddressField      = "client.address"
 	clientPortField         = "client.port"
-	localAddressField       = "network.local.address"
-	localPortField          = "network.local.port"
-	networkTransportField   = "network.transport"
-	networkTypeField        = "network.type"
 	serverAddressField      = "server.address"
 	tlsProtocolVersionField = "tls.protocol.version"
 	tlsCipherField          = "tls.cipher"
@@ -105,26 +101,18 @@ func (a *accessLogMiddleware) ServeTCP(conn tcp.WriteCloser) {
 	cConn := &countingConn{WriteCloser: conn}
 	a.next.ServeTCP(cConn)
 
+	// The listening address is not logged, as the entry point identifies it.
 	fields := logrus.Fields{
-		entryPointNameField:   a.entryPointName,
-		routerNameField:       a.routerName,
-		serviceNameField:      a.serviceName,
-		tlsModeField:          a.tlsMode,
-		networkTransportField: "tcp",
-		receivedBytesField:    cConn.bytesRead,
-		sentBytesField:        cConn.bytesWritten,
-		durationField:         time.Since(start).Seconds(),
+		entryPointNameField: a.entryPointName,
+		routerNameField:     a.routerName,
+		serviceNameField:    a.serviceName,
+		tlsModeField:        a.tlsMode,
+		receivedBytesField:  cConn.bytesRead,
+		sentBytesField:      cConn.bytesWritten,
+		durationField:       time.Since(start).Seconds(),
 	}
 
 	addAddressFields(fields, clientAddressField, clientPortField, conn.RemoteAddr())
-	addAddressFields(fields, localAddressField, localPortField, conn.LocalAddr())
-
-	if addr, ok := conn.LocalAddr().(*net.TCPAddr); ok {
-		fields[networkTypeField] = "ipv6"
-		if addr.IP.To4() != nil {
-			fields[networkTypeField] = "ipv4"
-		}
-	}
 
 	// The handshake is not forced, as it has to stay driven by the next handlers,
 	// so the TLS parameters are only known once the connection has been served.

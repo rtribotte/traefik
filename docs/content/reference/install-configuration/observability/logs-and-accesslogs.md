@@ -531,10 +531,6 @@ tcpAccessLog:
 | <a id="opt-traefik-connection-duration" href="#opt-traefik-connection-duration" title="#opt-traefik-connection-duration">`traefik.connection.duration`</a> | The duration of the connection, in seconds. |
 | <a id="opt-client-address" href="#opt-client-address" title="#opt-client-address">`client.address`</a> | The IP address of the client. |
 | <a id="opt-client-port" href="#opt-client-port" title="#opt-client-port">`client.port`</a> | The port of the client. |
-| <a id="opt-network-local-address" href="#opt-network-local-address" title="#opt-network-local-address">`network.local.address`</a> | The IP address the connection was accepted on. |
-| <a id="opt-network-local-port" href="#opt-network-local-port" title="#opt-network-local-port">`network.local.port`</a> | The port the connection was accepted on. |
-| <a id="opt-network-transport" href="#opt-network-transport" title="#opt-network-transport">`network.transport`</a> | Always `tcp`. |
-| <a id="opt-network-type" href="#opt-network-type" title="#opt-network-type">`network.type`</a> | `ipv4` or `ipv6`. |
 | <a id="opt-server-address" href="#opt-server-address" title="#opt-server-address">`server.address`</a> | The server name sent by the client (SNI), when the TLS is terminated by Traefik. |
 | <a id="opt-tls-protocol-version" href="#opt-tls-protocol-version" title="#opt-tls-protocol-version">`tls.protocol.version`</a> | The TLS version, when the TLS is terminated by Traefik. |
 | <a id="opt-tls-cipher" href="#opt-tls-cipher" title="#opt-tls-cipher">`tls.cipher`</a> | The TLS cipher suite, when the TLS is terminated by Traefik. |

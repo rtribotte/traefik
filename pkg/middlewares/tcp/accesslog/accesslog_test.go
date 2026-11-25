@@ -113,18 +113,14 @@ func TestAccessLogMiddleware_ServeTCP(t *testing.T) {
 	assert.Equal(t, "router@file", entry["traefik.router.name"])
 	assert.Equal(t, "service@file", entry["traefik.service.name"])
 	assert.Equal(t, "none", entry["traefik.tls.mode"])
-	assert.Equal(t, "tcp", entry["network.transport"])
 	assert.InDelta(t, 4, entry["traefik.connection.received_bytes"], 0)
 	assert.InDelta(t, 5, entry["traefik.connection.sent_bytes"], 0)
 	assert.Contains(t, entry, "traefik.connection.duration")
 	assert.NotEmpty(t, entry["time"])
 
-	// The address of a pipe cannot be split into a host and a port, and is not a TCP one.
+	// The address of a pipe cannot be split into a host and a port.
 	assert.Equal(t, "pipe", entry["client.address"])
 	assert.NotContains(t, entry, "client.port")
-	assert.Equal(t, "pipe", entry["network.local.address"])
-	assert.NotContains(t, entry, "network.local.port")
-	assert.NotContains(t, entry, "network.type")
 
 	assert.NotContains(t, entry, "tls.protocol.version")
 }
