@@ -5,10 +5,12 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/pem"
-	"maps"
+	"net"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/middlewares"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	traefiktls "github.com/traefik/traefik/v3/pkg/tls"
@@ -17,6 +19,35 @@ import (
 const (
 	typeName   = "AccessLogTCP"
 	nameRouter = "accesslog-router"
+)
+
+// The fields are named after the OpenTelemetry semantic conventions attributes,
+// and after the TCP routers metrics labels for the Traefik specific ones.
+const (
+	entryPointNameField       = "traefik.entrypoint.name"
+	routerNameField           = "traefik.router.name"
+	serviceNameField          = "traefik.service.name"
+	tlsModeField              = "traefik.tls.mode"
+	receivedBytesField        = "traefik.connection.received_bytes"
+	sentBytesField            = "traefik.connection.sent_bytes"
+	durationField             = "traefik.connection.duration"
+	clientAddressField        = "client.address"
+	clientPortField           = "client.port"
+	localAddressField         = "network.local.address"
+	localPortField            = "network.local.port"
+	networkTransportField     = "network.transport"
+	networkTypeField          = "network.type"
+	serverAddressField        = "server.address"
+	tlsProtocolVersionField   = "tls.protocol.version"
+	tlsCipherField            = "tls.cipher"
+	tlsClientCertificateField = "tls.client.certificate"
+)
+
+// The values of the TLS mode field.
+const (
+	tlsModeNone        = "none"
+	tlsModeTerminated  = "terminated"
+	tlsModePassthrough = "passthrough"
 )
 
 // connectionStater is implemented by the connections whose TLS is terminated by Traefik,
@@ -32,11 +63,12 @@ type accessLogMiddleware struct {
 	entryPointName string
 	routerName     string
 	serviceName    string
+	tlsMode        string
 }
 
 // RouterAccessLogHandler returns the access log TCP router handler.
 // It is idempotent when the TCP access logs are disabled, i.e. when the given handler is nil.
-func RouterAccessLogHandler(ctx context.Context, handler *Handler, entryPointName, routerName, serviceName string) tcp.Constructor {
+func RouterAccessLogHandler(ctx context.Context, handler *Handler, entryPointName, routerName, serviceName string, tlsConfig *dynamic.RouterTCPTLSConfig) tcp.Constructor {
 	return func(next tcp.Handler) (tcp.Handler, error) {
 		if handler == nil {
 			return next, nil
@@ -44,60 +76,86 @@ func RouterAccessLogHandler(ctx context.Context, handler *Handler, entryPointNam
 
 		middlewares.GetLogger(ctx, nameRouter, typeName).Debug().Msg("Creating middleware")
 
+		tlsMode := tlsModeNone
+		if tlsConfig != nil {
+			if tlsConfig.Passthrough {
+				tlsMode = tlsModePassthrough
+			} else {
+				tlsMode = tlsModeTerminated
+			}
+		}
+
 		return &accessLogMiddleware{
 			next:           next,
 			handler:        handler,
 			entryPointName: entryPointName,
 			routerName:     routerName,
 			serviceName:    serviceName,
+			tlsMode:        tlsMode,
 		}, nil
 	}
 }
 
-// ServeTCP logs the start and the end of the given connection.
+// ServeTCP logs the given connection once it has been served.
 func (a *accessLogMiddleware) ServeTCP(conn tcp.WriteCloser) {
 	start := time.Now()
-
-	fields := logrus.Fields{
-		"entry_point_name": a.entryPointName,
-		"router_name":      a.routerName,
-		"service_name":     a.serviceName,
-		"client_addr":      conn.RemoteAddr().String(),
-		"server_addr":      conn.LocalAddr().String(),
-	}
-
-	a.handler.log(withFields(fields, logrus.Fields{
-		"event":     "connection_start",
-		"timestamp": start.Format(time.RFC3339Nano),
-	}))
 
 	cConn := &countingConn{WriteCloser: conn}
 	a.next.ServeTCP(cConn)
 
-	end := withFields(fields, logrus.Fields{
-		"event":       "connection_end",
-		"timestamp":   time.Now().Format(time.RFC3339Nano),
-		"bytes_in":    cConn.bytesRead,
-		"bytes_out":   cConn.bytesWritten,
-		"duration_ms": time.Since(start).Milliseconds(),
-		"status":      "success",
-	})
+	fields := logrus.Fields{
+		entryPointNameField:   a.entryPointName,
+		routerNameField:       a.routerName,
+		serviceNameField:      a.serviceName,
+		tlsModeField:          a.tlsMode,
+		networkTransportField: "tcp",
+		receivedBytesField:    cConn.bytesRead,
+		sentBytesField:        cConn.bytesWritten,
+		durationField:         time.Since(start).Seconds(),
+	}
+
+	addAddressFields(fields, clientAddressField, clientPortField, conn.RemoteAddr())
+	addAddressFields(fields, localAddressField, localPortField, conn.LocalAddr())
+
+	if addr, ok := conn.LocalAddr().(*net.TCPAddr); ok {
+		fields[networkTypeField] = "ipv6"
+		if addr.IP.To4() != nil {
+			fields[networkTypeField] = "ipv4"
+		}
+	}
 
 	// The handshake is not forced, as it has to stay driven by the next handlers,
 	// so the TLS parameters are only known once the connection has been served.
 	if stater, ok := conn.(connectionStater); ok {
-		addTLSFields(end, stater.ConnectionState())
+		addTLSFields(fields, stater.ConnectionState())
 	}
 
-	a.handler.log(end)
+	a.handler.log(fields)
 }
 
-func withFields(fields, extra logrus.Fields) logrus.Fields {
-	result := make(logrus.Fields, len(fields)+len(extra))
-	maps.Copy(result, fields)
-	maps.Copy(result, extra)
+// addAddressFields adds the address and the port of the given network address.
+// The whole address is used when it cannot be split, e.g. for a Unix socket.
+func addAddressFields(fields logrus.Fields, addressField, portField string, addr net.Addr) {
+	if addr == nil {
+		return
+	}
 
-	return result
+	if tcpAddr, ok := addr.(*net.TCPAddr); ok {
+		fields[addressField] = tcpAddr.IP.String()
+		fields[portField] = tcpAddr.Port
+		return
+	}
+
+	host, port, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		fields[addressField] = addr.String()
+		return
+	}
+
+	fields[addressField] = host
+	if p, err := strconv.Atoi(port); err == nil {
+		fields[portField] = p
+	}
 }
 
 func addTLSFields(fields logrus.Fields, state tls.ConnectionState) {
@@ -105,9 +163,11 @@ func addTLSFields(fields logrus.Fields, state tls.ConnectionState) {
 		return
 	}
 
-	fields["tls_server_name"] = state.ServerName
-	fields["tls_version"] = traefiktls.GetVersion(&state)
-	fields["tls_cipher"] = traefiktls.GetCipherName(&state)
+	if state.ServerName != "" {
+		fields[serverAddressField] = state.ServerName
+	}
+	fields[tlsProtocolVersionField] = traefiktls.GetVersion(&state)
+	fields[tlsCipherField] = traefiktls.GetCipherName(&state)
 
 	if len(state.PeerCertificates) == 0 {
 		return
@@ -115,11 +175,11 @@ func addTLSFields(fields logrus.Fields, state tls.ConnectionState) {
 
 	buf := new(bytes.Buffer)
 	if err := pem.Encode(buf, &pem.Block{Type: "CERTIFICATE", Bytes: state.PeerCertificates[0].Raw}); err == nil {
-		fields["client_cert_pem"] = buf.String()
+		fields[tlsClientCertificateField] = buf.String()
 	}
 }
 
-// countingConn counts the bytes read from and written to the client.
+// countingConn counts the bytes received from and sent to the client.
 // The counters are only read once the connection has been served,
 // and each one is only updated by the goroutine copying in its direction.
 type countingConn struct {

@@ -74,15 +74,10 @@ func (l *AccessLog) SetDefaults() {
 	l.Fields.SetDefaults()
 }
 
-// TCPAccessLog holds the configuration settings for the TCP access logger (middlewares/accesslogtcp).
+// TCPAccessLog holds the configuration settings for the TCP access logger (middlewares/tcp/accesslog).
+// The TCP access logs are always written in the JSON format.
 type TCPAccessLog struct {
 	FilePath string `description:"TCP access log file path. Stdout is used when omitted or empty." json:"filePath,omitempty" toml:"filePath,omitempty" yaml:"filePath,omitempty"`
-	Format   string `description:"TCP access log format: json or common." json:"format,omitempty" toml:"format,omitempty" yaml:"format,omitempty" export:"true"`
-}
-
-// SetDefaults sets the default values.
-func (l *TCPAccessLog) SetDefaults() {
-	l.Format = CommonFormat
 }
 
 // AccessLogFilters holds filters configuration.

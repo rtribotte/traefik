@@ -449,24 +449,25 @@ TCP access logs concern the connections handled by the TCP routers.
 They are configured independently from the HTTP [access logs](#accesslogs):
 enabling one does not enable the other.
 
+Traefik writes one log line per connection, in the JSON format, once the connection is closed.
+The fields are named after the [OpenTelemetry semantic conventions](https://opentelemetry.io/docs/specs/semconv/) attributes,
+and use the `traefik.` prefix when no attribute exists.
+
 ### Configuration Example
 
 ```yaml tab="File (YAML)"
 tcpAccessLog:
   filePath: "/var/log/traefik/tcp-access.log"
-  format: json
 ```
 
 ```toml tab="File (TOML)"
 [tcpAccessLog]
   filePath = "/var/log/traefik/tcp-access.log"
-  format = "json"
 ```
 
 ```sh tab="CLI"
 --tcpaccesslog=true
 --tcpaccesslog.filepath=/var/log/traefik/tcp-access.log
---tcpaccesslog.format=json
 ```
 
 ### Configuration Options
@@ -474,21 +475,28 @@ tcpAccessLog:
 | Field      | Description    | Default | Required |
 |:-----------|:--------------------------|:--------|:---------|
 | <a id="opt-tcpAccessLog-filePath" href="#opt-tcpAccessLog-filePath" title="#opt-tcpAccessLog-filePath">`tcpAccessLog.filePath`</a> | By default, the TCP access logs are written to the standard output.<br />You can configure a file path instead using the `filePath` option. |  | No      |
-| <a id="opt-tcpAccessLog-format" href="#opt-tcpAccessLog-format" title="#opt-tcpAccessLog-format">`tcpAccessLog.format`</a> | Format of the TCP access logs.<br />Available formats: `common` or `json`. | "common" | No      |
 
 ### Fields
 
-| Field             | Description                                                                                             |
-|-------------------|---------------------------------------------------------------------------------------------------------|
-| <a id="opt-event" href="#opt-event" title="#opt-event">`event`</a> | The event type, either `connection_start` or `connection_end`. |
-| <a id="opt-client-addr" href="#opt-client-addr" title="#opt-client-addr">`client_addr`</a> | The remote address of the client. |
-| <a id="opt-server-addr" href="#opt-server-addr" title="#opt-server-addr">`server_addr`</a> | The local address of the server. |
-| <a id="opt-timestamp" href="#opt-timestamp" title="#opt-timestamp">`timestamp`</a> | The timestamp of the event. |
-| <a id="opt-bytes-in" href="#opt-bytes-in" title="#opt-bytes-in">`bytes_in`</a> | The number of bytes received from the client (only for `connection_end` events). |
-| <a id="opt-bytes-out" href="#opt-bytes-out" title="#opt-bytes-out">`bytes_out`</a> | The number of bytes sent to the client (only for `connection_end` events). |
-| <a id="opt-duration-ms" href="#opt-duration-ms" title="#opt-duration-ms">`duration_ms`</a> | The duration of the connection in milliseconds (only for `connection_end` events). |
-| <a id="opt-status" href="#opt-status" title="#opt-status">`status`</a> | The status of the connection, either `success` or `error` (only for `connection_end` events). |
-| <a id="opt-error" href="#opt-error" title="#opt-error">`error`</a> | The error message if the connection status is `error` (only for `connection_end` events). |
-| <a id="opt-client-cert-pem" href="#opt-client-cert-pem" title="#opt-client-cert-pem">`client_cert_pem`</a> | The PEM-encoded client certificate, if mTLS is used and a client certificate is provided. |
+| Field             | Description |
+|-------------------|-------------|
+| <a id="opt-time" href="#opt-time" title="#opt-time">`time`</a> | The time the connection was closed, in the RFC 3339 format. |
+| <a id="opt-traefik-entrypoint-name" href="#opt-traefik-entrypoint-name" title="#opt-traefik-entrypoint-name">`traefik.entrypoint.name`</a> | The name of the EntryPoint that accepted the connection. |
+| <a id="opt-traefik-router-name" href="#opt-traefik-router-name" title="#opt-traefik-router-name">`traefik.router.name`</a> | The name of the TCP router that handled the connection. |
+| <a id="opt-traefik-service-name" href="#opt-traefik-service-name" title="#opt-traefik-service-name">`traefik.service.name`</a> | The name of the TCP service the connection was forwarded to. |
+| <a id="opt-traefik-tls-mode" href="#opt-traefik-tls-mode" title="#opt-traefik-tls-mode">`traefik.tls.mode`</a> | How the router handles TLS: `none`, `terminated` or `passthrough`. |
+| <a id="opt-traefik-connection-received-bytes" href="#opt-traefik-connection-received-bytes" title="#opt-traefik-connection-received-bytes">`traefik.connection.received_bytes`</a> | The number of bytes received from the client. With TLS termination, the decrypted bytes are counted. |
+| <a id="opt-traefik-connection-sent-bytes" href="#opt-traefik-connection-sent-bytes" title="#opt-traefik-connection-sent-bytes">`traefik.connection.sent_bytes`</a> | The number of bytes sent to the client. With TLS termination, the decrypted bytes are counted. |
+| <a id="opt-traefik-connection-duration" href="#opt-traefik-connection-duration" title="#opt-traefik-connection-duration">`traefik.connection.duration`</a> | The duration of the connection, in seconds. |
+| <a id="opt-client-address" href="#opt-client-address" title="#opt-client-address">`client.address`</a> | The IP address of the client. |
+| <a id="opt-client-port" href="#opt-client-port" title="#opt-client-port">`client.port`</a> | The port of the client. |
+| <a id="opt-network-local-address" href="#opt-network-local-address" title="#opt-network-local-address">`network.local.address`</a> | The IP address the connection was accepted on. |
+| <a id="opt-network-local-port" href="#opt-network-local-port" title="#opt-network-local-port">`network.local.port`</a> | The port the connection was accepted on. |
+| <a id="opt-network-transport" href="#opt-network-transport" title="#opt-network-transport">`network.transport`</a> | Always `tcp`. |
+| <a id="opt-network-type" href="#opt-network-type" title="#opt-network-type">`network.type`</a> | `ipv4` or `ipv6`. |
+| <a id="opt-server-address" href="#opt-server-address" title="#opt-server-address">`server.address`</a> | The server name sent by the client (SNI), when the TLS is terminated by Traefik. |
+| <a id="opt-tls-protocol-version" href="#opt-tls-protocol-version" title="#opt-tls-protocol-version">`tls.protocol.version`</a> | The TLS version, when the TLS is terminated by Traefik. |
+| <a id="opt-tls-cipher" href="#opt-tls-cipher" title="#opt-tls-cipher">`tls.cipher`</a> | The TLS cipher suite, when the TLS is terminated by Traefik. |
+| <a id="opt-tls-client-certificate" href="#opt-tls-client-certificate" title="#opt-tls-client-certificate">`tls.client.certificate`</a> | The PEM-encoded client certificate, when the TLS is terminated by Traefik and the client provides one. |
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}

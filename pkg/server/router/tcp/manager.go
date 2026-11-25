@@ -389,7 +389,7 @@ func (m *Manager) buildTCPHandler(ctx context.Context, entryPointName, routerNam
 	// The access log middleware is idempotent if the TCP access logs are disabled.
 	// It comes after the metrics middleware, which does not detect the TLS connections it would wrap,
 	// and before the router middlewares, to log the connections they reject.
-	accessLogHandler := accesslogMiddle.RouterAccessLogHandler(ctx, m.observabilityMgr.TCPAccessLogHandler(), entryPointName, routerName, qualifiedService)
+	accessLogHandler := accesslogMiddle.RouterAccessLogHandler(ctx, m.observabilityMgr.TCPAccessLogHandler(), entryPointName, routerName, qualifiedService, router.TLS)
 
 	mHandler := m.middlewaresBuilder.BuildChain(ctx, router.Middlewares)
 

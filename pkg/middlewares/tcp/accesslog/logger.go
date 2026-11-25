@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 )
 
-// Handler writes the TCP access logs.
+// Handler writes the TCP access logs, in the JSON format.
 // It is shared by the access log middlewares of all the TCP routers.
 type Handler struct {
 	logger *logrus.Logger
@@ -27,18 +28,10 @@ func NewHandler(config *otypes.TCPAccessLog) (*Handler, error) {
 		file = f
 	}
 
-	var formatter logrus.Formatter
-	switch config.Format {
-	case "json":
-		formatter = new(logrus.JSONFormatter)
-	default:
-		formatter = new(logrus.TextFormatter)
-	}
-
 	// The zero value of the logger mutex makes the writes thread-safe.
 	logger := &logrus.Logger{
 		Out:       file,
-		Formatter: formatter,
+		Formatter: &logrus.JSONFormatter{TimestampFormat: time.RFC3339Nano},
 		Hooks:     make(logrus.LevelHooks),
 		Level:     logrus.InfoLevel,
 	}
