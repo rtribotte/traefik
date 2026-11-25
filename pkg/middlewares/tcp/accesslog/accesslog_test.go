@@ -301,7 +301,7 @@ func TestAccessLogMiddleware_ServeTCP_otlp(t *testing.T) {
 				},
 			})
 			require.NoError(t, err)
-			t.Cleanup(func() { _ = handler.file.Close() })
+			t.Cleanup(func() { require.NoError(t, handler.Close()) })
 
 			serverConn, clientConn := net.Pipe()
 			t.Cleanup(func() {
@@ -347,7 +347,7 @@ func newHandler(t *testing.T) (*Handler, string) {
 	handler, err := NewHandler(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 
-	t.Cleanup(func() { _ = handler.file.Close() })
+	t.Cleanup(func() { require.NoError(t, handler.Close()) })
 
 	return handler, logFile
 }

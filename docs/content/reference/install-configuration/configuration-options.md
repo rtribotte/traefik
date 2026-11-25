@@ -538,6 +538,7 @@ THIS FILE MUST NOT BE EDITED BY HAND
 | <a id="opt-serverstransport-spiffe-trustdomain" href="#opt-serverstransport-spiffe-trustdomain" title="#opt-serverstransport-spiffe-trustdomain">serverstransport.spiffe.trustdomain</a> | Defines the allowed SPIFFE trust domain. | |
 | <a id="opt-spiffe-workloadapiaddr" href="#opt-spiffe-workloadapiaddr" title="#opt-spiffe-workloadapiaddr">spiffe.workloadapiaddr</a> | Defines the workload API address. | |
 | <a id="opt-tcpaccesslog" href="#opt-tcpaccesslog" title="#opt-tcpaccesslog">tcpaccesslog</a> | TCP access log settings. | false |
+| <a id="opt-tcpaccesslog-bufferingsize" href="#opt-tcpaccesslog-bufferingsize" title="#opt-tcpaccesslog-bufferingsize">tcpaccesslog.bufferingsize</a> | Number of TCP access log lines to process in a buffered way. | 0 |
 | <a id="opt-tcpaccesslog-dualoutput" href="#opt-tcpaccesslog-dualoutput" title="#opt-tcpaccesslog-dualoutput">tcpaccesslog.dualoutput</a> | Enables TCP access log output alongside OTLP. By default, this output is disabled when OTLP is configured. | false |
 | <a id="opt-tcpaccesslog-filepath" href="#opt-tcpaccesslog-filepath" title="#opt-tcpaccesslog-filepath">tcpaccesslog.filepath</a> | TCP access log file path. Stdout is used when omitted or empty. | |
 | <a id="opt-tcpaccesslog-otlp" href="#opt-tcpaccesslog-otlp" title="#opt-tcpaccesslog-otlp">tcpaccesslog.otlp</a> | Settings for OpenTelemetry. | false |

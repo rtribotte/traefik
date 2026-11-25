@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -132,6 +134,12 @@ func (o *ObservabilityMgr) Close() {
 		}
 	}
 
+	if o.tcpAccessLoggerMiddleware != nil {
+		if err := o.tcpAccessLoggerMiddleware.Close(); err != nil {
+			log.Error().Err(err).Msg("Could not close the TCP access log file")
+		}
+	}
+
 	if o.tracerCloser != nil {
 		if err := o.tracerCloser.Close(); err != nil {
 			log.Error().Err(err).Msg("Could not close the tracer")
@@ -140,11 +148,21 @@ func (o *ObservabilityMgr) Close() {
 }
 
 func (o *ObservabilityMgr) RotateAccessLogs() error {
-	if o.accessLoggerMiddleware == nil {
-		return nil
+	var errs []error
+
+	if o.accessLoggerMiddleware != nil {
+		if err := o.accessLoggerMiddleware.Rotate(); err != nil {
+			errs = append(errs, fmt.Errorf("rotating the access log file: %w", err))
+		}
 	}
 
-	return o.accessLoggerMiddleware.Rotate()
+	if o.tcpAccessLoggerMiddleware != nil {
+		if err := o.tcpAccessLoggerMiddleware.Rotate(); err != nil {
+			errs = append(errs, fmt.Errorf("rotating the TCP access log file: %w", err))
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 func (o *ObservabilityMgr) observabilityContextHandler(next http.Handler, internal bool, config dynamic.RouterObservabilityConfig, metadata *dynamic.Metadata) http.Handler {

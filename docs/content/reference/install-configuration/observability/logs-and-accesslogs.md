@@ -476,6 +476,13 @@ tcpAccessLog:
 |:-----------|:--------------------------|:--------|:---------|
 | <a id="opt-tcpAccessLog-filePath" href="#opt-tcpAccessLog-filePath" title="#opt-tcpAccessLog-filePath">`tcpAccessLog.filePath`</a> | By default, the TCP access logs are written to the standard output.<br />You can configure a file path instead using the `filePath` option. |  | No      |
 | <a id="opt-tcpAccessLog-dualOutput" href="#opt-tcpAccessLog-dualOutput" title="#opt-tcpAccessLog-dualOutput">`tcpAccessLog.dualOutput`</a> | Force Stdio logging, even if OTLP is configured. By default, Stdio logging is disabled when OTLP is enabled for performance reasons. | false      | No      |
+| <a id="opt-tcpAccessLog-bufferingSize" href="#opt-tcpAccessLog-bufferingSize" title="#opt-tcpAccessLog-bufferingSize">`tcpAccessLog.bufferingSize`</a> | To write the TCP access logs asynchronously, set `bufferingSize` to a value greater than zero.<br />The value specifies the capacity, in log lines, of the in-memory queue.<br />Each log line keeps the time the connection was closed, even when it is written later on. | 0 | No      |
+
+### Log Rotation
+
+As for the HTTP access logs, when Traefik receives a USR1 signal, it closes and opens again the TCP access log file.
+This lets an external program, such as `logrotate`, rotate the TCP access log file.
+See [Log Rotation](#log-rotation) for more details.
 
 ### OpenTelemetry
 
