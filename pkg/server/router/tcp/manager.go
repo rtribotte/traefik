@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/runtime"
+	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	metricsMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/metrics"
 	"github.com/traefik/traefik/v3/pkg/muxer"
 	httpmuxer "github.com/traefik/traefik/v3/pkg/muxer/http"
@@ -273,7 +274,6 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 				logger.Error().Err(err).Send()
 				continue
 			}
-			handler = m.observabilityMgr.BuildTCP(ctxRouter, handler)
 		}
 
 		if routerConfig.TLS == nil {
@@ -351,7 +351,7 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 		}
 
 		handler = &tcp.TLSHandler{
-			Next:           m.observabilityMgr.BuildTCP(ctxRouter, handler),
+			Next:           handler,
 			Config:         tlsConf,
 			TLSOptionsName: tlsOptionsName,
 		}
@@ -386,9 +386,14 @@ func (m *Manager) buildTCPHandler(ctx context.Context, entryPointName, routerNam
 	qualifiedService := provider.GetQualifiedName(ctx, router.Service)
 	metricsHandler := metricsMiddle.RouterMetricsHandler(ctx, m.observabilityMgr.MetricsRegistry(), entryPointName, routerName, qualifiedService, router.TLS)
 
+	// The access log middleware is idempotent if the TCP access logs are disabled.
+	// It comes after the metrics middleware, which does not detect the TLS connections it would wrap,
+	// and before the router middlewares, to log the connections they reject.
+	accessLogHandler := accesslogMiddle.RouterAccessLogHandler(ctx, m.observabilityMgr.TCPAccessLogHandler(), entryPointName, routerName, qualifiedService)
+
 	mHandler := m.middlewaresBuilder.BuildChain(ctx, router.Middlewares)
 
-	return tcp.NewChain(metricsHandler).Extend(*mHandler).Then(sHandler)
+	return tcp.NewChain(metricsHandler, accessLogHandler).Extend(*mHandler).Then(sHandler)
 }
 
 func providerName(routerName string) string {
