@@ -538,9 +538,6 @@ accessLog:
       headers:
         name0: foobar
         name1: foobar
-tcpAccessLog:
-  filePath: foobar
-  format: foobar
 tracing:
   serviceName: foobar
   resourceAttributes:
