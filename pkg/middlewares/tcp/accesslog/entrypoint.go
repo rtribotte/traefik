@@ -51,12 +51,12 @@ func NewEntryPointLogger(logger *Logger, entryPointName string) *EntryPointLogge
 	}
 }
 
-// LogUnhandled logs a connection closed by the entry point without a router handling it.
+// LogConnection logs a connection closed by the entry point without a router handling it.
 // The router name is only known when the matching router has invalid TLS options,
 // and the server name only when the TLS ClientHello was read.
 // The given error type is replaced when the error shows that the client closed the connection,
 // or did not send its first bytes in time.
-func (e *EntryPointLogger) LogUnhandled(conn net.Conn, start time.Time, receivedBytes int64, routerName, serverName, errorType string, err error) {
+func (e *EntryPointLogger) LogConnection(conn net.Conn, start time.Time, receivedBytes int64, routerName, serverName, errorType string, err error) {
 	if e == nil {
 		return
 	}

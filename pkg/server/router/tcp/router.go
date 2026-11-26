@@ -115,7 +115,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
 			conn.Close()
-			r.logUnhandled(conn, "", accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+			r.logConnection(conn, "", accesslogMiddle.ErrorTypeInvalidConnectionData, err)
 			return
 		}
 
@@ -147,7 +147,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while peeking first bytes")
 		}
 		_ = pConn.Close()
-		r.logUnhandled(pConn, "", accesslogMiddle.ErrorTypeConnectionClosed, err)
+		r.logConnection(pConn, "", accesslogMiddle.ErrorTypeConnectionClosed, err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
 				log.Debug().Err(err).Msg("Error while serving Postgres connection")
 			}
-			r.logUnhandled(pConn, "", accesslogMiddle.ErrorTypePostgres, err)
+			r.logConnection(pConn, "", accesslogMiddle.ErrorTypePostgres, err)
 		}
 		_ = pConn.Close()
 		return
@@ -170,7 +170,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while reading client hello")
 		}
 		_ = pConn.Close()
-		r.logUnhandled(pConn, "", accesslogMiddle.ErrorTypeInvalidClientHello, err)
+		r.logConnection(pConn, "", accesslogMiddle.ErrorTypeInvalidClientHello, err)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
 		_ = pConn.Close()
-		r.logUnhandled(pConn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+		r.logConnection(pConn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
 		return
 	}
 
@@ -198,7 +198,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			r.httpForwarder.ServeTCP(pConn)
 		default:
 			_ = pConn.Close()
-			r.logUnhandled(pConn, "", accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+			r.logConnection(pConn, "", accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
 		}
 		return
 	}
@@ -251,7 +251,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	_ = pConn.Close()
-	r.logUnhandled(pConn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+	r.logConnection(pConn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
 }
 
 // SetAccessLogger sets the logger of the connections closed without a router handling them.
@@ -259,13 +259,13 @@ func (r *Router) SetAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger)
 	r.accessLogger = accessLogger
 }
 
-// logUnhandled logs in the TCP access logs a connection closed without a router handling it.
+// logConnection logs in the TCP access logs a connection closed without a router handling it.
 // The server name is only known once the TLS ClientHello was read,
 // and the error is the one which prevented the routing, if any.
-func (r *Router) logUnhandled(conn net.Conn, serverName, errorType string, err error) {
+func (r *Router) logConnection(conn net.Conn, serverName, errorType string, err error) {
 	start, received := connStats(conn)
 
-	r.accessLogger.LogUnhandled(conn, start, received, "", serverName, errorType, err)
+	r.accessLogger.LogConnection(conn, start, received, "", serverName, errorType, err)
 }
 
 // AddTCPRoute defines a handler for the given rule.
@@ -388,7 +388,7 @@ func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 
 	start, received := connStats(conn)
 
-	t.accessLogger.LogUnhandled(conn, start, received, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
+	t.accessLogger.LogConnection(conn, start, received, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
 }
 
 // LogUnservedHTTPConn logs in the TCP access logs a connection forwarded to an HTTP server,
@@ -412,7 +412,7 @@ func LogUnservedHTTPConn(accessLogger *accesslogMiddle.EntryPointLogger, conn ne
 
 	start, received := connStats(conn)
 
-	accessLogger.LogUnhandled(conn, start, received, "", serverName, errorType, nil)
+	accessLogger.LogConnection(conn, start, received, "", serverName, errorType, nil)
 }
 
 // connStats returns when the router received the given connection, and the bytes read from it.

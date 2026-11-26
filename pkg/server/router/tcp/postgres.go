@@ -55,7 +55,7 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	}
 
 	if !hello.isTLS {
-		r.logUnhandled(conn, "", accesslogMiddle.ErrorTypePostgres, nil)
+		r.logConnection(conn, "", accesslogMiddle.ErrorTypePostgres, nil)
 		return nil
 	}
 
@@ -69,14 +69,14 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		r.logUnhandled(conn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+		r.logConnection(conn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
 		return nil
 	}
 
 	// Contains also TCP TLS passthrough routes.
 	handlerTCPTLS, _ := r.muxerTCPTLS.Match(connData)
 	if handlerTCPTLS == nil {
-		r.logUnhandled(conn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+		r.logConnection(conn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
 		return nil
 	}
 
