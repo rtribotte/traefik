@@ -124,7 +124,7 @@ func TestLogger_LogConnection_disabled(t *testing.T) {
 	})
 }
 
-func TestAddAddressFields(t *testing.T) {
+func TestAddClientFields(t *testing.T) {
 	testCases := []struct {
 		desc     string
 		addr     net.Addr
@@ -133,22 +133,22 @@ func TestAddAddressFields(t *testing.T) {
 		{
 			desc:     "IPv4 TCP address",
 			addr:     &net.TCPAddr{IP: net.IPv4(10, 0, 0, 1), Port: 4242},
-			expected: map[string]any{"address": "10.0.0.1", "port": 4242},
+			expected: map[string]any{"client.address": "10.0.0.1", "client.port": 4242},
 		},
 		{
 			desc:     "IPv6 TCP address",
 			addr:     &net.TCPAddr{IP: net.ParseIP("::1"), Port: 4242},
-			expected: map[string]any{"address": "::1", "port": 4242},
+			expected: map[string]any{"client.address": "::1", "client.port": 4242},
 		},
 		{
 			desc:     "splittable address",
 			addr:     stringAddr("192.168.1.1:8080"),
-			expected: map[string]any{"address": "192.168.1.1", "port": 8080},
+			expected: map[string]any{"client.address": "192.168.1.1", "client.port": 8080},
 		},
 		{
 			desc:     "unsplittable address",
 			addr:     stringAddr("/run/traefik.sock"),
-			expected: map[string]any{"address": "/run/traefik.sock"},
+			expected: map[string]any{"client.address": "/run/traefik.sock"},
 		},
 		{
 			desc:     "no address",
@@ -161,7 +161,7 @@ func TestAddAddressFields(t *testing.T) {
 			t.Parallel()
 
 			fields := make(map[string]any)
-			addAddressFields(fields, "address", "port", test.addr)
+			addClientFields(fields, test.addr)
 
 			assert.Equal(t, test.expected, fields)
 		})

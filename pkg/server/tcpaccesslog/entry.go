@@ -126,7 +126,7 @@ func (l *Logger) LogConnection(conn net.Conn, entry Entry) {
 	addField(fields, errorTypeField, errorType(entry.ErrorType, entry.Err))
 
 	// The listening address is not logged, as the entry point identifies it.
-	addAddressFields(fields, clientAddressField, clientPortField, conn.RemoteAddr())
+	addClientFields(fields, conn.RemoteAddr())
 
 	// The handshake is not forced, as it has to stay driven by the handlers,
 	// so the TLS parameters are only known once the connection has been served.
@@ -164,28 +164,28 @@ func errorType(errorType string, err error) string {
 	return errorType
 }
 
-// addAddressFields adds the address and the port of the given network address.
+// addClientFields adds the address and the port of the given client network address.
 // The whole address is used when it cannot be split, e.g. for a Unix socket.
-func addAddressFields(fields logrus.Fields, addressField, portField string, addr net.Addr) {
+func addClientFields(fields logrus.Fields, addr net.Addr) {
 	if addr == nil {
 		return
 	}
 
 	if tcpAddr, ok := addr.(*net.TCPAddr); ok {
-		fields[addressField] = tcpAddr.IP.String()
-		fields[portField] = tcpAddr.Port
+		fields[clientAddressField] = tcpAddr.IP.String()
+		fields[clientPortField] = tcpAddr.Port
 		return
 	}
 
 	host, port, err := net.SplitHostPort(addr.String())
 	if err != nil {
-		fields[addressField] = addr.String()
+		fields[clientAddressField] = addr.String()
 		return
 	}
 
-	fields[addressField] = host
+	fields[clientAddressField] = host
 	if p, err := strconv.Atoi(port); err == nil {
-		fields[portField] = p
+		fields[clientPortField] = p
 	}
 }
 
