@@ -644,8 +644,6 @@ type httpServer struct {
 	Server    stoppableServer
 	Forwarder *httpForwarder
 	Switcher  *middlewares.HTTPHandlerSwitcher
-
-	unservedConns *unservedConnLogger
 }
 
 func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, entryPointName string, tcpAccessLogger *tcpaccesslog.Logger) (*httpServer, error) {
@@ -741,8 +739,8 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 
 	// The connections closed before any request reaches the handler are logged in the TCP access logs,
 	// hence the wrapping has to be done last so that it is the first handler executed.
-	unservedConns := &unservedConnLogger{accessLogger: tcpAccessLogger, entryPointName: entryPointName}
-	handler = unservedConns.wrap(handler)
+	unservedConns := tcpaccesslog.NewHTTPConnLogger(tcpAccessLogger, entryPointName)
+	handler = unservedConns.Wrap(handler)
 
 	// The round trippers and connection pools dedicated to a connection (Kerberos or NTLM) are only reachable from its
 	// context, which is kept until the ConnState hook reports the connection closed to release them.
@@ -767,7 +765,7 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 		return ctx
 	})
 
-	connContext.AddConnContextFunc(unservedConns.connContext)
+	connContext.AddConnContextFunc(unservedConns.ConnContext)
 
 	if debugConnection || (configuration.Transport != nil && (configuration.Transport.KeepAliveMaxTime > 0 || configuration.Transport.KeepAliveMaxRequests > 0)) {
 		connContext.AddConnContextFunc(func(ctx context.Context, c net.Conn) context.Context {
@@ -791,7 +789,7 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 			}
 		}
 
-		unservedConns.connState(c, state)
+		unservedConns.ConnState(c, state)
 
 		if debugConnection {
 			clientConnectionStatesMu.Lock()
@@ -828,10 +826,9 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 		}
 	}()
 	return &httpServer{
-		Server:        serverHTTP,
-		Forwarder:     listener,
-		Switcher:      httpSwitcher,
-		unservedConns: unservedConns,
+		Server:    serverHTTP,
+		Forwarder: listener,
+		Switcher:  httpSwitcher,
 	}, nil
 }
 
