@@ -765,7 +765,14 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 	})
 
 	unservedConns := tcpaccesslog.NewUnservedConnLogger(tcpAccessLogger, entryPointName)
-	connContext.AddConnContextFunc(unservedConns.ConnContext)
+	if unservedConns != nil {
+		connContext.AddConnContextFunc(func(ctx context.Context, c net.Conn) context.Context {
+			ctx, served := tcpaccesslog.AddServedOnContext(ctx)
+			unservedConns.Track(c, served)
+
+			return ctx
+		})
+	}
 
 	if debugConnection || (configuration.Transport != nil && (configuration.Transport.KeepAliveMaxTime > 0 || configuration.Transport.KeepAliveMaxRequests > 0)) {
 		connContext.AddConnContextFunc(func(ctx context.Context, c net.Conn) context.Context {

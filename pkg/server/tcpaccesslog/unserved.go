@@ -38,17 +38,10 @@ func NewUnservedConnLogger(logger *Logger, entryPointName string) *UnservedConnL
 	}
 }
 
-// ConnContext tracks the given connection.
-// It is meant to be used by the http.Server ConnContext hook.
-func (h *UnservedConnLogger) ConnContext(ctx context.Context, c net.Conn) context.Context {
-	if h == nil {
-		return ctx
-	}
-
-	served := &atomic.Bool{}
+// Track tracks the given connection, until its closed state is reported to ConnState.
+// The served flag is the one added to the connection context by AddServedOnContext.
+func (h *UnservedConnLogger) Track(c net.Conn, served *atomic.Bool) {
 	h.served.Store(c, served)
-
-	return context.WithValue(ctx, servedKey{}, served)
 }
 
 // ConnState logs the given connection when it is closed without having served any request.
@@ -83,6 +76,14 @@ func (h *UnservedConnLogger) ConnState(c net.Conn, state http.ConnState) {
 	}
 
 	h.logger.LogConnection(c, entry)
+}
+
+// AddServedOnContext adds to the given connection context the flag MarkServed sets,
+// and returns it to be tracked by an UnservedConnLogger.
+func AddServedOnContext(ctx context.Context) (context.Context, *atomic.Bool) {
+	served := &atomic.Bool{}
+
+	return context.WithValue(ctx, servedKey{}, served), served
 }
 
 // MarkServed marks the connection of the request with the given context as served,
