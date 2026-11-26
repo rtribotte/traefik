@@ -63,6 +63,8 @@ func (h *HTTPConnLogger) ConnState(c net.Conn, state http.ConnState) {
 		return
 	}
 
+	// The connection stops being tracked here, so that it is logged at most once,
+	// even if the closed state were reported again.
 	served, ok := h.served.LoadAndDelete(c)
 	if !ok || state == http.StateHijacked || served.(*atomic.Bool).Load() {
 		return
