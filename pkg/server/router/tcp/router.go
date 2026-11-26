@@ -14,7 +14,7 @@ import (
 
 	"github.com/go-acme/lego/v5/challenge/tlsalpn01"
 	"github.com/rs/zerolog/log"
-	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	traefiktls "github.com/traefik/traefik/v3/pkg/tls"
@@ -58,7 +58,7 @@ type Router struct {
 
 	// accessLogger logs the connections closed without a router handling them.
 	// It is nil when the TCP access logs are disabled.
-	accessLogger *accesslogMiddle.EntryPointLogger
+	accessLogger *accesslog.EntryPointLogger
 }
 
 // NewRouter returns a new TCP router.
@@ -114,7 +114,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
 			conn.Close()
-			r.logConnection(conn, "", accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+			r.logConnection(conn, "", accesslog.ErrorTypeInvalidConnectionData, err)
 			return
 		}
 
@@ -146,7 +146,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while peeking first bytes")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, "", accesslogMiddle.ErrorTypeConnectionClosed, err)
+		r.logConnection(pConn, "", accesslog.ErrorTypeConnectionClosed, err)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
 				log.Debug().Err(err).Msg("Error while serving Postgres connection")
 			}
-			r.logConnection(pConn, "", accesslogMiddle.ErrorTypePostgres, err)
+			r.logConnection(pConn, "", accesslog.ErrorTypePostgres, err)
 		}
 		_ = pConn.Close()
 		return
@@ -169,7 +169,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while reading client hello")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, "", accesslogMiddle.ErrorTypeInvalidClientHello, err)
+		r.logConnection(pConn, "", accesslog.ErrorTypeInvalidClientHello, err)
 		return
 	}
 
@@ -184,7 +184,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
 		_ = pConn.Close()
-		r.logConnection(pConn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+		r.logConnection(pConn, hello.serverName, accesslog.ErrorTypeInvalidConnectionData, err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			r.httpForwarder.ServeTCP(pConn)
 		default:
 			_ = pConn.Close()
-			r.logConnection(pConn, "", accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+			r.logConnection(pConn, "", accesslog.ErrorTypeNoMatchingRouter, nil)
 		}
 		return
 	}
@@ -250,11 +250,11 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	_ = pConn.Close()
-	r.logConnection(pConn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+	r.logConnection(pConn, hello.serverName, accesslog.ErrorTypeNoMatchingRouter, nil)
 }
 
 // SetAccessLogger sets the logger of the connections closed without a router handling them.
-func (r *Router) SetAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger) {
+func (r *Router) SetAccessLogger(accessLogger *accesslog.EntryPointLogger) {
 	r.accessLogger = accessLogger
 }
 
@@ -374,7 +374,7 @@ func (r *Router) acmeTLSALPNHandler() tcp.Handler {
 // since we cannot proceed with the intended TLS conf.
 type brokenTLSRouter struct {
 	// accessLogger logs the closed connections, as the routers with invalid TLS options do not handle them.
-	accessLogger *accesslogMiddle.EntryPointLogger
+	accessLogger *accesslog.EntryPointLogger
 	// tcpRouterName is empty for the HTTPS routers, whose TLS options are checked per server name.
 	tcpRouterName string
 }
@@ -383,7 +383,7 @@ type brokenTLSRouter struct {
 func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
-	t.accessLogger.LogConnection(conn, t.tcpRouterName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
+	t.accessLogger.LogConnection(conn, t.tcpRouterName, "", accesslog.ErrorTypeInvalidTLSOptions, nil)
 }
 
 // peekConn wraps a tcp.WriteCloser with a bufio.Reader for Peek operations

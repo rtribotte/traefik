@@ -29,7 +29,7 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/contenttype"
 	"github.com/traefik/traefik/v3/pkg/middlewares/forwardedheaders"
 	"github.com/traefik/traefik/v3/pkg/middlewares/requestdecorator"
-	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"github.com/traefik/traefik/v3/pkg/observability/metrics"
 	"github.com/traefik/traefik/v3/pkg/proxy/fast"
@@ -105,7 +105,7 @@ func (h *httpForwarder) Close() error {
 // TCPEntryPoints holds a map of TCPEntryPoint (the entrypoint names being the keys).
 type TCPEntryPoints map[string]*TCPEntryPoint
 
-func NewTCPEntryPoints(entryPointsConfig static.EntryPoints, hostResolverConfig *types.HostResolverConfig, metricsRegistry metrics.Registry, tcpAccessLogger *accesslogMiddle.Logger) (TCPEntryPoints, error) {
+func NewTCPEntryPoints(entryPointsConfig static.EntryPoints, hostResolverConfig *types.HostResolverConfig, metricsRegistry metrics.Registry, tcpAccessLogger *accesslog.Logger) (TCPEntryPoints, error) {
 	if os.Getenv(debugConnectionEnv) != "" {
 		expvar.Publish("clientConnectionStates", expvar.Func(func() any {
 			return clientConnectionStates
@@ -183,7 +183,7 @@ type TCPEntryPoint struct {
 
 // NewTCPEntryPoint creates a new TCPEntryPoint.
 // The TCP access logger is nil when the TCP access logs are disabled.
-func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoint, hostResolverConfig *types.HostResolverConfig, openConnectionsGauge gokitmetrics.Gauge, tcpAccessLogger *accesslogMiddle.Logger) (*TCPEntryPoint, error) {
+func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoint, hostResolverConfig *types.HostResolverConfig, openConnectionsGauge gokitmetrics.Gauge, tcpAccessLogger *accesslog.Logger) (*TCPEntryPoint, error) {
 	tracker := newConnectionTracker(openConnectionsGauge)
 
 	listener, err := buildListener(ctx, name, config)
@@ -203,7 +203,7 @@ func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoin
 	// which is called once for the HTTP server and once for the HTTPS server.
 	logHeaderNamesStrategiesWarnings(ctx, config)
 
-	accessLogger := accesslogMiddle.NewEntryPointLogger(tcpAccessLogger, name)
+	accessLogger := accesslog.NewEntryPointLogger(tcpAccessLogger, name)
 	rt.SetAccessLogger(accessLogger)
 
 	httpServer, err := newHTTPServer(ctx, listener, config, true, reqDecorator, accessLogger)
@@ -651,7 +651,7 @@ type httpServer struct {
 	unservedConns *unservedConnLogger
 }
 
-func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, accessLogger *accesslogMiddle.EntryPointLogger) (*httpServer, error) {
+func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, accessLogger *accesslog.EntryPointLogger) (*httpServer, error) {
 	if configuration.HTTP2.MaxConcurrentStreams < 0 {
 		return nil, errors.New("max concurrent streams value must be greater than or equal to zero")
 	}

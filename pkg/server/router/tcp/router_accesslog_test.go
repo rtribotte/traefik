@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	traefiktcp "github.com/traefik/traefik/v3/pkg/tcp"
 )
@@ -159,14 +159,14 @@ func newAccessLoggedRouter(t *testing.T) (*Router, string) {
 
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-	logger, err := accesslogMiddle.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
+	logger, err := accesslog.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, logger.Close()) })
 
 	router, err := NewRouter(nil)
 	require.NoError(t, err)
 
-	router.SetAccessLogger(accesslogMiddle.NewEntryPointLogger(logger, "web"))
+	router.SetAccessLogger(accesslog.NewEntryPointLogger(logger, "web"))
 
 	return router, logFile
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/traefik/v3/pkg/config/static"
-	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	tcprouter "github.com/traefik/traefik/v3/pkg/server/router/tcp"
 	"github.com/traefik/traefik/v3/pkg/tls/generate"
@@ -121,7 +121,7 @@ func startTCPAccessLoggedEntryPoint(t *testing.T, httpsTLSConfig *tls.Config) (s
 
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-	logger, err := accesslogMiddle.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
+	logger, err := accesslog.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, logger.Close()) })
 
@@ -136,7 +136,7 @@ func startTCPAccessLoggedEntryPoint(t *testing.T, httpsTLSConfig *tls.Config) (s
 	router, err := tcprouter.NewRouter(nil)
 	require.NoError(t, err)
 
-	router.SetAccessLogger(accesslogMiddle.NewEntryPointLogger(logger, "web"))
+	router.SetAccessLogger(accesslog.NewEntryPointLogger(logger, "web"))
 
 	okHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)

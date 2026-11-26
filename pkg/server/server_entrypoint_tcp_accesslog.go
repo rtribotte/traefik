@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
+	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 )
 
 type servedKey struct{}
@@ -20,7 +20,7 @@ type servedKey struct{}
 // as a connection becomes active as soon as its first byte is read.
 type unservedConnLogger struct {
 	// accessLogger is nil when the TCP access logs are disabled.
-	accessLogger *accesslogMiddle.EntryPointLogger
+	accessLogger *accesslog.EntryPointLogger
 
 	// served holds, for each tracked connection, whether a request reached the handler.
 	served sync.Map
@@ -50,14 +50,14 @@ func (u *unservedConnLogger) connState(c net.Conn, state http.ConnState) {
 		return
 	}
 
-	errorType := accesslogMiddle.ErrorTypeNoHTTPRequest
+	errorType := accesslog.ErrorTypeNoHTTPRequest
 
 	var serverName string
 	if tlsConn, ok := c.(*tls.Conn); ok {
 		state := tlsConn.ConnectionState()
 		serverName = state.ServerName
 		if !state.HandshakeComplete {
-			errorType = accesslogMiddle.ErrorTypeTLSHandshake
+			errorType = accesslog.ErrorTypeTLSHandshake
 		}
 	}
 
