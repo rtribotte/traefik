@@ -325,7 +325,7 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 
 			logger.Debug().Msgf("Adding special TLS closing route for %q because broken TLS options %s", routerConfig.Rule, tlsOptionsName)
 
-			if err := router.muxerTCPTLS.AddRoute(routerConfig.Rule, routerConfig.RuleSyntax, routerConfig.Priority, providerName(routerName), &brokenTLSRouter{accessLogger: router.accessLogger, routerName: routerName}); err != nil {
+			if err := router.muxerTCPTLS.AddRoute(routerConfig.Rule, routerConfig.RuleSyntax, routerConfig.Priority, providerName(routerName), &brokenTLSRouter{accessLogger: router.accessLogger, tcpRouterName: routerName}); err != nil {
 				routerConfig.AddError(err, true)
 				logger.Error().Err(err).Send()
 			}

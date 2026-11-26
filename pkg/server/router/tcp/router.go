@@ -375,15 +375,15 @@ func (r *Router) acmeTLSALPNHandler() tcp.Handler {
 type brokenTLSRouter struct {
 	// accessLogger logs the closed connections, as the routers with invalid TLS options do not handle them.
 	accessLogger *accesslogMiddle.EntryPointLogger
-	// routerName is only known for the TCP routers.
-	routerName string
+	// tcpRouterName is empty for the HTTPS routers, whose TLS options are checked per server name.
+	tcpRouterName string
 }
 
 // ServeTCP instantly closes the connection.
 func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
-	t.accessLogger.LogConnection(conn, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
+	t.accessLogger.LogConnection(conn, t.tcpRouterName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
 }
 
 // peekConn wraps a tcp.WriteCloser with a bufio.Reader for Peek operations

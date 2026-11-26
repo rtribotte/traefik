@@ -75,7 +75,7 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			setup: func(t *testing.T, router *Router, _ net.Conn) {
 				t.Helper()
 
-				brokenRouter := &brokenTLSRouter{accessLogger: router.accessLogger, routerName: "router@file"}
+				brokenRouter := &brokenTLSRouter{accessLogger: router.accessLogger, tcpRouterName: "router@file"}
 				require.NoError(t, router.muxerTCPTLS.AddRoute("HostSNI(`foo.localhost`)", "", 1, "file", brokenRouter))
 			},
 			client: func(clientConn net.Conn) {
