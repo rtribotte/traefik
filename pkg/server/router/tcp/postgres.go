@@ -54,7 +54,7 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	}
 
 	if !hello.isTLS {
-		return nil
+		return errors.New("non-TLS connection after the STARTTLS negotiation")
 	}
 
 	// The deadline was there to prevent hanging connections while waiting for the client,
@@ -67,13 +67,13 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		return nil
+		return errInvalidConnectionData
 	}
 
 	// Contains also TCP TLS passthrough routes.
 	handlerTCPTLS, _ := r.muxerTCPTLS.Match(connData)
 	if handlerTCPTLS == nil {
-		return nil
+		return errNoMatchingRouter
 	}
 
 	// We are in TLS mode and if the handler is not TLSHandler, we are in passthrough.

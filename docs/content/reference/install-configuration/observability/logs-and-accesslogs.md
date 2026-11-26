@@ -543,5 +543,29 @@ tcpAccessLog:
 | <a id="opt-tls-cipher" href="#opt-tls-cipher" title="#opt-tls-cipher">`tls.cipher`</a> | The TLS cipher suite, when the TLS is terminated by Traefik. |
 | <a id="opt-tls-client-subject" href="#opt-tls-client-subject" title="#opt-tls-client-subject">`tls.client.subject`</a> | The subject of the client certificate, when the TLS is terminated by Traefik and the client provides one. |
 | <a id="opt-tls-client-hash-sha256" href="#opt-tls-client-hash-sha256" title="#opt-tls-client-hash-sha256">`tls.client.hash.sha256`</a> | The SHA-256 fingerprint of the client certificate, as an uppercase hexadecimal string, when the TLS is terminated by Traefik and the client provides one.<br />Unlike the subject, it identifies the certificate uniquely, e.g. when a certificate is renewed with the same subject. |
+| <a id="opt-error-type" href="#opt-error-type" title="#opt-error-type">`error.type`</a> | Why the EntryPoint closed the connection without a router handling it (see below). |
+
+### Connections Not Handled by a Router
+
+Traefik also logs the connections the EntryPoint closes before any TCP router handles them,
+e.g. a client closing the connection before sending data, or a TLS connection for a server name no router matches.
+These log lines have the `error.type` field,
+and neither the `traefik.service.name` nor the TLS fields.
+The `traefik.router.name` field is only present for the `invalid_tls_options` error type,
+and the `server.address` field only when the TLS ClientHello was read.
+The `traefik.connection.received_bytes` field counts the bytes read to route the connection.
+
+| Error type | Description |
+|------------|-------------|
+| <a id="opt-connection-closed" href="#opt-connection-closed" title="#opt-connection-closed">`connection_closed`</a> | The client closed the connection before sending enough data to route it. |
+| <a id="opt-timeout" href="#opt-timeout" title="#opt-timeout">`timeout`</a> | The client did not send enough data to route the connection in time. |
+| <a id="opt-invalid-client-hello" href="#opt-invalid-client-hello" title="#opt-invalid-client-hello">`invalid_client_hello`</a> | The TLS ClientHello could not be read. |
+| <a id="opt-invalid-connection-data" href="#opt-invalid-connection-data" title="#opt-invalid-connection-data">`invalid_connection_data`</a> | The connection data used for routing could not be read. |
+| <a id="opt-no-matching-router" href="#opt-no-matching-router" title="#opt-no-matching-router">`no_matching_router`</a> | No TCP router matches the Postgres STARTTLS connection.<br />The other connections no TCP router matches are forwarded to the HTTP routers. |
+| <a id="opt-postgres-error" href="#opt-postgres-error" title="#opt-postgres-error">`postgres_error`</a> | The Postgres STARTTLS negotiation failed. |
+| <a id="opt-invalid-tls-options" href="#opt-invalid-tls-options" title="#opt-invalid-tls-options">`invalid_tls_options`</a> | The TLS options of the router matching the connection are invalid. |
+
+The connections forwarded to the HTTP routers are not part of the TCP access logs,
+as the HTTP access logs log their requests.
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}

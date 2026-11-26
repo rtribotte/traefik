@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-acme/lego/v5/challenge/tlsalpn01"
 	"github.com/rs/zerolog/log"
+	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	traefiktls "github.com/traefik/traefik/v3/pkg/tls"
@@ -21,6 +22,13 @@ import (
 
 // errClientHelloRead is used as a sentinel error to break the TLS handshake once we have read the ClientHello.
 var errClientHelloRead = errors.New("client hello successfully read")
+
+// errNoMatchingRouter and errInvalidConnectionData are returned when no router handles a connection,
+// to log the reason in the TCP access logs.
+var (
+	errNoMatchingRouter      = errors.New("no matching router")
+	errInvalidConnectionData = errors.New("invalid connection data")
+)
 
 type tlsConfigWithOptionsName struct {
 	cfg         *tls.Config
@@ -54,6 +62,10 @@ type Router struct {
 	// hostHTTPTLSConfig contains TLS configs keyed by SNI.
 	// A nil config is the hint to set up a brokenTLSRouter.
 	hostHTTPTLSConfig map[string]tlsConfigWithOptionsName // TLS configs keyed by SNI
+
+	// accessLogger logs the connections closed without a router handling them.
+	// It is nil when the TCP access logs are disabled.
+	accessLogger *accesslogMiddle.EntryPointLogger
 }
 
 // NewRouter returns a new TCP router.
@@ -99,6 +111,8 @@ func (r *Router) HTTP3TLSConfigMatcherFunc() func(connData tcpmuxer.ConnData) (*
 
 // ServeTCP forwards the connection to the right TCP/HTTP handler.
 func (r *Router) ServeTCP(conn tcp.WriteCloser) {
+	start := time.Now()
+
 	// Handling Non-TLS TCP connection early if there is neither HTTP(S) nor TLS routers on the entryPoint,
 	// and if there is at least one non-TLS TCP router.
 	// In the case of a non-TLS TCP client (that does not "send" first),
@@ -108,7 +122,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		connData, err := tcpmuxer.NewConnData("", conn.RemoteAddr(), nil)
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
-			conn.Close()
+			r.closeUnhandled(conn, start, 0, "", "", accesslogMiddle.ErrorTypeInvalidConnectionData)
 			return
 		}
 
@@ -131,24 +145,26 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	// TODO -- Check if ProxyProtocol changes the first bytes of the request
-	pConn := newPeekConn(conn)
+	pConn := newPeekConn(conn, start)
 
 	postgres, err := isPostgres(pConn)
 	if err != nil {
-		opErr, ok := errors.AsType[*net.OpError](err)
-		if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
+		errType := unhandledErrorType(err, accesslogMiddle.ErrorTypeConnectionClosed)
+		if errType != accesslogMiddle.ErrorTypeConnectionClosed && errType != accesslogMiddle.ErrorTypeTimeout {
 			log.Debug().Err(err).Msg("Error while peeking first bytes")
 		}
-		_ = pConn.Close()
+		r.closeUnhandled(pConn, start, pConn.received, "", "", errType)
 		return
 	}
 
 	if postgres {
 		if err := r.servePostgres(pConn); err != nil {
-			opErr, ok := errors.AsType[*net.OpError](err)
-			if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
+			errType := unhandledErrorType(err, accesslogMiddle.ErrorTypePostgres)
+			if errType == accesslogMiddle.ErrorTypePostgres {
 				log.Debug().Err(err).Msg("Error while serving Postgres connection")
 			}
+			r.closeUnhandled(pConn, start, pConn.received, "", "", errType)
+			return
 		}
 		_ = pConn.Close()
 		return
@@ -156,11 +172,11 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 
 	hello, err := clientHelloInfo(pConn)
 	if err != nil {
-		opErr, ok := errors.AsType[*net.OpError](err)
-		if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
+		errType := unhandledErrorType(err, accesslogMiddle.ErrorTypeInvalidClientHello)
+		if errType == accesslogMiddle.ErrorTypeInvalidClientHello {
 			log.Debug().Err(err).Msg("Error while reading client hello")
 		}
-		_ = pConn.Close()
+		r.closeUnhandled(pConn, start, pConn.received, "", "", errType)
 		return
 	}
 
@@ -174,7 +190,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, pConn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		_ = pConn.Close()
+		r.closeUnhandled(pConn, start, pConn.received, "", hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData)
 		return
 	}
 
@@ -186,7 +202,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		case r.httpForwarder != nil:
 			r.httpForwarder.ServeTCP(pConn)
 		default:
-			_ = pConn.Close()
+			r.closeUnhandled(pConn, start, pConn.received, "", "", accesslogMiddle.ErrorTypeNoMatchingRouter)
 		}
 		return
 	}
@@ -238,7 +254,40 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		return
 	}
 
-	_ = pConn.Close()
+	r.closeUnhandled(pConn, start, pConn.received, "", hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter)
+}
+
+// SetAccessLogger sets the logger of the connections closed without a router handling them.
+func (r *Router) SetAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger) {
+	r.accessLogger = accessLogger
+}
+
+// closeUnhandled closes a connection no router handles, and logs it in the TCP access logs.
+func (r *Router) closeUnhandled(conn tcp.WriteCloser, start time.Time, receivedBytes int64, routerName, serverName, errorType string) {
+	_ = conn.Close()
+
+	r.accessLogger.LogUnhandled(conn, start, receivedBytes, routerName, serverName, errorType)
+}
+
+// unhandledErrorType returns the TCP access log error type of an error which prevented the routing of a connection.
+func unhandledErrorType(err error, defaultErrorType string) string {
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return accesslogMiddle.ErrorTypeConnectionClosed
+	}
+
+	if netErr, ok := errors.AsType[net.Error](err); ok && netErr.Timeout() {
+		return accesslogMiddle.ErrorTypeTimeout
+	}
+
+	if errors.Is(err, errNoMatchingRouter) {
+		return accesslogMiddle.ErrorTypeNoMatchingRouter
+	}
+
+	if errors.Is(err, errInvalidConnectionData) {
+		return accesslogMiddle.ErrorTypeInvalidConnectionData
+	}
+
+	return defaultErrorType
 }
 
 // AddTCPRoute defines a handler for the given rule.
@@ -280,7 +329,7 @@ func (r *Router) SetHTTPSForwarder(handler tcp.Handler) {
 	for sniHost, tlsConf := range r.hostHTTPTLSConfig {
 		var tcpHandler tcp.Handler
 		if tlsConf.cfg == nil {
-			tcpHandler = &brokenTLSRouter{}
+			tcpHandler = &brokenTLSRouter{accessLogger: r.accessLogger}
 		} else {
 			tcpHandler = &tcp.TLSHandler{
 				Next:           handler,
@@ -298,7 +347,7 @@ func (r *Router) SetHTTPSForwarder(handler tcp.Handler) {
 	}
 
 	if r.httpsTLSConfig == nil {
-		r.httpsForwarder = &brokenTLSRouter{}
+		r.httpsForwarder = &brokenTLSRouter{accessLogger: r.accessLogger}
 		return
 	}
 
@@ -348,11 +397,36 @@ func (r *Router) acmeTLSALPNHandler() tcp.Handler {
 // brokenTLSRouter is associated to a Host(SNI) rule for which we know the TLS conf is broken.
 // It is used to make sure any attempt to connect to that hostname is closed,
 // since we cannot proceed with the intended TLS conf.
-type brokenTLSRouter struct{}
+type brokenTLSRouter struct {
+	// accessLogger logs the closed connections, as the routers with invalid TLS options do not handle them.
+	accessLogger *accesslogMiddle.EntryPointLogger
+	// routerName is only known for the TCP routers.
+	routerName string
+}
 
 // ServeTCP instantly closes the connection.
 func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
+
+	start, received := time.Now(), int64(0)
+	if pConn, ok := unwrapPeekConn(conn); ok {
+		start, received = pConn.start, pConn.received
+	}
+
+	t.accessLogger.LogUnhandled(conn, start, received, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions)
+}
+
+// unwrapPeekConn returns the peekConn the router wraps the connections in, before their protocol detection.
+func unwrapPeekConn(conn tcp.WriteCloser) (*peekConn, bool) {
+	switch c := conn.(type) {
+	case *peekConn:
+		return c, true
+	case *postgresConn:
+		pConn, ok := c.WriteCloser.(*peekConn)
+		return pConn, ok
+	default:
+		return nil, false
+	}
 }
 
 // peekConn wraps a tcp.WriteCloser with a bufio.Reader for Peek operations
@@ -363,13 +437,33 @@ type peekConn struct {
 
 	peeked []byte
 	reader *bufio.Reader
+
+	// start and received are logged in the TCP access logs when the connection is not handled by a router.
+	// received counts the bytes read from the connection, peeked or not.
+	start    time.Time
+	received int64
 }
 
-func newPeekConn(conn tcp.WriteCloser) *peekConn {
-	return &peekConn{
+func newPeekConn(conn tcp.WriteCloser, start time.Time) *peekConn {
+	pConn := &peekConn{
 		WriteCloser: conn,
-		reader:      bufio.NewReader(conn),
+		start:       start,
 	}
+	pConn.reader = bufio.NewReader(receivedCounter{conn: pConn})
+
+	return pConn
+}
+
+// receivedCounter reads from the connection wrapped by the peekConn, and counts the read bytes.
+type receivedCounter struct {
+	conn *peekConn
+}
+
+func (r receivedCounter) Read(p []byte) (int, error) {
+	n, err := r.conn.WriteCloser.Read(p)
+	r.conn.received += int64(n)
+
+	return n, err
 }
 
 // Peek allows peeking into the connection without consuming bytes, by using the bufio.Reader's Peek method.

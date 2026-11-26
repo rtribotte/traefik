@@ -39,6 +39,7 @@ const (
 	tlsCipherField          = "tls.cipher"
 	tlsClientSubjectField   = "tls.client.subject"
 	tlsClientHashField      = "tls.client.hash.sha256"
+	errorTypeField          = "error.type"
 )
 
 // The values of the TLS mode field.
