@@ -118,7 +118,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
 			conn.Close()
-			r.logConnection(conn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
+			r.logConnection(conn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData})
 			return
 		}
 
@@ -188,7 +188,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
 		_ = pConn.Close()
-		r.logConnection(pConn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
+		r.logConnection(pConn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData})
 		return
 	}
 

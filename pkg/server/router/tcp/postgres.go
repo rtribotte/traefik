@@ -69,7 +69,7 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		r.logConnection(conn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
+		r.logConnection(conn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData})
 		return nil
 	}
 
