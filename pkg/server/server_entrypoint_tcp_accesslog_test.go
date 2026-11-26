@@ -85,7 +85,7 @@ func TestTCPEntryPoint_unservedHTTPConnAccessLog(t *testing.T) {
 			assert.Equal(t, "web", entry["traefik.entrypoint.name"])
 			assert.Equal(t, test.expectedErrorType, entry["error.type"])
 			assert.Equal(t, "127.0.0.1", entry["client.address"])
-			assert.Positive(t, entry["traefik.connection.received_bytes"])
+			assert.NotContains(t, entry, "traefik.connection.received_bytes")
 			assert.NotContains(t, entry, "traefik.router.name")
 		})
 	}

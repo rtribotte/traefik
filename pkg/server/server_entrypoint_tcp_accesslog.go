@@ -2,13 +2,13 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"sync"
 	"sync/atomic"
 
 	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
-	tcprouter "github.com/traefik/traefik/v3/pkg/server/router/tcp"
 )
 
 type servedKey struct{}
@@ -50,7 +50,18 @@ func (u *unservedConnLogger) connState(c net.Conn, state http.ConnState) {
 		return
 	}
 
-	tcprouter.LogUnservedHTTPConn(u.accessLogger, c)
+	errorType := accesslogMiddle.ErrorTypeNoHTTPRequest
+
+	var serverName string
+	if tlsConn, ok := c.(*tls.Conn); ok {
+		state := tlsConn.ConnectionState()
+		serverName = state.ServerName
+		if !state.HandshakeComplete {
+			errorType = accesslogMiddle.ErrorTypeTLSHandshake
+		}
+	}
+
+	u.accessLogger.LogConnection(c, "", serverName, errorType, nil)
 }
 
 // wrap marks the connections of the requests reaching the given handler as served.

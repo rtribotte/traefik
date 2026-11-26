@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"slices"
-	"sync/atomic"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge/tlsalpn01"
@@ -263,9 +262,7 @@ func (r *Router) SetAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger)
 // The server name is only known once the TLS ClientHello was read,
 // and the error is the one which prevented the routing, if any.
 func (r *Router) logConnection(conn net.Conn, serverName, errorType string, err error) {
-	start, received := connStats(conn)
-
-	r.accessLogger.LogConnection(conn, start, received, "", serverName, errorType, err)
+	r.accessLogger.LogConnection(conn, "", serverName, errorType, err)
 }
 
 // AddTCPRoute defines a handler for the given rule.
@@ -386,60 +383,7 @@ type brokenTLSRouter struct {
 func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
-	start, received := connStats(conn)
-
-	t.accessLogger.LogConnection(conn, start, received, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
-}
-
-// LogUnservedHTTPConn logs in the TCP access logs a connection forwarded to an HTTP server,
-// which closed it without serving any request, e.g. because its TLS handshake failed.
-// The HTTP access logs do not log these connections, as no request reaches the HTTP routers.
-func LogUnservedHTTPConn(accessLogger *accesslogMiddle.EntryPointLogger, conn net.Conn) {
-	if accessLogger == nil {
-		return
-	}
-
-	errorType := accesslogMiddle.ErrorTypeNoHTTPRequest
-
-	var serverName string
-	if tlsConn, ok := conn.(*tls.Conn); ok {
-		state := tlsConn.ConnectionState()
-		serverName = state.ServerName
-		if !state.HandshakeComplete {
-			errorType = accesslogMiddle.ErrorTypeTLSHandshake
-		}
-	}
-
-	start, received := connStats(conn)
-
-	accessLogger.LogConnection(conn, start, received, "", serverName, errorType, nil)
-}
-
-// connStats returns when the router received the given connection, and the bytes read from it.
-// It falls back on the current time when the connection is not one the router wrapped.
-func connStats(conn net.Conn) (time.Time, int64) {
-	if pConn, ok := unwrapPeekConn(conn); ok {
-		return pConn.start, pConn.received.Load()
-	}
-
-	return time.Now(), 0
-}
-
-// unwrapPeekConn returns the peekConn the router wraps the connections in, before their protocol detection,
-// including when the connection was then wrapped for the Postgres STARTTLS or the TLS termination.
-func unwrapPeekConn(conn net.Conn) (*peekConn, bool) {
-	switch c := conn.(type) {
-	case *peekConn:
-		return c, true
-	case *postgresConn:
-		return unwrapPeekConn(c.WriteCloser)
-	case *tls.Conn:
-		return unwrapPeekConn(c.NetConn())
-	case tcp.TLSConn:
-		return unwrapPeekConn(c.WriteCloser)
-	default:
-		return nil, false
-	}
+	t.accessLogger.LogConnection(conn, t.routerName, "", accesslogMiddle.ErrorTypeInvalidTLSOptions, nil)
 }
 
 // peekConn wraps a tcp.WriteCloser with a bufio.Reader for Peek operations
@@ -450,34 +394,13 @@ type peekConn struct {
 
 	peeked []byte
 	reader *bufio.Reader
-
-	// start and received are logged in the TCP access logs when the connection is not handled by a router.
-	// received counts the bytes read from the connection, peeked or not.
-	// It is atomic, as the HTTP servers read the connection and log it from distinct goroutines.
-	start    time.Time
-	received atomic.Int64
 }
 
 func newPeekConn(conn tcp.WriteCloser) *peekConn {
-	pConn := &peekConn{
+	return &peekConn{
 		WriteCloser: conn,
-		start:       time.Now(),
+		reader:      bufio.NewReader(conn),
 	}
-	pConn.reader = bufio.NewReader(receivedCounter{conn: pConn})
-
-	return pConn
-}
-
-// receivedCounter reads from the connection wrapped by the peekConn, and counts the read bytes.
-type receivedCounter struct {
-	conn *peekConn
-}
-
-func (r receivedCounter) Read(p []byte) (int, error) {
-	n, err := r.conn.WriteCloser.Read(p)
-	r.conn.received.Add(int64(n))
-
-	return n, err
 }
 
 // Peek allows peeking into the connection without consuming bytes, by using the bufio.Reader's Peek method.

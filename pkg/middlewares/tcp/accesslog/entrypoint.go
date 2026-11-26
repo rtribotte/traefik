@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -56,7 +55,9 @@ func NewEntryPointLogger(logger *Logger, entryPointName string) *EntryPointLogge
 // and the server name only when the TLS ClientHello was read.
 // The given error type is replaced when the error shows that the client closed the connection,
 // or did not send its first bytes in time.
-func (e *EntryPointLogger) LogConnection(conn net.Conn, start time.Time, receivedBytes int64, routerName, serverName, errorType string, err error) {
+// The bytes and the duration are not logged, as the connection is closed while being routed:
+// the error type tells more about it than these values.
+func (e *EntryPointLogger) LogConnection(conn net.Conn, routerName, serverName, errorType string, err error) {
 	if e == nil {
 		return
 	}
@@ -69,9 +70,6 @@ func (e *EntryPointLogger) LogConnection(conn net.Conn, start time.Time, receive
 
 	fields := logrus.Fields{
 		entryPointNameField: e.entryPointName,
-		receivedBytesField:  receivedBytes,
-		sentBytesField:      int64(0),
-		durationField:       time.Since(start).Seconds(),
 		errorTypeField:      errorType,
 	}
 

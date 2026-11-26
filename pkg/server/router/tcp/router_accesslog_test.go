@@ -28,7 +28,6 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 		expectedErrorType  string
 		expectedRouterName string
 		expectedServerName string
-		expectReceived     bool
 	}{
 		{
 			desc: "client closing the connection before sending data",
@@ -53,7 +52,6 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 				_, _ = io.Copy(io.Discard, clientConn)
 			},
 			expectedErrorType: "no_matching_router",
-			expectReceived:    true,
 		},
 		{
 			desc: "invalid TLS ClientHello",
@@ -63,7 +61,6 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 				_, _ = io.Copy(io.Discard, clientConn)
 			},
 			expectedErrorType: "invalid_client_hello",
-			expectReceived:    true,
 		},
 		{
 			desc: "no matching router for a TLS connection",
@@ -72,7 +69,6 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			},
 			expectedErrorType:  "no_matching_router",
 			expectedServerName: "foo.localhost",
-			expectReceived:     true,
 		},
 		{
 			desc: "router with invalid TLS options",
@@ -87,7 +83,6 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			},
 			expectedErrorType:  "invalid_tls_options",
 			expectedRouterName: "router@file",
-			expectReceived:     true,
 		},
 	}
 
@@ -119,15 +114,10 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			assert.Equal(t, test.expectedErrorType, entry["error.type"])
 			assert.Equal(t, "10.0.0.1", entry["client.address"])
 			assert.InDelta(t, 4242, entry["client.port"], 0)
-			assert.InDelta(t, 0, entry["traefik.connection.sent_bytes"], 0)
-			assert.Contains(t, entry, "traefik.connection.duration")
 			assert.NotContains(t, entry, "traefik.service.name")
-
-			if test.expectReceived {
-				assert.Positive(t, entry["traefik.connection.received_bytes"])
-			} else {
-				assert.InDelta(t, 0, entry["traefik.connection.received_bytes"], 0)
-			}
+			assert.NotContains(t, entry, "traefik.connection.received_bytes")
+			assert.NotContains(t, entry, "traefik.connection.sent_bytes")
+			assert.NotContains(t, entry, "traefik.connection.duration")
 
 			if test.expectedRouterName == "" {
 				assert.NotContains(t, entry, "traefik.router.name")

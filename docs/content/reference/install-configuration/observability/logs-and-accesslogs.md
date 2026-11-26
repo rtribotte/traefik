@@ -550,10 +550,9 @@ tcpAccessLog:
 Traefik also logs the connections the EntryPoint closes before any TCP router handles them,
 e.g. a client closing the connection before sending data, or a TLS connection for a server name no router matches.
 These log lines have the `error.type` field,
-and neither the `traefik.service.name` nor the TLS fields.
+and neither the `traefik.service.name`, the byte counts, the duration, nor the TLS fields.
 The `traefik.router.name` field is only present for the `invalid_tls_options` error type,
 and the `server.address` field only when the TLS ClientHello was read.
-The `traefik.connection.received_bytes` field counts the bytes read to route the connection.
 
 | Error type | Description |
 |------------|-------------|
