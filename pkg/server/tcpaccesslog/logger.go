@@ -1,4 +1,4 @@
-package accesslog
+package tcpaccesslog
 
 import (
 	"context"

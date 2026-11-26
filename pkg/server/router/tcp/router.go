@@ -14,8 +14,8 @@ import (
 
 	"github.com/go-acme/lego/v5/challenge/tlsalpn01"
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	traefiktls "github.com/traefik/traefik/v3/pkg/tls"
 )
@@ -58,13 +58,13 @@ type Router struct {
 
 	// accessLogger logs the connections closed without a router handling them.
 	// It is nil when the TCP access logs are disabled.
-	accessLogger   *accesslog.Logger
+	accessLogger   *tcpaccesslog.Logger
 	entryPointName string
 }
 
 // NewRouter returns a new TCP router.
 // The access logger is nil when the TCP access logs are disabled.
-func NewRouter(providersPrecedence []string, entryPointName string, accessLogger *accesslog.Logger) (*Router, error) {
+func NewRouter(providersPrecedence []string, entryPointName string, accessLogger *tcpaccesslog.Logger) (*Router, error) {
 	muxTCP, err := tcpmuxer.NewMuxer(providersPrecedence)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
 			conn.Close()
-			r.logConnection(conn, accesslog.Entry{ErrorType: accesslog.ErrorTypeInvalidConnectionData, Err: err})
+			r.logConnection(conn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
 			return
 		}
 
@@ -150,7 +150,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while peeking first bytes")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeConnectionClosed, Err: err})
+		r.logConnection(pConn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeConnectionClosed, Err: err})
 		return
 	}
 
@@ -160,7 +160,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
 				log.Debug().Err(err).Msg("Error while serving Postgres connection")
 			}
-			r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypePostgres, Err: err})
+			r.logConnection(pConn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypePostgres, Err: err})
 		}
 		_ = pConn.Close()
 		return
@@ -173,7 +173,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while reading client hello")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeInvalidClientHello, Err: err})
+		r.logConnection(pConn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeInvalidClientHello, Err: err})
 		return
 	}
 
@@ -188,7 +188,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
 		_ = pConn.Close()
-		r.logConnection(pConn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeInvalidConnectionData, Err: err})
+		r.logConnection(pConn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
 		return
 	}
 
@@ -201,7 +201,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			r.httpForwarder.ServeTCP(pConn)
 		default:
 			_ = pConn.Close()
-			r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeNoMatchingRouter})
+			r.logConnection(pConn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeNoMatchingRouter})
 		}
 		return
 	}
@@ -254,11 +254,11 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	_ = pConn.Close()
-	r.logConnection(pConn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeNoMatchingRouter})
+	r.logConnection(pConn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeNoMatchingRouter})
 }
 
 // logConnection logs in the TCP access logs a connection closed without a router handling it.
-func (r *Router) logConnection(conn net.Conn, entry accesslog.Entry) {
+func (r *Router) logConnection(conn net.Conn, entry tcpaccesslog.Entry) {
 	entry.EntryPointName = r.entryPointName
 
 	r.accessLogger.LogConnection(conn, entry)
@@ -384,7 +384,7 @@ func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
 	if t.router != nil {
-		t.router.logConnection(conn, accesslog.Entry{RouterName: t.tcpRouterName, ErrorType: accesslog.ErrorTypeInvalidTLSOptions})
+		t.router.logConnection(conn, tcpaccesslog.Entry{RouterName: t.tcpRouterName, ErrorType: tcpaccesslog.ErrorTypeInvalidTLSOptions})
 	}
 }
 

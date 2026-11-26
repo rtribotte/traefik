@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/traefik/v3/pkg/config/static"
-	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
 	tcprouter "github.com/traefik/traefik/v3/pkg/server/router/tcp"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 	"github.com/traefik/traefik/v3/pkg/tls/generate"
 )
 
@@ -121,7 +121,7 @@ func startTCPAccessLoggedEntryPoint(t *testing.T, httpsTLSConfig *tls.Config) (s
 
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
-	logger, err := accesslog.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
+	logger, err := tcpaccesslog.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, logger.Close()) })
 

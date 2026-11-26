@@ -29,13 +29,13 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/contenttype"
 	"github.com/traefik/traefik/v3/pkg/middlewares/forwardedheaders"
 	"github.com/traefik/traefik/v3/pkg/middlewares/requestdecorator"
-	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"github.com/traefik/traefik/v3/pkg/observability/metrics"
 	"github.com/traefik/traefik/v3/pkg/proxy/fast"
 	"github.com/traefik/traefik/v3/pkg/safe"
 	tcprouter "github.com/traefik/traefik/v3/pkg/server/router/tcp"
 	"github.com/traefik/traefik/v3/pkg/server/service/kerberos"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 	"github.com/traefik/traefik/v3/pkg/types"
 )
@@ -105,7 +105,7 @@ func (h *httpForwarder) Close() error {
 // TCPEntryPoints holds a map of TCPEntryPoint (the entrypoint names being the keys).
 type TCPEntryPoints map[string]*TCPEntryPoint
 
-func NewTCPEntryPoints(entryPointsConfig static.EntryPoints, hostResolverConfig *types.HostResolverConfig, metricsRegistry metrics.Registry, tcpAccessLogger *accesslog.Logger) (TCPEntryPoints, error) {
+func NewTCPEntryPoints(entryPointsConfig static.EntryPoints, hostResolverConfig *types.HostResolverConfig, metricsRegistry metrics.Registry, tcpAccessLogger *tcpaccesslog.Logger) (TCPEntryPoints, error) {
 	if os.Getenv(debugConnectionEnv) != "" {
 		expvar.Publish("clientConnectionStates", expvar.Func(func() any {
 			return clientConnectionStates
@@ -183,7 +183,7 @@ type TCPEntryPoint struct {
 
 // NewTCPEntryPoint creates a new TCPEntryPoint.
 // The TCP access logger is nil when the TCP access logs are disabled.
-func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoint, hostResolverConfig *types.HostResolverConfig, openConnectionsGauge gokitmetrics.Gauge, tcpAccessLogger *accesslog.Logger) (*TCPEntryPoint, error) {
+func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoint, hostResolverConfig *types.HostResolverConfig, openConnectionsGauge gokitmetrics.Gauge, tcpAccessLogger *tcpaccesslog.Logger) (*TCPEntryPoint, error) {
 	tracker := newConnectionTracker(openConnectionsGauge)
 
 	listener, err := buildListener(ctx, name, config)
@@ -648,7 +648,7 @@ type httpServer struct {
 	unservedConns *unservedConnLogger
 }
 
-func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, entryPointName string, tcpAccessLogger *accesslog.Logger) (*httpServer, error) {
+func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, entryPointName string, tcpAccessLogger *tcpaccesslog.Logger) (*httpServer, error) {
 	if configuration.HTTP2.MaxConcurrentStreams < 0 {
 		return nil, errors.New("max concurrent streams value must be greater than or equal to zero")
 	}

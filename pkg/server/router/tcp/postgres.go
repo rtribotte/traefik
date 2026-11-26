@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 )
 
@@ -55,7 +55,7 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	}
 
 	if !hello.isTLS {
-		r.logConnection(conn, accesslog.Entry{ErrorType: accesslog.ErrorTypePostgres})
+		r.logConnection(conn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypePostgres})
 		return nil
 	}
 
@@ -69,14 +69,14 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		r.logConnection(conn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeInvalidConnectionData, Err: err})
+		r.logConnection(conn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeInvalidConnectionData, Err: err})
 		return nil
 	}
 
 	// Contains also TCP TLS passthrough routes.
 	handlerTCPTLS, _ := r.muxerTCPTLS.Match(connData)
 	if handlerTCPTLS == nil {
-		r.logConnection(conn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeNoMatchingRouter})
+		r.logConnection(conn, tcpaccesslog.Entry{ServerName: hello.serverName, ErrorType: tcpaccesslog.ErrorTypeNoMatchingRouter})
 		return nil
 	}
 

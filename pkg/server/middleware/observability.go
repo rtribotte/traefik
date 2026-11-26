@@ -15,11 +15,11 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/capture"
 	mmetrics "github.com/traefik/traefik/v3/pkg/middlewares/metrics"
 	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
-	tcpaccesslog "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	"github.com/traefik/traefik/v3/pkg/observability/logs"
 	"github.com/traefik/traefik/v3/pkg/observability/metrics"
 	"github.com/traefik/traefik/v3/pkg/observability/tracing"
 	otypes "github.com/traefik/traefik/v3/pkg/observability/types"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 )
 
 // ObservabilityMgr is a manager for observability (AccessLogs, Metrics and Tracing) enablement.

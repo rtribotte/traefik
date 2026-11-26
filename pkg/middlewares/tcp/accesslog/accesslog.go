@@ -6,6 +6,7 @@ import (
 
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/middlewares"
+	"github.com/traefik/traefik/v3/pkg/server/tcpaccesslog"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 )
 
@@ -23,13 +24,13 @@ const (
 
 type accessLogMiddleware struct {
 	next   tcp.Handler
-	logger *Logger
-	entry  Entry
+	logger *tcpaccesslog.Logger
+	entry  tcpaccesslog.Entry
 }
 
 // RouterAccessLogHandler returns the access log TCP router handler.
 // It is a no-op when the TCP access logs are disabled, i.e. when the given logger is nil.
-func RouterAccessLogHandler(ctx context.Context, logger *Logger, entryPointName, routerName, serviceName string, tlsConfig *dynamic.RouterTCPTLSConfig) tcp.Constructor {
+func RouterAccessLogHandler(ctx context.Context, logger *tcpaccesslog.Logger, entryPointName, routerName, serviceName string, tlsConfig *dynamic.RouterTCPTLSConfig) tcp.Constructor {
 	return func(next tcp.Handler) (tcp.Handler, error) {
 		if logger == nil {
 			return next, nil
@@ -49,7 +50,7 @@ func RouterAccessLogHandler(ctx context.Context, logger *Logger, entryPointName,
 		return &accessLogMiddleware{
 			next:   next,
 			logger: logger,
-			entry: Entry{
+			entry: tcpaccesslog.Entry{
 				EntryPointName: entryPointName,
 				RouterName:     routerName,
 				ServiceName:    serviceName,
@@ -67,7 +68,7 @@ func (a *accessLogMiddleware) ServeTCP(conn tcp.WriteCloser) {
 	a.next.ServeTCP(cConn)
 
 	entry := a.entry
-	entry.Stats = &ConnStats{
+	entry.Stats = &tcpaccesslog.ConnStats{
 		ReceivedBytes: cConn.bytesRead,
 		SentBytes:     cConn.bytesWritten,
 		Duration:      time.Since(start),
