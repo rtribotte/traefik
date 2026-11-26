@@ -532,7 +532,7 @@ tcpAccessLog:
 | <a id="opt-traefik-entrypoint-name" href="#opt-traefik-entrypoint-name" title="#opt-traefik-entrypoint-name">`traefik.entrypoint.name`</a> | The name of the EntryPoint that accepted the connection. |
 | <a id="opt-traefik-router-name" href="#opt-traefik-router-name" title="#opt-traefik-router-name">`traefik.router.name`</a> | The name of the TCP router that handled the connection. |
 | <a id="opt-traefik-service-name" href="#opt-traefik-service-name" title="#opt-traefik-service-name">`traefik.service.name`</a> | The name of the TCP service the connection was forwarded to. |
-| <a id="opt-traefik-tls-mode" href="#opt-traefik-tls-mode" title="#opt-traefik-tls-mode">`traefik.tls.mode`</a> | How the router handles TLS: `none`, `terminated` or `passthrough`. |
+| <a id="opt-traefik-tls-mode" href="#opt-traefik-tls-mode" title="#opt-traefik-tls-mode">`traefik.tls.mode`</a> | How the router handles TLS: `none`, `terminated` or `passthrough`.<br />The field is absent when the TLS mode is not known, for some [connections not handled by a router](#connections-not-handled-by-a-router). |
 | <a id="opt-traefik-connection-received-bytes" href="#opt-traefik-connection-received-bytes" title="#opt-traefik-connection-received-bytes">`traefik.connection.received_bytes`</a> | The number of bytes received from the client. With TLS termination, the decrypted bytes are counted. |
 | <a id="opt-traefik-connection-sent-bytes" href="#opt-traefik-connection-sent-bytes" title="#opt-traefik-connection-sent-bytes">`traefik.connection.sent_bytes`</a> | The number of bytes sent to the client. With TLS termination, the decrypted bytes are counted. |
 | <a id="opt-traefik-connection-duration" href="#opt-traefik-connection-duration" title="#opt-traefik-connection-duration">`traefik.connection.duration`</a> | The duration of the connection, in seconds. |
@@ -553,6 +553,9 @@ These log lines have the `error.type` field,
 and neither the `traefik.service.name`, the byte counts, nor the duration fields.
 The `traefik.router.name` field is only present for the `invalid_tls_options` error type,
 and the `server.address` field only when the TLS ClientHello was read.
+The `traefik.tls.mode` field is only present when it is known:
+`none` for a non-TLS connection no router matches,
+and `terminated` for the `invalid_tls_options` error type.
 The other TLS fields are only present for the `no_http_request` error type, when the TLS handshake completed.
 
 | Error type | Description |

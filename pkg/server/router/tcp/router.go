@@ -201,7 +201,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			r.httpForwarder.ServeTCP(pConn)
 		default:
 			_ = pConn.Close()
-			r.logConnection(pConn, tcpaccesslog.Entry{ErrorType: tcpaccesslog.ErrorTypeNoMatchingRouter})
+			r.logConnection(pConn, tcpaccesslog.Entry{TLSMode: tcpaccesslog.TLSModeNone, ErrorType: tcpaccesslog.ErrorTypeNoMatchingRouter})
 		}
 		return
 	}
@@ -384,7 +384,12 @@ func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
 	if t.router != nil {
-		t.router.logConnection(conn, tcpaccesslog.Entry{RouterName: t.tcpRouterName, ErrorType: tcpaccesslog.ErrorTypeInvalidTLSOptions})
+		// The TLS options are only used by the routers terminating the TLS connections.
+		t.router.logConnection(conn, tcpaccesslog.Entry{
+			RouterName: t.tcpRouterName,
+			TLSMode:    tcpaccesslog.TLSModeTerminated,
+			ErrorType:  tcpaccesslog.ErrorTypeInvalidTLSOptions,
+		})
 	}
 }
 

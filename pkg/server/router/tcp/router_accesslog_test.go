@@ -28,6 +28,7 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 		expectedErrorType  string
 		expectedRouterName string
 		expectedServerName string
+		expectedTLSMode    string
 	}{
 		{
 			desc: "client closing the connection before sending data",
@@ -52,6 +53,7 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 				_, _ = io.Copy(io.Discard, clientConn)
 			},
 			expectedErrorType: "no_matching_router",
+			expectedTLSMode:   "none",
 		},
 		{
 			desc: "invalid TLS ClientHello",
@@ -83,6 +85,7 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			},
 			expectedErrorType:  "invalid_tls_options",
 			expectedRouterName: "router@file",
+			expectedTLSMode:    "terminated",
 		},
 	}
 
@@ -118,6 +121,12 @@ func TestRouter_ServeTCP_unhandledAccessLog(t *testing.T) {
 			assert.NotContains(t, entry, "traefik.connection.received_bytes")
 			assert.NotContains(t, entry, "traefik.connection.sent_bytes")
 			assert.NotContains(t, entry, "traefik.connection.duration")
+
+			if test.expectedTLSMode == "" {
+				assert.NotContains(t, entry, "traefik.tls.mode")
+			} else {
+				assert.Equal(t, test.expectedTLSMode, entry["traefik.tls.mode"])
+			}
 
 			if test.expectedRouterName == "" {
 				assert.NotContains(t, entry, "traefik.router.name")
