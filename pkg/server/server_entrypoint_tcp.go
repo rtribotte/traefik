@@ -739,8 +739,7 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 
 	// The connections closed before any request reaches the handler are logged in the TCP access logs,
 	// hence the wrapping has to be done last so that it is the first handler executed.
-	unservedConns := tcpaccesslog.NewHTTPConnLogger(tcpAccessLogger, entryPointName)
-	handler = unservedConns.Wrap(handler)
+	handler = markServed(handler)
 
 	// The round trippers and connection pools dedicated to a connection (Kerberos or NTLM) are only reachable from its
 	// context, which is kept until the ConnState hook reports the connection closed to release them.
@@ -765,6 +764,7 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 		return ctx
 	})
 
+	unservedConns := tcpaccesslog.NewUnservedConnLogger(tcpAccessLogger, entryPointName)
 	connContext.AddConnContextFunc(unservedConns.ConnContext)
 
 	if debugConnection || (configuration.Transport != nil && (configuration.Transport.KeepAliveMaxTime > 0 || configuration.Transport.KeepAliveMaxRequests > 0)) {
@@ -885,6 +885,16 @@ func populateRequestTLS(h http.Handler) http.Handler {
 				req.TLS = &state
 			}
 		}
+
+		h.ServeHTTP(rw, req)
+	})
+}
+
+// markServed marks the connection of the request as served,
+// so that it is not logged in the TCP access logs when it is closed.
+func markServed(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		tcpaccesslog.MarkServed(req.Context())
 
 		h.ServeHTTP(rw, req)
 	})
