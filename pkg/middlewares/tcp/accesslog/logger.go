@@ -170,7 +170,8 @@ func (l *Logger) export(line logLine) {
 	formatted := entry.Dup()
 	formatted.Level = logrus.InfoLevel
 
-	var body string
+	// The empty JSON object keeps the body parseable as the other ones when the formatting fails.
+	body := "{}"
 	if b, err := l.formatter.Format(formatted); err != nil {
 		// The log line is still exported with its attributes,
 		// but the formatting error is not sent as if it was the log line.

@@ -358,7 +358,7 @@ func TestLogger_export_formatError(t *testing.T) {
 	// The log line is exported with its attributes, but the formatting error is not sent as its body.
 	routerName, _ := record.Attributes().Get("traefik.router.name")
 	assert.Equal(t, "router@file", routerName.Str())
-	assert.Empty(t, record.Body().Str())
+	assert.Equal(t, "{}", record.Body().Str())
 }
 
 // newCollector starts an OTLP HTTP collector, which sends the export requests it receives to the returned channel.
