@@ -382,6 +382,9 @@ func (e *TCPEntryPoint) Shutdown(ctx context.Context) {
 
 // SwitchRouter switches the TCP router handler.
 func (e *TCPEntryPoint) SwitchRouter(rt *tcprouter.Router) {
+	e.httpServer.unservedConns.setAccessLogger(rt.AccessLogger())
+	e.httpsServer.unservedConns.setAccessLogger(rt.AccessLogger())
+
 	rt.SetHTTPForwarder(e.httpServer.Forwarder)
 
 	httpHandler := rt.GetHTTPHandler()
@@ -642,6 +645,8 @@ type httpServer struct {
 	Server    stoppableServer
 	Forwarder *httpForwarder
 	Switcher  *middlewares.HTTPHandlerSwitcher
+
+	unservedConns *unservedConnLogger
 }
 
 func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator) (*httpServer, error) {
@@ -735,6 +740,11 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 
 	handler = populateRequestTLS(handler)
 
+	// The connections closed before any request reaches the handler are logged in the TCP access logs,
+	// hence the wrapping has to be done last so that it is the first handler executed.
+	unservedConns := &unservedConnLogger{}
+	handler = unservedConns.wrap(handler)
+
 	// The round trippers and connection pools dedicated to a connection (Kerberos or NTLM) are only reachable from its
 	// context, which is kept until the ConnState hook reports the connection closed to release them.
 	var transportConnContexts connContexts
@@ -758,6 +768,8 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 		return ctx
 	})
 
+	connContext.AddConnContextFunc(unservedConns.connContext)
+
 	if debugConnection || (configuration.Transport != nil && (configuration.Transport.KeepAliveMaxTime > 0 || configuration.Transport.KeepAliveMaxRequests > 0)) {
 		connContext.AddConnContextFunc(func(ctx context.Context, c net.Conn) context.Context {
 			cState := &connState{Start: time.Now()}
@@ -779,6 +791,8 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 				fast.ReleaseConnPoolsOnContext(ctx)
 			}
 		}
+
+		unservedConns.connState(c, state)
 
 		if debugConnection {
 			clientConnectionStatesMu.Lock()
@@ -815,9 +829,10 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 		}
 	}()
 	return &httpServer{
-		Server:    serverHTTP,
-		Forwarder: listener,
-		Switcher:  httpSwitcher,
+		Server:        serverHTTP,
+		Forwarder:     listener,
+		Switcher:      httpSwitcher,
+		unservedConns: unservedConns,
 	}, nil
 }
 

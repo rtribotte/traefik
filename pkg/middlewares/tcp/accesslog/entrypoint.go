@@ -23,6 +23,10 @@ const (
 	ErrorTypePostgres = "postgres_error"
 	// ErrorTypeInvalidTLSOptions is used when the TLS options of the matching router are invalid.
 	ErrorTypeInvalidTLSOptions = "invalid_tls_options"
+	// ErrorTypeTLSHandshake is used when the TLS handshake of a connection forwarded to the HTTPS server failed.
+	ErrorTypeTLSHandshake = "tls_handshake_error"
+	// ErrorTypeNoHTTPRequest is used when a connection forwarded to an HTTP server was closed without serving any request.
+	ErrorTypeNoHTTPRequest = "no_http_request"
 )
 
 // EntryPointLogger logs the connections an entry point closes without a router handling them,

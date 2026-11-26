@@ -564,8 +564,10 @@ The `traefik.connection.received_bytes` field counts the bytes read to route the
 | <a id="opt-no-matching-router" href="#opt-no-matching-router" title="#opt-no-matching-router">`no_matching_router`</a> | No TCP router matches the Postgres STARTTLS connection.<br />The other connections no TCP router matches are forwarded to the HTTP routers. |
 | <a id="opt-postgres-error" href="#opt-postgres-error" title="#opt-postgres-error">`postgres_error`</a> | The Postgres STARTTLS negotiation failed. |
 | <a id="opt-invalid-tls-options" href="#opt-invalid-tls-options" title="#opt-invalid-tls-options">`invalid_tls_options`</a> | The TLS options of the router matching the connection are invalid. |
+| <a id="opt-tls-handshake-error" href="#opt-tls-handshake-error" title="#opt-tls-handshake-error">`tls_handshake_error`</a> | The TLS handshake of the connection forwarded to the HTTPS routers failed. |
+| <a id="opt-no-http-request" href="#opt-no-http-request" title="#opt-no-http-request">`no_http_request`</a> | The connection forwarded to the HTTP routers was closed without serving any request, e.g. because its bytes are not an HTTP request. |
 
-The connections forwarded to the HTTP routers are not part of the TCP access logs,
+The connections forwarded to the HTTP routers are only part of the TCP access logs when they serve no request,
 as the HTTP access logs log their requests.
 
 {% include-markdown "includes/traefik-for-business-applications.md" %}
