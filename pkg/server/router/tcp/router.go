@@ -58,11 +58,13 @@ type Router struct {
 
 	// accessLogger logs the connections closed without a router handling them.
 	// It is nil when the TCP access logs are disabled.
-	accessLogger *accesslog.EntryPointLogger
+	accessLogger   *accesslog.Logger
+	entryPointName string
 }
 
 // NewRouter returns a new TCP router.
-func NewRouter(providersPrecedence []string) (*Router, error) {
+// The access logger is nil when the TCP access logs are disabled.
+func NewRouter(providersPrecedence []string, entryPointName string, accessLogger *accesslog.Logger) (*Router, error) {
 	muxTCP, err := tcpmuxer.NewMuxer(providersPrecedence)
 	if err != nil {
 		return nil, err
@@ -79,9 +81,11 @@ func NewRouter(providersPrecedence []string) (*Router, error) {
 	}
 
 	return &Router{
-		muxerTCP:    *muxTCP,
-		muxerTCPTLS: *muxTCPTLS,
-		muxerHTTPS:  *muxHTTPS,
+		muxerTCP:       *muxTCP,
+		muxerTCPTLS:    *muxTCPTLS,
+		muxerHTTPS:     *muxHTTPS,
+		accessLogger:   accessLogger,
+		entryPointName: entryPointName,
 	}, nil
 }
 
@@ -114,7 +118,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		if err != nil {
 			log.Error().Err(err).Msg("Error while reading TCP connection data")
 			conn.Close()
-			r.logConnection(conn, "", accesslog.ErrorTypeInvalidConnectionData, err)
+			r.logConnection(conn, accesslog.Entry{ErrorType: accesslog.ErrorTypeInvalidConnectionData, Err: err})
 			return
 		}
 
@@ -146,7 +150,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while peeking first bytes")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, "", accesslog.ErrorTypeConnectionClosed, err)
+		r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeConnectionClosed, Err: err})
 		return
 	}
 
@@ -156,7 +160,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			if !errors.Is(err, io.EOF) && (!ok || !opErr.Timeout()) {
 				log.Debug().Err(err).Msg("Error while serving Postgres connection")
 			}
-			r.logConnection(pConn, "", accesslog.ErrorTypePostgres, err)
+			r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypePostgres, Err: err})
 		}
 		_ = pConn.Close()
 		return
@@ -169,7 +173,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			log.Debug().Err(err).Msg("Error while reading client hello")
 		}
 		_ = pConn.Close()
-		r.logConnection(pConn, "", accesslog.ErrorTypeInvalidClientHello, err)
+		r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeInvalidClientHello, Err: err})
 		return
 	}
 
@@ -184,7 +188,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
 		_ = pConn.Close()
-		r.logConnection(pConn, hello.serverName, accesslog.ErrorTypeInvalidConnectionData, err)
+		r.logConnection(pConn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeInvalidConnectionData, Err: err})
 		return
 	}
 
@@ -197,7 +201,7 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 			r.httpForwarder.ServeTCP(pConn)
 		default:
 			_ = pConn.Close()
-			r.logConnection(pConn, "", accesslog.ErrorTypeNoMatchingRouter, nil)
+			r.logConnection(pConn, accesslog.Entry{ErrorType: accesslog.ErrorTypeNoMatchingRouter})
 		}
 		return
 	}
@@ -250,19 +254,14 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	_ = pConn.Close()
-	r.logConnection(pConn, hello.serverName, accesslog.ErrorTypeNoMatchingRouter, nil)
-}
-
-// SetAccessLogger sets the logger of the connections closed without a router handling them.
-func (r *Router) SetAccessLogger(accessLogger *accesslog.EntryPointLogger) {
-	r.accessLogger = accessLogger
+	r.logConnection(pConn, accesslog.Entry{ServerName: hello.serverName, ErrorType: accesslog.ErrorTypeNoMatchingRouter})
 }
 
 // logConnection logs in the TCP access logs a connection closed without a router handling it.
-// The server name is only known once the TLS ClientHello was read,
-// and the error is the one which prevented the routing, if any.
-func (r *Router) logConnection(conn net.Conn, serverName, errorType string, err error) {
-	r.accessLogger.LogConnection(conn, "", serverName, errorType, err)
+func (r *Router) logConnection(conn net.Conn, entry accesslog.Entry) {
+	entry.EntryPointName = r.entryPointName
+
+	r.accessLogger.LogConnection(conn, entry)
 }
 
 // AddTCPRoute defines a handler for the given rule.
@@ -304,7 +303,7 @@ func (r *Router) SetHTTPSForwarder(handler tcp.Handler) {
 	for sniHost, tlsConf := range r.hostHTTPTLSConfig {
 		var tcpHandler tcp.Handler
 		if tlsConf.cfg == nil {
-			tcpHandler = &brokenTLSRouter{accessLogger: r.accessLogger}
+			tcpHandler = &brokenTLSRouter{router: r}
 		} else {
 			tcpHandler = &tcp.TLSHandler{
 				Next:           handler,
@@ -322,7 +321,7 @@ func (r *Router) SetHTTPSForwarder(handler tcp.Handler) {
 	}
 
 	if r.httpsTLSConfig == nil {
-		r.httpsForwarder = &brokenTLSRouter{accessLogger: r.accessLogger}
+		r.httpsForwarder = &brokenTLSRouter{router: r}
 		return
 	}
 
@@ -373,8 +372,9 @@ func (r *Router) acmeTLSALPNHandler() tcp.Handler {
 // It is used to make sure any attempt to connect to that hostname is closed,
 // since we cannot proceed with the intended TLS conf.
 type brokenTLSRouter struct {
-	// accessLogger logs the closed connections, as the routers with invalid TLS options do not handle them.
-	accessLogger *accesslog.EntryPointLogger
+	// router logs the closed connections, as the routers with invalid TLS options do not handle them.
+	// It is nil when the closed connections are not logged.
+	router *Router
 	// tcpRouterName is empty for the HTTPS routers, whose TLS options are checked per server name.
 	tcpRouterName string
 }
@@ -383,7 +383,9 @@ type brokenTLSRouter struct {
 func (t *brokenTLSRouter) ServeTCP(conn tcp.WriteCloser) {
 	_ = conn.Close()
 
-	t.accessLogger.LogConnection(conn, t.tcpRouterName, "", accesslog.ErrorTypeInvalidTLSOptions, nil)
+	if t.router != nil {
+		t.router.logConnection(conn, accesslog.Entry{RouterName: t.tcpRouterName, ErrorType: accesslog.ErrorTypeInvalidTLSOptions})
+	}
 }
 
 // peekConn wraps a tcp.WriteCloser with a bufio.Reader for Peek operations

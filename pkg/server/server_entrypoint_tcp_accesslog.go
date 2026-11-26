@@ -20,7 +20,8 @@ type servedKey struct{}
 // as a connection becomes active as soon as its first byte is read.
 type unservedConnLogger struct {
 	// accessLogger is nil when the TCP access logs are disabled.
-	accessLogger *accesslog.EntryPointLogger
+	accessLogger   *accesslog.Logger
+	entryPointName string
 
 	// served holds, for each tracked connection, whether a request reached the handler.
 	served sync.Map
@@ -50,18 +51,19 @@ func (u *unservedConnLogger) connState(c net.Conn, state http.ConnState) {
 		return
 	}
 
-	errorType := accesslog.ErrorTypeNoHTTPRequest
+	entry := accesslog.Entry{
+		EntryPointName: u.entryPointName,
+		ErrorType:      accesslog.ErrorTypeNoHTTPRequest,
+	}
 
-	var serverName string
 	if tlsConn, ok := c.(*tls.Conn); ok {
-		state := tlsConn.ConnectionState()
-		serverName = state.ServerName
-		if !state.HandshakeComplete {
-			errorType = accesslog.ErrorTypeTLSHandshake
+		if state := tlsConn.ConnectionState(); !state.HandshakeComplete {
+			entry.ServerName = state.ServerName
+			entry.ErrorType = accesslog.ErrorTypeTLSHandshake
 		}
 	}
 
-	u.accessLogger.LogConnection(c, "", serverName, errorType, nil)
+	u.accessLogger.LogConnection(c, entry)
 }
 
 // wrap marks the connections of the requests reaching the given handler as served.

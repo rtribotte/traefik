@@ -133,10 +133,8 @@ func startTCPAccessLoggedEntryPoint(t *testing.T, httpsTLSConfig *tls.Config) (s
 	}, nil, nil, logger)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "web", logger)
 	require.NoError(t, err)
-
-	router.SetAccessLogger(accesslog.NewEntryPointLogger(logger, "web"))
 
 	okHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)

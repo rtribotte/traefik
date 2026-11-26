@@ -107,7 +107,7 @@ func TestHTTP3AdvertisedPort(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.AddHTTPTLSConfig("*", &tls.Config{
@@ -169,7 +169,7 @@ func TestHTTP30RTT(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.AddHTTPTLSConfig("example.com", &tls.Config{
@@ -248,7 +248,7 @@ func TestHTTP3ReadTimeout(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	bodyReadErr := make(chan error, 1)
@@ -357,7 +357,7 @@ func TestHTTP3StickyBackendTransport(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.AddHTTPTLSConfig("example.com", &tls.Config{Certificates: []tls.Certificate{tlsCert}}, traefiktls.DefaultTLSConfigName)
@@ -474,7 +474,7 @@ func TestNewHTTP3ServerTimeouts(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.AddHTTPTLSConfig("*", &tls.Config{

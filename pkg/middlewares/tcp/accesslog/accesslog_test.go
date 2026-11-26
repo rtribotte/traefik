@@ -75,7 +75,7 @@ func TestRouterAccessLogHandler(t *testing.T) {
 			require.Equal(t, test.wrapped, wrapped)
 
 			if wrapped {
-				assert.Equal(t, test.tlsMode, middleware.tlsMode)
+				assert.Equal(t, test.tlsMode, middleware.entry.TLSMode)
 			}
 		})
 	}

@@ -191,7 +191,7 @@ func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoin
 		return nil, fmt.Errorf("building listener: %w", err)
 	}
 
-	rt, err := tcprouter.NewRouter(nil)
+	rt, err := tcprouter.NewRouter(nil, name, tcpAccessLogger)
 	if err != nil {
 		return nil, fmt.Errorf("creating TCP router: %w", err)
 	}
@@ -203,17 +203,14 @@ func NewTCPEntryPoint(ctx context.Context, name string, config *static.EntryPoin
 	// which is called once for the HTTP server and once for the HTTPS server.
 	logHeaderNamesStrategiesWarnings(ctx, config)
 
-	accessLogger := accesslog.NewEntryPointLogger(tcpAccessLogger, name)
-	rt.SetAccessLogger(accessLogger)
-
-	httpServer, err := newHTTPServer(ctx, listener, config, true, reqDecorator, accessLogger)
+	httpServer, err := newHTTPServer(ctx, listener, config, true, reqDecorator, name, tcpAccessLogger)
 	if err != nil {
 		return nil, fmt.Errorf("creating HTTP server: %w", err)
 	}
 
 	rt.SetHTTPForwarder(httpServer.Forwarder)
 
-	httpsServer, err := newHTTPServer(ctx, listener, config, false, reqDecorator, accessLogger)
+	httpsServer, err := newHTTPServer(ctx, listener, config, false, reqDecorator, name, tcpAccessLogger)
 	if err != nil {
 		return nil, fmt.Errorf("creating HTTPS server: %w", err)
 	}
@@ -651,7 +648,7 @@ type httpServer struct {
 	unservedConns *unservedConnLogger
 }
 
-func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, accessLogger *accesslog.EntryPointLogger) (*httpServer, error) {
+func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.EntryPoint, withH2c bool, reqDecorator *requestdecorator.RequestDecorator, entryPointName string, tcpAccessLogger *accesslog.Logger) (*httpServer, error) {
 	if configuration.HTTP2.MaxConcurrentStreams < 0 {
 		return nil, errors.New("max concurrent streams value must be greater than or equal to zero")
 	}
@@ -744,7 +741,7 @@ func newHTTPServer(ctx context.Context, ln net.Listener, configuration *static.E
 
 	// The connections closed before any request reaches the handler are logged in the TCP access logs,
 	// hence the wrapping has to be done last so that it is the first handler executed.
-	unservedConns := &unservedConnLogger{accessLogger: accessLogger}
+	unservedConns := &unservedConnLogger{accessLogger: tcpAccessLogger, entryPointName: entryPointName}
 	handler = unservedConns.wrap(handler)
 
 	// The round trippers and connection pools dedicated to a connection (Kerberos or NTLM) are only reachable from its

@@ -668,7 +668,7 @@ func Test_Routing(t *testing.T) {
 }
 
 func Test_Router_acmeTLSALPNHandlerTimeout(t *testing.T) {
-	router, err := NewRouter(nil)
+	router, err := NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.httpsTLSConfig = &tls.Config{}
@@ -859,7 +859,7 @@ func TestPostgresTLSTermination(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	router, err := NewRouter(nil)
+	router, err := NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	// Register a TCPTLS route (TLS termination, not passthrough) with a TLSHandler.
@@ -925,7 +925,7 @@ func TestPostgresTLSPassthrough(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	router, err := NewRouter(nil)
+	router, err := NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	// Register a TCPTLS route (TLS passthrough) with a tcp.Handler.

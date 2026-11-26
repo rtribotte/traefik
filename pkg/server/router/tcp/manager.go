@@ -103,12 +103,10 @@ func (m *Manager) getHTTPRouters(ctx context.Context, entryPoints []string, tls 
 
 func (m *Manager) buildEntryPointHandler(ctx context.Context, entryPointName string, configs map[string]*runtime.TCPRouterInfo, configsHTTP map[string]*runtime.RouterInfo, handlerHTTP, handlerHTTPS http.Handler) (*Router, error) {
 	// Build a new Router.
-	router, err := NewRouter(m.providersPrecedence)
+	router, err := NewRouter(m.providersPrecedence, entryPointName, m.observabilityMgr.TCPAccessLogger())
 	if err != nil {
 		return nil, err
 	}
-
-	router.SetAccessLogger(accesslog.NewEntryPointLogger(m.observabilityMgr.TCPAccessLogger(), entryPointName))
 
 	router.SetHTTPHandler(handlerHTTP)
 
@@ -325,7 +323,7 @@ func (m *Manager) addTCPHandlers(ctx context.Context, entryPointName string, con
 
 			logger.Debug().Msgf("Adding special TLS closing route for %q because broken TLS options %s", routerConfig.Rule, tlsOptionsName)
 
-			if err := router.muxerTCPTLS.AddRoute(routerConfig.Rule, routerConfig.RuleSyntax, routerConfig.Priority, providerName(routerName), &brokenTLSRouter{accessLogger: router.accessLogger, tcpRouterName: routerName}); err != nil {
+			if err := router.muxerTCPTLS.AddRoute(routerConfig.Rule, routerConfig.RuleSyntax, routerConfig.Priority, providerName(routerName), &brokenTLSRouter{router: router, tcpRouterName: routerName}); err != nil {
 				routerConfig.AddError(err, true)
 				logger.Error().Err(err).Send()
 			}

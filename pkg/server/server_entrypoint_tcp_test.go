@@ -34,7 +34,7 @@ import (
 )
 
 func TestShutdownHijacked(t *testing.T) {
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -50,7 +50,7 @@ func TestShutdownHijacked(t *testing.T) {
 }
 
 func TestShutdownHTTP(t *testing.T) {
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -62,7 +62,7 @@ func TestShutdownHTTP(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	err = router.AddTCPRoute("HostSNI(`*`)", 0, "", tcp.HandlerFunc(func(conn tcp.WriteCloser) {
@@ -187,7 +187,7 @@ func TestReadTimeoutWithoutFirstByte(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -226,7 +226,7 @@ func TestReadTimeoutWithFirstByte(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -268,7 +268,7 @@ func TestKeepAliveMaxRequests(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -316,7 +316,7 @@ func TestKeepAliveMaxTime(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -360,7 +360,7 @@ func TestKeepAliveH2c(t *testing.T) {
 	}, nil, nil, nil)
 	require.NoError(t, err)
 
-	router, err := tcprouter.NewRouter(nil)
+	router, err := tcprouter.NewRouter(nil, "", nil)
 	require.NoError(t, err)
 
 	router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -632,7 +632,7 @@ func TestAliasHeadersStrategy(t *testing.T) {
 			}, nil, nil, nil)
 			require.NoError(t, err)
 
-			router, err := tcprouter.NewRouter(nil)
+			router, err := tcprouter.NewRouter(nil, "", nil)
 			require.NoError(t, err)
 
 			var reachedBackend bool
@@ -789,7 +789,7 @@ func TestPathOperations(t *testing.T) {
 	}
 
 	// Create the HTTP server using newHTTPServer.
-	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), nil)
+	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), "", nil)
 	require.NoError(t, err)
 
 	server.Switcher.UpdateHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -981,7 +981,7 @@ func TestHTTP2Config(t *testing.T) {
 	configuration.HTTP2.MaxDecoderHeaderTableSize = int32(expectedDecoderTableSize)
 
 	// Create the HTTP server using newHTTPServer.
-	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), nil)
+	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), "", nil)
 	require.NoError(t, err)
 
 	// Get the underlying HTTP Server.
@@ -1005,7 +1005,7 @@ func TestRequestTargetForms(t *testing.T) {
 	configuration := &static.EntryPoint{}
 	configuration.SetDefaults()
 
-	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), nil)
+	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), "", nil)
 	require.NoError(t, err)
 
 	server.Switcher.UpdateHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1424,7 +1424,7 @@ func TestUnderscoreHeadersStrategy(t *testing.T) {
 			}, nil, nil, nil)
 			require.NoError(t, err)
 
-			router, err := tcprouter.NewRouter(nil)
+			router, err := tcprouter.NewRouter(nil, "", nil)
 			require.NoError(t, err)
 
 			var reachedBackend bool
@@ -1660,7 +1660,7 @@ func TestHTTP2RequestTLS(t *testing.T) {
 	configuration := &static.EntryPoint{}
 	configuration.SetDefaults()
 
-	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), nil)
+	server, err := newHTTPServer(t.Context(), ln, configuration, false, requestdecorator.New(nil), "", nil)
 	require.NoError(t, err)
 
 	server.Switcher.UpdateHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -1799,7 +1799,7 @@ func TestStickyBackendTransportReleasedWithClientConnection(t *testing.T) {
 				})
 			}
 
-			router, err := tcprouter.NewRouter(nil)
+			router, err := tcprouter.NewRouter(nil, "", nil)
 			require.NoError(t, err)
 
 			router.SetHTTPHandler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
