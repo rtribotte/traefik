@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	accesslogMiddle "github.com/traefik/traefik/v3/pkg/middlewares/tcp/accesslog"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
 	"github.com/traefik/traefik/v3/pkg/tcp"
 )
@@ -54,7 +55,8 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	}
 
 	if !hello.isTLS {
-		return errors.New("non-TLS connection after the STARTTLS negotiation")
+		r.logUnhandled(conn, "", accesslogMiddle.ErrorTypePostgres, nil)
+		return nil
 	}
 
 	// The deadline was there to prevent hanging connections while waiting for the client,
@@ -67,13 +69,15 @@ func (r *Router) servePostgres(conn *peekConn) error {
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn.RemoteAddr(), hello.protos)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while reading TCP connection data")
-		return errInvalidConnectionData
+		r.logUnhandled(conn, hello.serverName, accesslogMiddle.ErrorTypeInvalidConnectionData, err)
+		return nil
 	}
 
 	// Contains also TCP TLS passthrough routes.
 	handlerTCPTLS, _ := r.muxerTCPTLS.Match(connData)
 	if handlerTCPTLS == nil {
-		return errNoMatchingRouter
+		r.logUnhandled(conn, hello.serverName, accesslogMiddle.ErrorTypeNoMatchingRouter, nil)
+		return nil
 	}
 
 	// We are in TLS mode and if the handler is not TLSHandler, we are in passthrough.
