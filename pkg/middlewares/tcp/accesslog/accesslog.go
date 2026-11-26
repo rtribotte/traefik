@@ -15,13 +15,6 @@ const (
 	nameRouter = "accesslog-router"
 )
 
-// The values of the TLS mode field.
-const (
-	tlsModeNone        = "none"
-	tlsModeTerminated  = "terminated"
-	tlsModePassthrough = "passthrough"
-)
-
 type accessLogMiddleware struct {
 	next   tcp.Handler
 	logger *tcpaccesslog.Logger
@@ -38,12 +31,12 @@ func RouterAccessLogHandler(ctx context.Context, logger *tcpaccesslog.Logger, en
 
 		middlewares.GetLogger(ctx, nameRouter, typeName).Debug().Msg("Creating middleware")
 
-		tlsMode := tlsModeNone
+		tlsMode := tcpaccesslog.TLSModeNone
 		if tlsConfig != nil {
 			if tlsConfig.Passthrough {
-				tlsMode = tlsModePassthrough
+				tlsMode = tcpaccesslog.TLSModePassthrough
 			} else {
-				tlsMode = tlsModeTerminated
+				tlsMode = tcpaccesslog.TLSModeTerminated
 			}
 		}
 

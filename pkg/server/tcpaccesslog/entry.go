@@ -35,6 +35,16 @@ const (
 	errorTypeField          = "error.type"
 )
 
+// The values of the TLS mode field.
+const (
+	// TLSModeNone is used for the routers without TLS.
+	TLSModeNone = "none"
+	// TLSModeTerminated is used for the routers terminating the TLS connections.
+	TLSModeTerminated = "terminated"
+	// TLSModePassthrough is used for the routers forwarding the TLS connections as is.
+	TLSModePassthrough = "passthrough"
+)
+
 // The values of the error type field, for the connections closed without a router handling them.
 const (
 	// ErrorTypeTimeout is used when the client did not send its first bytes in time.
