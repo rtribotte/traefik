@@ -19,21 +19,16 @@ type servedKey struct{}
 // The http.ConnState hook cannot tell them apart by itself,
 // as a connection becomes active as soon as its first byte is read.
 type unservedConnLogger struct {
-	// accessLogger is replaced when the router of the entry point is switched.
-	accessLogger atomic.Pointer[accesslogMiddle.EntryPointLogger]
+	// accessLogger is nil when the TCP access logs are disabled.
+	accessLogger *accesslogMiddle.EntryPointLogger
 
 	// served holds, for each tracked connection, whether a request reached the handler.
 	served sync.Map
 }
 
-// setAccessLogger sets the logger, which is nil when the TCP access logs are disabled.
-func (u *unservedConnLogger) setAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger) {
-	u.accessLogger.Store(accessLogger)
-}
-
 // connContext tracks the given connection, when the TCP access logs are enabled.
 func (u *unservedConnLogger) connContext(ctx context.Context, c net.Conn) context.Context {
-	if u.accessLogger.Load() == nil {
+	if u.accessLogger == nil {
 		return ctx
 	}
 
@@ -55,7 +50,7 @@ func (u *unservedConnLogger) connState(c net.Conn, state http.ConnState) {
 		return
 	}
 
-	tcprouter.LogUnservedHTTPConn(u.accessLogger.Load(), c)
+	tcprouter.LogUnservedHTTPConn(u.accessLogger, c)
 }
 
 // wrap marks the connections of the requests reaching the given handler as served.

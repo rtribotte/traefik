@@ -104,7 +104,7 @@ func TestHTTP3AdvertisedPort(t *testing.T) {
 		HTTP3: &static.HTTP3Config{
 			AdvertisedPort: 8080,
 		},
-	}, nil, nil)
+	}, nil, nil, nil)
 	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)
@@ -166,7 +166,7 @@ func TestHTTP30RTT(t *testing.T) {
 		ForwardedHeaders: &static.ForwardedHeaders{},
 		HTTP2:            &static.HTTP2Config{},
 		HTTP3:            &static.HTTP3Config{},
-	}, nil, nil)
+	}, nil, nil, nil)
 	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)
@@ -245,7 +245,7 @@ func TestHTTP3ReadTimeout(t *testing.T) {
 		ForwardedHeaders: &static.ForwardedHeaders{},
 		HTTP2:            &static.HTTP2Config{},
 		HTTP3:            &static.HTTP3Config{},
-	}, nil, nil)
+	}, nil, nil, nil)
 	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)
@@ -354,7 +354,7 @@ func TestHTTP3StickyBackendTransport(t *testing.T) {
 		ForwardedHeaders: &static.ForwardedHeaders{},
 		HTTP2:            &static.HTTP2Config{},
 		HTTP3:            &static.HTTP3Config{},
-	}, nil, nil)
+	}, nil, nil, nil)
 	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)
@@ -471,7 +471,7 @@ func TestNewHTTP3ServerTimeouts(t *testing.T) {
 		HTTP:             static.HTTPConfig{MaxHeaderBytes: 12345},
 		HTTP2:            &static.HTTP2Config{},
 		HTTP3:            &static.HTTP3Config{},
-	}, nil, nil)
+	}, nil, nil, nil)
 	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)

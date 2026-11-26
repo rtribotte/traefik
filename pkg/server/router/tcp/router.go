@@ -263,12 +263,6 @@ func (r *Router) SetAccessLogger(accessLogger *accesslogMiddle.EntryPointLogger)
 	r.accessLogger = accessLogger
 }
 
-// AccessLogger returns the logger of the connections closed without a router handling them.
-// It is nil when the TCP access logs are disabled.
-func (r *Router) AccessLogger() *accesslogMiddle.EntryPointLogger {
-	return r.accessLogger
-}
-
 // closeUnhandled closes a connection no router handles, and logs it in the TCP access logs.
 func (r *Router) closeUnhandled(conn tcp.WriteCloser, start time.Time, receivedBytes int64, routerName, serverName, errorType string) {
 	_ = conn.Close()

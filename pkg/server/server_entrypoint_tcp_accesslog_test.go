@@ -119,19 +119,19 @@ func startTCPAccessLoggedEntryPoint(t *testing.T, httpsTLSConfig *tls.Config) (s
 	epConfig := &static.EntryPointsTransport{}
 	epConfig.SetDefaults()
 
-	entryPoint, err := NewTCPEntryPoint(t.Context(), "web", &static.EntryPoint{
-		Address:          "127.0.0.1:0",
-		Transport:        epConfig,
-		ForwardedHeaders: &static.ForwardedHeaders{},
-		HTTP2:            &static.HTTP2Config{},
-	}, nil, nil)
-	require.NoError(t, err)
-
 	logFile := filepath.Join(t.TempDir(), "tcp-access.log")
 
 	logger, err := accesslogMiddle.NewLogger(t.Context(), &otypes.TCPAccessLog{FilePath: logFile})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, logger.Close()) })
+
+	entryPoint, err := NewTCPEntryPoint(t.Context(), "web", &static.EntryPoint{
+		Address:          "127.0.0.1:0",
+		Transport:        epConfig,
+		ForwardedHeaders: &static.ForwardedHeaders{},
+		HTTP2:            &static.HTTP2Config{},
+	}, nil, nil, logger)
+	require.NoError(t, err)
 
 	router, err := tcprouter.NewRouter(nil)
 	require.NoError(t, err)
